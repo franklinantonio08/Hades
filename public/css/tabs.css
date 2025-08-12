@@ -1,0 +1,134 @@
+/* Tabs */
+.tabs {
+    background-color: #ffffff;
+    margin: 0 auto;
+    padding: 0px;
+    position: relative;
+    white-space: nowrap;
+    width: 100%;
+  }
+  .tabs li.tab {
+    background-color: #ffffff;
+    display: block;
+    float: left;
+    margin: 0;
+    text-align: center;
+  }
+  .tabs li.tab a {
+    -moz-transition: color 0.28s ease;
+    -ms-transition: color 0.28s ease;
+    -o-transition: color 0.28s ease;
+    -webkit-transition: color 0.28s ease;
+    color: #ee6e73;
+    display: block;
+    height: 100%;
+    text-decoration: none;
+    transition: color 0.28s ease;
+    width: 100%;
+  }
+  .tabs li.tab a.active {
+    color: #5f72be !important;
+  }
+  .tabs .indicator {
+    background-color: #5f72be;
+    bottom: 0;
+    height: 2px;
+    position: absolute;
+    will-change: left, right;
+  }
+  .tabs-top .indicator {
+    top: 0;
+  }
+  .nav-pills li a {
+    line-height: 36px !important;
+  }
+  .nav-pills li.active a {
+    background-color: #5f72be !important;
+  }
+  .nav-pills li.active a:hover {
+    background-color: #5f72be !important;
+  }
+  .nav-pills li.active a:focus {
+    background-color: #5f72be !important;
+  }
+  .nav.nav-tabs + .tab-content {
+    background: #ffffff;
+    margin-bottom: 30px;
+    padding: 30px;
+  }
+  .tabs-vertical-env {
+    margin-bottom: 30px;
+  }
+  .tabs-vertical-env .tab-content {
+    background: #ffffff;
+    display: table-cell;
+    margin-bottom: 30px;
+    padding: 30px;
+    vertical-align: top;
+  }
+  .tabs-vertical-env .nav.tabs-vertical {
+    display: table-cell;
+    min-width: 120px;
+    vertical-align: top;
+    width: 150px;
+  }
+  .tabs-vertical-env .nav.tabs-vertical li.active > a {
+    background-color: #ffffff;
+    border: 0;
+  }
+  .tabs-vertical-env .nav.tabs-vertical li > a {
+    color: #333333;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .nav.nav-tabs > li.active > a {
+    background-color: #ffffff;
+    border: 0;
+  }
+  .nav.nav-tabs > li > a,
+  .nav.tabs-vertical > li > a {
+    background-color: transparent;
+    border-radius: 0;
+    border: none;
+    color: #505461 !important;
+    cursor: pointer;
+    line-height: 50px;
+    padding-left: 20px;
+    padding-right: 20px;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+    --text-transform: uppercase;
+    font-family: "Source Sans Pro", "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  .nav.nav-tabs > li > a:hover,
+  .nav.tabs-vertical > li > a:hover {
+    color: #5f72be !important;
+  }
+  .tab-content {
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    color: #777777;
+  }
+  .nav.nav-tabs > li:last-of-type a {
+    margin-right: 0px;
+  }
+  .nav.nav-tabs {
+    border-bottom: 0;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  }
+  .navtab-bg {
+    background-color: #f4f8fb;
+  }
+  .nav-tabs.nav-justified > .active > a,
+  .nav-tabs.nav-justified > .active > a:hover,
+  .nav-tabs.nav-justified > .active > a:focus,
+  .tabs-vertical-env .nav.tabs-vertical li.active > a {
+    border: none;
+  }
+  .nav-tabs > li.active > a,
+  .nav-tabs > li.active > a:focus,
+  .nav-tabs > li.active > a:hover,
+  .tabs-vertical > li.active > a,
+  .tabs-vertical > li.active > a:focus,
+  .tabs-vertical > li.active > a:hover {
+    color: #5f72be !important;
+  }
