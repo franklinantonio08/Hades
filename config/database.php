@@ -91,6 +91,19 @@ return [
             'prefix_indexes' => true,
         ],
 
+        
+        'simpanama' => [
+            'driver' => env('DB4_CONNECTION', 'sqlsrv'),
+            'host' => env('DB4_HOST', 'localhost'),
+            'port' => env('DB4_PORT', '1433'),
+            'database' => env('DB4_DATABASE', 'SIM_PANAMA'),
+            'username' => env('DB4_USERNAME', 'bireporte'),
+            'password' => env('DB4_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
     ],
 
     /*

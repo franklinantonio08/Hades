@@ -6,9 +6,8 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Autenticación') - {{ config('app.name', 'Laravel') }}</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.2.0/dist/css/coreui.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
+  {{-- Vite: CSS/JS locales (sin CDNs) --}}
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 
   <style>
     :root { --auth-overlay: rgba(0,0,0,.45); }
@@ -50,7 +49,8 @@
       * { transition: none !important; animation: none !important; }
     }
   </style>
-  @stack('styles')
+
+  @stack('scripts')
 </head>
 <body>
   <div id="background-layer" role="img" aria-label="Imagen de fondo"></div>
@@ -63,7 +63,7 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  {{-- Bootstrap/CoreUI/Icons y jQuery se cargan desde resources/js/app.js, no uses CDNs aquí --}}
   <script>
     // Fondo rotativo
     (function(){
@@ -80,7 +80,7 @@
     })();
     document.getElementById('year').textContent = new Date().getFullYear();
   </script>
+
   @stack('scripts')
 </body>
 </html>
-

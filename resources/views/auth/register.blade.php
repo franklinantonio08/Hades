@@ -1,15 +1,4 @@
 @extends('layouts.auth')
-{{-- 
-@section('scripts')
-    
-    <script>
-        const BASEURL = '{{ url()->current() }}';
-        const token = '{{ csrf_token() }}';
-    </script>
-
-    <script src="{{ asset('../js/auth/register.js') }}" type="text/javascript"></script>
-@endsection --}}
-
 
 @section('scripts')
   <script>
@@ -18,6 +7,8 @@
     const token   = @json(csrf_token());
 
     window.REDIRECT_HOME = @json(url('/'));
+
+    const ENDPOINT_FILIACION = @json(route('registro.consultaFiliacion'));
 
   </script>
 
@@ -160,6 +151,26 @@
                  placeholder="Ej: 701234">
           @error('documento_numero') <div class="invalid-feedback">{{ $message }}</div> @enderror
         </div>
+
+         <div class="col-12 col-md-6">
+          <label for="genero" class="form-label fw-semibold">Genero</label>
+          <select id="genero" name="genero" class="form-select">
+            <option value="" disabled {{ old('genero') ? '' : 'selected' }}>Selecciona...</option>
+            <option value="M" {{ old('genero')==='M' ? 'selected':'' }}>Masculino</option>
+            <option value="F" {{ old('genero')==='F' ? 'selected':'' }}>Femenino</option>
+          </select>
+          @error('genero') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+        </div>
+
+     <div class="col-12 col-md-6">
+      <label for="fecha_nacimiento" class="form-label fw-semibold">Fecha de nacimiento</label>
+      <input id="fecha_nacimiento" type="date" name="fecha_nacimiento"
+             value="{{ old('fecha_nacimiento') }}"
+             class="form-control @error('fecha_nacimiento') is-invalid @enderror">
+      @error('fecha_nacimiento') <div class="invalid-feedback">{{ $message }}</div> @enderror
+    </div>
+
+
       </div>
     </div>
 
@@ -227,99 +238,3 @@
     </div>
   </form>
 @endsection
-
-
-
-{{-- @push('scripts') --}}
-{{-- <script>
-  // Mostrar/ocultar contraseña
-  (function(){
-    const pwd = document.getElementById('password');
-    const btn = document.getElementById('togglePwd');
-    const icon = document.getElementById('toggleIcon');
-    if (btn) btn.addEventListener('click', () => {
-      const showing = pwd.getAttribute('type') === 'text';
-      pwd.setAttribute('type', showing ? 'password' : 'text');
-      icon.classList.toggle('bi-eye');
-      icon.classList.toggle('bi-eye-slash');
-      pwd.focus({preventScroll:true});
-    });
-  })();
-
-  // Hint de Bloq Mayús
-  (function(){
-    const pwd = document.getElementById('password');
-    const hint = document.getElementById('capsHint');
-    function update(e){ const caps = e.getModifierState && e.getModifierState('CapsLock'); hint.style.display = caps ? 'block' : 'none'; }
-    ['keyup','keydown','focus'].forEach(ev => pwd.addEventListener(ev, update));
-    pwd.addEventListener('blur', ()=> hint.style.display='none');
-  })();
-
-  // Toggle secciones (Abogado / Solicitante) + required dinámicos
-  (function(){
-    const radios = document.querySelectorAll('input[name="tipo_usuario"]');
-    const secSolic = document.getElementById('sectionSolicitante');
-    const secAbog  = document.getElementById('sectionAbogado');
-
-    const camposSolicReq = ['documento_tipo','documento_numero'];
-    const camposAbogReq  = ['abogado_id','idoneidad'];
-
-    function setRequired(ids, value){
-      ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) { value ? el.setAttribute('required','required') : el.removeAttribute('required'); }
-      });
-    }
-
-    function paint(){
-      const val = document.querySelector('input[name="tipo_usuario"]:checked')?.value || 'solicitante';
-      const isAbogado = val === 'abogado';
-      secAbog.style.display  = isAbogado ? 'block':'none';
-      secSolic.style.display = isAbogado ? 'none':'block';
-      setRequired(camposAbogReq,  isAbogado);
-      setRequired(camposSolicReq, !isAbogado);
-    }
-
-    radios.forEach(r => r.addEventListener('change', paint));
-    paint();
-  })();
-
-  // Validación simple del archivo de idoneidad (tipo y tamaño)
-  (function(){
-    const input = document.getElementById('idoneidad');
-    if (!input) return;
-    const max = parseInt(input.dataset.max || 5242880, 10); // 5MB
-    const valid = ['application/pdf','image/jpeg','image/png'];
-    const fb = document.getElementById('idoneidadFeedback');
-
-    input.addEventListener('change', () => {
-      fb.textContent = '';
-      input.classList.remove('is-invalid');
-      const file = input.files && input.files[0];
-      if (!file) return;
-      if (file.size > max) {
-        fb.textContent = 'El archivo excede 5MB.';
-        input.classList.add('is-invalid');
-        input.value = '';
-        return;
-      }
-      if (!valid.includes(file.type)) {
-        fb.textContent = 'Formato no permitido. Usa PDF/JPG/PNG.';
-        input.classList.add('is-invalid');
-        input.value = '';
-      }
-    });
-  })();
-
-  // Spinner en submit + prevenir doble envío
-  (function(){
-    const form = document.getElementById('registerForm');
-    const btn  = document.getElementById('btnRegister');
-    form.addEventListener('submit', () => {
-      btn.disabled = true;
-      btn.querySelector('.btn-label').classList.add('d-none');
-      btn.querySelector('.btn-spinner').classList.remove('d-none');
-    });
-  })();
-</script> --}}
-{{-- @endpush --}}

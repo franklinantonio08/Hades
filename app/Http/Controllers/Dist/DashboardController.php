@@ -39,28 +39,28 @@ class DashboardController extends Controller
 
         // view()->share('totalSolicitudes', $totalSolicitudes);	
 
-        $resultados = DB::table('rid_migrante')
-            ->selectRaw('COUNT(*) as totalMigrantes,
-                         DATE_FORMAT(MIN(created_at), "%M") as primeraMigranteMes,
-                         DATE_FORMAT(MAX(created_at), "%M") as ultimaMigranteMes')
-            ->whereYear('created_at', $year)
-            ->first();
+        // $resultados = DB::table('rid_migrante')
+        //     ->selectRaw('COUNT(*) as totalMigrantes,
+        //                  DATE_FORMAT(MIN(created_at), "%M") as primeraMigranteMes,
+        //                  DATE_FORMAT(MAX(created_at), "%M") as ultimaMigranteMes')
+        //     ->whereYear('created_at', $year)
+        //     ->first();
         
 
-        $totalMigrantes = $resultados->totalMigrantes;
-        $primeraSolicitud = $resultados->primeraMigranteMes;
-        $ultimaSolicitud = $resultados->ultimaMigranteMes;
+        // $totalMigrantes = $resultados->totalMigrantes;
+        // $primeraSolicitud = $resultados->primeraMigranteMes;
+        // $ultimaSolicitud = $resultados->ultimaMigranteMes;
 
        
 
-       //return \view('dashboard');
+       return \view('dashboard');
 
-       return view('layouts.app', [
-        'year' => $year,
-        'totalMigrantes' => $totalMigrantes,
-        'primeraSolicitud' => $primeraSolicitud,
-        'ultimaSolicitud' => $ultimaSolicitud,
-    ]);
+    //    return view('layouts.app', [
+    //     'year' => $year,
+    //     'totalMigrantes' => $totalMigrantes,
+    //     'primeraSolicitud' => $primeraSolicitud,
+    //     'ultimaSolicitud' => $ultimaSolicitud,
+    // ]);
 
     }
 

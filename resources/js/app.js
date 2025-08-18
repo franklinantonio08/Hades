@@ -1,7 +1,10 @@
 import './bootstrap'
 
-import 'bootstrap'        // usa @popperjs/core automáticamente
-import '@coreui/coreui'   // opcional: componentes de CoreUI
-
+// JS de terceros
+import 'bootstrap'
 import $ from 'jquery'
-window.$ = window.jQuery = $
+window.$ = window.jQuery = $;
+
+// Tu JS de registro
+import './auth/register.js'
+import './auth/login';

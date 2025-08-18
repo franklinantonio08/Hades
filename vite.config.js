@@ -1,3 +1,4 @@
+// vite.config.js
 import { defineConfig } from 'vite'
 import laravel from 'laravel-vite-plugin'
 
@@ -11,4 +12,8 @@ export default defineConfig({
       refresh: true,
     }),
   ],
+  server: {
+    host: '0.0.0.0', // por si quieres abrir desde otro dispositivo en la red
+    port: 5173,
+  },
 })

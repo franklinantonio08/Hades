@@ -88,9 +88,9 @@
                                     <div class="row">
                                         <div class="col">
                                             <div class="card-title fs-4 fw-semibold">Total Migrantes</div>
-                                            <div class="card-subtitle text-disabled">{{ $primeraSolicitud }} - {{ $ultimaSolicitud }} {{ $year }}</div>
+                                            <div class="card-subtitle text-disabled"></div>
                                         </div>
-                                        <div class="col text-end text-primary fs-4 fw-semibold">{{ $totalMigrantes }}</div>
+                                        <div class="col text-end text-primary fs-4 fw-semibold"></div>
                                     </div>
                                 </div>
                                 <div class="chart-wrapper mt-3" style="height:150px;">
@@ -151,7 +151,7 @@
                     <div class="card mb-4">
                         <div class="card-body p-4">
                             <div class="card-title fs-4 fw-semibold">Trafico Mensual</div>
-                            <div class="card-subtitle text-disabled">{{ $primeraSolicitud }} - {{ $ultimaSolicitud }} {{ $year }}</div>
+                            <div class="card-subtitle text-disabled"></div>
                             <div class="chart-wrapper" style="height:300px;margin-top:40px;">
                                 <canvas class="chart" id="main-bar-chart"  width="400"  height="300"></canvas>
                             </div>
