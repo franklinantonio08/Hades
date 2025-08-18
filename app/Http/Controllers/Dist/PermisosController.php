@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\dist;
+namespace App\Http\Controllers\Dist;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -26,7 +26,7 @@ class PermisosController extends Controller
 
     public function Index(){
 
-        return \view('dist/permisos/index');
+        return view('dist.permisos.index');
     }      
     
     public function PostIndex(){    

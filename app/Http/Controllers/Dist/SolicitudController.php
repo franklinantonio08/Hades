@@ -35,9 +35,7 @@ class SolicitudController extends Controller
 
     public function Index(){
         
-     
-
-        return \view('dist/solicitud/index');
+        return view('dist.solicitud.index');
 
     }
 

@@ -1,7 +1,7 @@
-import './bootstrap';
+import './bootstrap'
 
-import Alpine from 'alpinejs';
+import 'bootstrap'        // usa @popperjs/core automáticamente
+import '@coreui/coreui'   // opcional: componentes de CoreUI
 
-window.Alpine = Alpine;
-
-Alpine.start();
+import $ from 'jquery'
+window.$ = window.jQuery = $

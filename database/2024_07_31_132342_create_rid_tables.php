@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class CreateMigrationTablesV2 extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      *
@@ -341,4 +340,4 @@ class CreateMigrationTablesV2 extends Migration
         Schema::dropIfExists('RID_paises');
         Schema::dropIfExists('RID_regiones');
     }
-}
+};
