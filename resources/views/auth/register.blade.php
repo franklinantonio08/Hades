@@ -238,3 +238,8 @@
     </div>
   </form>
 @endsection
+
+
+@section('modals')
+  @include('includes.messagebasicmodal')
+@endsection

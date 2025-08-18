@@ -171,21 +171,26 @@ class RegisteredUserController extends Controller
             $idoneidadPath = null;
             if ($data['tipo_usuario'] === 'abogado' && $request->hasFile('idoneidad')) {
                 $idoneidadPath = $request->file('idoneidad')->store('idoneidades', 'public');
-            }
+            }         
 
-            $fullName = trim(
-                ($data['primer_nombre'] ?? '').' '.
-                ($data['segundo_nombre'] ?? '').' '.
-                ($data['primer_apellido'] ?? '').' '.
-                ($data['segundo_apellido'] ?? '')
+            $primer_nombre = mb_convert_case(strtolower($data['primer_nombre']), MB_CASE_TITLE, "UTF-8");
+            $segundo_nombre = mb_convert_case(strtolower($data['segundo_nombre']), MB_CASE_TITLE, "UTF-8");
+            $primer_apellido = mb_convert_case(strtolower($data['primer_apellido']), MB_CASE_TITLE, "UTF-8");
+            $segundo_apellido = mb_convert_case(strtolower($data['segundo_apellido']), MB_CASE_TITLE, "UTF-8");
+
+               $fullName = trim(
+                ($primer_nombre ?? '').' '.
+                ($segundo_nombre ?? '').' '.
+                ($primer_apellido ?? '').' '.
+                ($segundo_apellido ?? '')
             );
 
             $user = User::create([
                 // Nombres desglosados + name
-                'primer_nombre'    => $data['primer_nombre'],
-                'segundo_nombre'   => $data['segundo_nombre'] ?? null,
-                'primer_apellido'  => $data['primer_apellido'],
-                'segundo_apellido' => $data['segundo_apellido'] ?? null,
+                'primer_nombre'    => $primer_nombre,
+                'segundo_nombre'   => $segundo_nombre ?? null,
+                'primer_apellido'  => $primer_apellido,
+                'segundo_apellido' => $segundo_apellido ?? null,
                 'name'             => $fullName,
 
                 // Contacto

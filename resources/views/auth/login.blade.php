@@ -127,3 +127,8 @@
   })();
 </script>
 @endpush
+
+
+@section('modals')
+  @include('includes.messagebasicmodal')
+@endsection

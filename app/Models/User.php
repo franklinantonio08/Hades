@@ -53,7 +53,8 @@ class User extends Authenticatable
         'abogado_id',
         'firma_estudio',
         'idoneidad_path',
-        // 'abogado_id',
+        'genero',
+        'fecha_nacimiento',
     ];
 
     /**
