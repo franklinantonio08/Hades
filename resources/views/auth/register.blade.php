@@ -1,6 +1,9 @@
 @extends('layouts.auth')
 
 @section('scripts')
+
+  @include('includes.messagebasicmodal')
+
   <script>
     // Base del sitio (NO la URL actual para evitar /register/buscaposiciones)
     const BASEURL = @json(url(''));
@@ -13,10 +16,10 @@
   </script>
 
   {{-- ruta correcta del js público --}}
-  <script src="{{ asset('js/auth/register.js') }}" type="text/javascript"></script>
+  {{-- <script src="{{ asset('js/auth/register.js') }}" type="text/javascript"></script> --}}
 @endsection
 
-
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 
 @section('title', 'Crear Cuenta')
 
@@ -227,7 +230,7 @@
       </div>
     </div>
 
-    <button type="submit" class="btn btn-primary w-100 mt-3" id="btnRegister">
+    <button class="btn btn-primary w-100 mt-3" id="btnRegister">
       <span class="btn-label"><i class="bi bi-person-plus me-2"></i> Crear cuenta</span>
       <span class="btn-spinner spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
     </button>
@@ -240,6 +243,6 @@
 @endsection
 
 
-@section('modals')
+{{-- @section('modals')
   @include('includes.messagebasicmodal')
-@endsection
+@endsection --}}

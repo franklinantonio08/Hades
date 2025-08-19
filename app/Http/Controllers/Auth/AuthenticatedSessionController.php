@@ -30,6 +30,14 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
+        if (! $request->user()->hasVerifiedEmail()) {
+            Auth::logout(); // cerramos sesión inmediatamente
+
+            return back()->withErrors([
+                'email' => 'Debes verificar tu dirección de correo electrónico antes de iniciar sesión.',
+            ]);
+        }
+
         $request->session()->regenerate();
 
         return redirect()->intended(RouteServiceProvider::HOME);

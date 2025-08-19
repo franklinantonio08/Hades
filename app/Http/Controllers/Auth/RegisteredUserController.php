@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+// use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\Rule;
@@ -166,6 +166,7 @@ class RegisteredUserController extends Controller
             if ($fechaSim) {
                 $data['fecha_nacimiento'] = $fechaSim;
             }
+        }
 
             // Guardar archivo de idoneidad si aplica
             $idoneidadPath = null;
@@ -173,24 +174,19 @@ class RegisteredUserController extends Controller
                 $idoneidadPath = $request->file('idoneidad')->store('idoneidades', 'public');
             }         
 
-            $primer_nombre = mb_convert_case(strtolower($data['primer_nombre']), MB_CASE_TITLE, "UTF-8");
-            $segundo_nombre = mb_convert_case(strtolower($data['segundo_nombre']), MB_CASE_TITLE, "UTF-8");
-            $primer_apellido = mb_convert_case(strtolower($data['primer_apellido']), MB_CASE_TITLE, "UTF-8");
-            $segundo_apellido = mb_convert_case(strtolower($data['segundo_apellido']), MB_CASE_TITLE, "UTF-8");
+            $primer_nombre    = mb_convert_case(strtolower($data['primer_nombre']), MB_CASE_TITLE, "UTF-8");
+            $segundo_nombre   = $data['segundo_nombre'] ? mb_convert_case(strtolower($data['segundo_nombre']), MB_CASE_TITLE, "UTF-8") : null;
+            $primer_apellido  = mb_convert_case(strtolower($data['primer_apellido']), MB_CASE_TITLE, "UTF-8");
+            $segundo_apellido = $data['segundo_apellido'] ? mb_convert_case(strtolower($data['segundo_apellido']), MB_CASE_TITLE, "UTF-8") : null;
 
-               $fullName = trim(
-                ($primer_nombre ?? '').' '.
-                ($segundo_nombre ?? '').' '.
-                ($primer_apellido ?? '').' '.
-                ($segundo_apellido ?? '')
-            );
+            $fullName = trim("$primer_nombre $segundo_nombre $primer_apellido $segundo_apellido");
 
             $user = User::create([
                 // Nombres desglosados + name
                 'primer_nombre'    => $primer_nombre,
-                'segundo_nombre'   => $segundo_nombre ?? null,
+                'segundo_nombre'   => $segundo_nombre,
                 'primer_apellido'  => $primer_apellido,
-                'segundo_apellido' => $segundo_apellido ?? null,
+                'segundo_apellido' => $segundo_apellido,
                 'name'             => $fullName,
 
                 // Contacto
@@ -199,6 +195,7 @@ class RegisteredUserController extends Controller
 
                 // Tipo y campos condicionales
                 'tipo_usuario'     => $data['tipo_usuario'],
+
                 'documento_tipo'   => $data['tipo_usuario'] === 'solicitante' ? ($data['documento_tipo'] ?? null) : null,
                 'documento_numero' => $data['tipo_usuario'] === 'solicitante' ? ($data['documento_numero'] ?? null) : null,
                 'genero'           => $data['tipo_usuario'] === 'solicitante' ? ($data['genero'] ?? null) : null,
@@ -212,76 +209,105 @@ class RegisteredUserController extends Controller
             ]);
 
             event(new Registered($user));
-            Auth::login($user);
+
+            // $user->sendEmailVerificationNotification();
+
+            // NO: Auth::login($user);
 
             if ($request->wantsJson()) {
                 return response()->json([
-                    'ok'       => true,
-                    'redirect' => url(RouteServiceProvider::HOME),
+                    'ok' => true,
+                    'message' => 'Cuenta creada. Te enviamos un correo para verificar tu dirección. Revisa tu bandeja.',
+                    'redirect' => route('login'),
                 ]);
             }
 
-            return redirect(RouteServiceProvider::HOME);
+            // Si llegara por submit normal:
+            // return redirect()->route('login')->with('status', 'verification-link-sent');
+            
 
+            // Auth::login($user);
 
-        }
+            // if ($request->wantsJson()) {
+            //     return response()->json([
+            //         'ok'       => true,
+            //         'redirect' => url(RouteServiceProvider::HOME),
+            //     ]);
+            // }
+
+            // return redirect(RouteServiceProvider::HOME);
+
+        //     if ($request->wantsJson()) {
+        //         return response()->json([
+        //             'ok'       => true,
+        //             'message'  => 'Registro exitoso. Revisa tu correo para activar la cuenta.',
+        //             'redirect' => route('verification.notice'), // /verify-email
+        //         ]);
+        //     }
+
+        // // Fallback para navegación normal
+        //     return redirect()->route('verification.notice')->with('status', 'verification-link-sent');
+
+        // }
     }
 
-    public function buscarFiliacion(Request $request)
-{
-    $validated = $request->validate([
-        'documento_tipo'   => ['required', Rule::in(['Ruex'])],
-        'documento_numero' => ['required', 'string', 'max:50'],
-    ]);
-
-    $ruex = trim($validated['documento_numero']);
-
-    $row = DB::connection('sqlsrv_sim')
-        ->table('dbo.SIM_FI_GENERALES')
-        ->select([
-            'NUM_REG_FILIACION',
-            'NOM_PRIMER_APELL',
-            'NOM_SEGUND_APELL',
-            'NOM_PRIMER_NOMB',
-            'NOM_SEGUND_NOMB',
-            'IND_SEXO',
-            'FEC_NACIM',
-        ])
-        ->where('NUM_REG_FILIACION', $ruex)
-        ->first();
-
-    if (!$row) {
-        throw ValidationException::withMessages([
-            'documento_numero' => 'No se encontró la filiación en el sistema.',
+    public function buscarFiliacion(Request $request) {
+            
+        $validated = $request->validate([
+            'documento_tipo'   => ['required', Rule::in(['Ruex'])],
+            'documento_numero' => ['required', 'string', 'max:50'],
         ]);
-    }
 
-    // Mapear sexo y fecha
-    $sexo = strtoupper((string)($row->IND_SEXO ?? ''));
-    if (!in_array($sexo, ['M','F'], true)) {
-        $sexo = null;
-    }
+        $ruex = trim($validated['documento_numero']);
 
-    $fecha = null;
-    if (!empty($row->FEC_NACIM)) {
-        $ts = strtotime((string)$row->FEC_NACIM);
-        if ($ts !== false) {
-            $fecha = date('Y-m-d', $ts); // YYYY-MM-DD
+        $row = DB::connection('sqlsrv_sim')
+            ->table('dbo.SIM_FI_GENERALES')
+            ->select([
+                'NUM_REG_FILIACION',
+                'NOM_PRIMER_APELL',
+                'NOM_SEGUND_APELL',
+                'NOM_PRIMER_NOMB',
+                'NOM_SEGUND_NOMB',
+                'IND_SEXO',
+                'FEC_NACIM',
+            ])
+            ->where('NUM_REG_FILIACION', $ruex)
+            ->first();
+
+        if (!$row) {
+            throw ValidationException::withMessages([
+                'documento_numero' => 'No se encontró la filiación en el sistema.',
+            ]);
         }
+
+        // Mapear sexo y fecha
+        $sexo = strtoupper((string)($row->IND_SEXO ?? ''));
+
+        if (!in_array($sexo, ['M','F'], true)) {
+            $sexo = null;
+        }
+
+        $fecha = null;
+
+        if (!empty($row->FEC_NACIM)) {
+            $ts = strtotime((string)$row->FEC_NACIM);
+            if ($ts !== false) {
+                $fecha = date('Y-m-d', $ts); // YYYY-MM-DD
+            }
+        }
+
+        return response()->json([
+            'ok' => true,
+            'data' => [
+                'primer_nombre'    => $row->NOM_PRIMER_NOMB ?? null,
+                'segundo_nombre'   => $row->NOM_SEGUND_NOMB ?? null,
+                'primer_apellido'  => $row->NOM_PRIMER_APELL ?? null,
+                'segundo_apellido' => $row->NOM_SEGUND_APELL ?? null,
+                'genero'           => $sexo,
+                'fecha_nacimiento' => $fecha,
+            ],
+        ]);
+        
     }
-
-    return response()->json([
-        'ok' => true,
-        'data' => [
-            'primer_nombre'    => $row->NOM_PRIMER_NOMB ?? null,
-            'segundo_nombre'   => $row->NOM_SEGUND_NOMB ?? null,
-            'primer_apellido'  => $row->NOM_PRIMER_APELL ?? null,
-            'segundo_apellido' => $row->NOM_SEGUND_APELL ?? null,
-            'genero'           => $sexo,
-            'fecha_nacimiento' => $fecha,
-        ],
-    ]);
-}
-
 
 }

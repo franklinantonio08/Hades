@@ -112,28 +112,28 @@
                         </ul>
                 </li> -->
         
-                <li class="nav-group"><a class="nav-link nav-group-toggle" href="#">
+                {{-- <li class="nav-group"><a class="nav-link nav-group-toggle" href="#">
                         <svg class="nav-icon">
                                 <use xlink:href="{{ asset('../vendors/@coreui/icons/svg/free.svg#cil-chart-line') }}"></use>
                         </svg> Registro Irregulares Darien</a>
                         <ul class="nav-group-items">
                                 @if (Auth::user()->usuariopermiso('005'))
                                         <li class="nav-item"><a class="nav-link" href="/admin/RIDmigrantes"><span class="nav-icon"></span> Migrantes</a></li>
-                                @endif
+                                @endif --}}
 
                                 {{-- @if (Auth::user()->usuariopermiso('003')) --}}
-                                        <li class="nav-item"><a class="nav-link" href="/admin/RIDafinidad"><span class="nav-icon"></span> Afinidad</a></li>
+                                        {{-- <li class="nav-item"><a class="nav-link" href="/admin/RIDafinidad"><span class="nav-icon"></span> Afinidad</a></li> --}}
                                 {{-- @endif --}}
 
-                                @if (Auth::user()->usuariopermiso('002'))
+                                {{-- @if (Auth::user()->usuariopermiso('002'))
                                         <li class="nav-item"><a class="nav-link" href="/admin/RIDpuestocontrol"><span class="nav-icon"></span> Punto de Control</a></li>
-                                @endif
+                                @endif --}}
 
                                 {{-- @if (Auth::user()->usuariopermiso('004')) --}}
-                                        <li class="nav-item"><a class="nav-link" href="/admin/RIDestaciontemporal"><span class="nav-icon"></span>Com. Recep. / Est. Temp.</a></li>  
+                                        {{-- <li class="nav-item"><a class="nav-link" href="/admin/RIDestaciontemporal"><span class="nav-icon"></span>Com. Recep. / Est. Temp.</a></li>   --}}
                                 {{-- @endif --}}
-                        </ul>
-                </li>
+                        {{-- </ul>
+                </li> --}}
 
                 <li class="nav-group"><a class="nav-link nav-group-toggle" href="#">
                         <svg class="nav-icon">
