@@ -2,7 +2,6 @@
 
 @section('scripts')
 
-  @include('includes.messagebasicmodal')
 
   <script>
     // Base del sitio (NO la URL actual para evitar /register/buscaposiciones)
@@ -15,11 +14,9 @@
 
   </script>
 
-  {{-- ruta correcta del js público --}}
-  {{-- <script src="{{ asset('js/auth/register.js') }}" type="text/javascript"></script> --}}
 @endsection
 
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+
 
 @section('title', 'Crear Cuenta')
 
@@ -243,6 +240,3 @@
 @endsection
 
 
-{{-- @section('modals')
-  @include('includes.messagebasicmodal')
-@endsection --}}

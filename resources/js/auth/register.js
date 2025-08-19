@@ -11,9 +11,11 @@ class RegisterHandler {
 
   init() {
     console.log('por aqui');
+
+    
     if (!this.$form.length) return;
 
-    console.log('por aqui');
+    // console.log('por aqui');
 
     this.togglePassword();
     this.capsLockHint();
@@ -21,6 +23,14 @@ class RegisterHandler {
     this.validateIdoneidad();
     this.setupAjaxSubmit();
     this.setupFiliacionLookup();
+
+    // this.showModal(
+    //     'Bienvenido',
+    //     'Por favor completa tu registro para continuar.',
+    //     'info'
+    // );
+
+
   }
 
   togglePassword() {
@@ -230,7 +240,7 @@ class RegisterHandler {
     this.$btnSubmit.find('.btn-spinner').toggleClass('d-none', !isLoading);
   }
 
-  showModal(title, message, variant = 'info', redirect = null) {
+  showModal(title, message, variant = 'info', redirect = null) { 
     window.showMessageModal?.({ title, message, variant });
 
     const modalEl = document.getElementById('messageBasicModal');

@@ -51,7 +51,7 @@
         </style>
 
         
-        @stack('scripts')
+        {{-- @stack('scripts') --}}
     </head>
 
     <body>
@@ -85,7 +85,9 @@
         </script>
 
         @yield('modals')
-        
+
+        @include('includes.messagebasicmodal')
+
         @stack('scripts')
 
     </body>

@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 use App\Notifications\VerifyEmailCustom;
+use App\Notifications\CustomResetPassword;
+use Illuminate\Support\Facades\URL;
 
 
 use DB;
@@ -35,11 +37,24 @@ class User extends Authenticatable implements MustVerifyEmail
         return true;
     }
 
-     public function sendEmailVerificationNotification(){
+    public function sendEmailVerificationNotification(){
 
         $this->notify(new VerifyEmailCustom);
 
     }
+
+    public function sendPasswordResetNotification($token){
+        // URL estándar del formulario de reset
+        $resetUrl = route('password.reset', [
+            'token' => $token,
+            'email' => $this->getEmailForPasswordReset(),
+        ]);
+
+        // Envía tu notificación custom basada en vista HTML en /mails/
+        $this->notify(new CustomResetPassword($resetUrl));
+    }
+
+
 
     /**
      * The attributes that are mass assignable.
