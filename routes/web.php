@@ -84,22 +84,28 @@ Route::middleware('guest')->group(function () {
         Route::get('dist/dashboard/listado', [DashboardController::class, 'PostIndex']) ->name('PostIndex');  
 
         // solicitud
+        Route::prefix('dist/solicitud')->name('solicitud.')->group(function () {
 
-        Route::get('dist/solicitud', [SolicitudController::class, 'Index']) ->name('Index'); 
-        Route::post('dist/solicitud', [SolicitudController::class, 'PostIndex']) ->name('PostIndex');
-        Route::get('dist/missolicitudes/{Id}', [SolicitudController::class, 'Missolicitudes']) ->name('Missolicitudes'); 
-        Route::post('dist/missolicitudes/{Id}', [SolicitudController::class, 'PostMissolicitudes']) ->name('PostMissolicitudes'); 
+            Route::get('/', [SolicitudController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [SolicitudController::class, 'PostIndex']) ->name('PostIndex');
+            // Route::get('dist/missolicitudes/{Id}', [SolicitudController::class, 'Missolicitudes']) ->name('Missolicitudes'); 
+            // Route::post('dist/missolicitudes/{Id}', [SolicitudController::class, 'PostMissolicitudes']) ->name('PostMissolicitudes'); 
 
-        Route::get('dist/solicitud/nuevo', [SolicitudController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('dist/solicitud/nuevo', [SolicitudController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('dist/solicitud/editar/{Id}', [SolicitudController::class, 'Editar']) ->name('Editar');
-        Route::post('dist/solicitud/editar/{Id}', [SolicitudController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('dist/solicitud/mostrar/{Id}', [SolicitudController::class, 'Mostrar']) ->name('Mostrar');
-        Route::post('dist/solicitud/desactivar', [SolicitudController::class, 'Desactivar']) ->name('Desactivar'); 
-        
-        Route::post('dist/solicitud/nuevo/buscatipoatencion', [SolicitudController::class, 'postBuscatipoatencion']) ->name('postBuscatipoatencion');
-        Route::post('dist/solicitud/nuevo/buscamotivo', [SolicitudController::class, 'postBuscamotivo']) ->name('postBuscamotivo');
-        
+            Route::get('/nuevo', [SolicitudController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [SolicitudController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            
+            Route::get('/instruciones', [SolicitudController::class, 'instruciones']) ->name('instruciones'); 
+
+            Route::get('/editar/{Id}', [SolicitudController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [SolicitudController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [SolicitudController::class, 'Mostrar']) ->name('Mostrar');
+            Route::post('/desactivar', [SolicitudController::class, 'Desactivar']) ->name('Desactivar'); 
+            
+            Route::post('/nuevo/buscatipoatencion', [SolicitudController::class, 'postBuscatipoatencion']) ->name('postBuscatipoatencion');
+            Route::post('/nuevo/buscamotivo', [SolicitudController::class, 'postBuscamotivo']) ->name('postBuscamotivo');
+
+        });
+            
 
         // Departamento
         Route::get('dist/departamento', [DepartamentoController::class, 'Index']) ->name('Index');  

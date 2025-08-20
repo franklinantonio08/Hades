@@ -10,12 +10,18 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\Solicitud;
-use App\Models\Colaboradores;
-use App\Models\Cubiculo;
+
+use App\Models\User;
+
+use App\Models\Provincia;
+use App\Models\Distrito;
+use App\Models\Corregimiento;
+
 use App\Models\Motivo;
 use App\Models\Submotivo;
 use App\Models\Consumidor;
 use App\Models\Departamento;
+
 
 use DB;
 use Excel;
@@ -214,28 +220,42 @@ class SolicitudController extends Controller
             }
         
             public function Nuevo(){
+
+                $Usuario = User::find(Auth::user()->id)->first();
+
+                // Solicitud::find($solicitudId);
+        
+                if(!empty($solicitUsuarioudExiste)){
+                    return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0001");
                 
+                }
 
-                //return 'hola';
-
-
-                $departamento = DB::table('departamento')
+                
+                $provincia = User
                 ->where('estatus', '=', 'Activo')
-                ->where('organizacionId', '=', '1')
-                ->select('id', 'nombre', 'codigo')
                 ->get();
 
-                if(empty($departamento)){
-                    return redirect('dist/dashboard')->withErrors("ERROR LA PROVINCIA ESTA VACIA CODE-0226");
-                }	
-                view()->share('departamento', $departamento);	
+
+                // $departamento = DB::table('departamento')
+                // ->where('estatus', '=', 'Activo')
+                // ->where('organizacionId', '=', '1')
+                // ->select('id', 'nombre', 'codigo')
+                // ->get();
+
+                // if(empty($departamento)){
+                //     return redirect('dist/dashboard')->withErrors("ERROR LA PROVINCIA ESTA VACIA CODE-0226");
+                // }	
+                // view()->share('departamento', $departamento);	
 
 
                 /*if(!$this->common->usuariopermiso('004')){
                     return redirect('dist/dashboard')->withErrors($this->common->message);
                 }*/
                 
-                return \View::make('dist/solicitud/nuevo');
+                // return \View::make('dist/solicitud/nuevo');
+
+
+                return view('dist.solicitud.nuevo', compact('Usuario', 'provincia', 'distrito', 'corregimiento'));
             }
         
             public function postNuevo(){

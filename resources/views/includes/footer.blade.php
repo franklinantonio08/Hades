@@ -1,53 +1,40 @@
-<!-- resources/views/includes/footer.blade.php -->
-
-<footer class="footer" style="background-color: #000; color: #fff; padding: 20px; text-align: center;">
-    <a href="https://www.migracion.gob.pa/">
-        <img src="{{ asset('images/logo1.png') }}" alt="Logo" class="logo" style="max-width: 150px; margin-bottom: 20px;">
-    </a>
-    <div class="social-icons" style="margin-bottom: 10px;">
-        <a href="https://www.facebook.com/migracionpanama" class="social-icon"><i class="fab fa-facebook-f icon2"></i></a>
-        <a href="https://www.instagram.com/migracionpanama/" class="social-icon"><i class="fab fa-instagram icon2"></i></a>
-        <a href="https://x.com/migracionpanama" class="social-icon"><i class="fab fa-twitter icon2"></i></a>
-        <a href="https://www.youtube.com/@migracionpanama5695" class="social-icon"><i class="fab fa-youtube icon2"></i></a>
-        <a href="https://www.tiktok.com/@migracionpanama" class="social-icon"><i class="fab fa-tiktok icon2"></i></a>
+<footer class="footer mt-5 py-4 text-center border-top bg-light">
+    <div class="d-flex justify-content-center gap-3 mb-3">
+        <a href="https://www.facebook.com/migracionpanama" class="footer-icon text-white bg-primary" title="Facebook">
+            <i class="bi bi-facebook"></i>
+        </a>
+        <a href="https://www.instagram.com/migracionpanama/" class="footer-icon text-white bg-danger" title="Instagram">
+            <i class="bi bi-instagram"></i>
+        </a>
+        <a href="https://x.com/migracionpanama" class="footer-icon text-white bg-dark" title="Twitter (X)">
+            <i class="bi bi-twitter"></i>
+        </a>
+        <a href="https://www.youtube.com/@migracionpanama5695" class="footer-icon text-white bg-danger" title="YouTube">
+            <i class="bi bi-youtube"></i>
+        </a>
+        <a href="https://www.tiktok.com/@migracionpanama" class="footer-icon text-white bg-dark" title="TikTok">
+            <i class="bi bi-tiktok"></i>
+        </a>
     </div>
-    <p style="margin-bottom: 10px;">@migracionpanama</p>
-    <p style="font-size: 12px;">Servicio Nacional de Migración © 2024 Todos los Derechos Reservados</p>
+    <p class="text-muted small mb-0">Servicio Nacional de Migración © {{ date('Y') }} Todos los Derechos Reservados</p>
 </footer>
 
 <style>
-    .icon2 {
-        margin-right: 5px;
-        padding: 10px;
-        border-radius: 50%;
-        background-color: #007BFF;
-        color: white;
-    }
-
-    .social-icons {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-    }
-
-    .social-icon {
-        display: flex;
+    .footer-icon {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 40px;
-        height: 40px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
-        background-color: #007BFF;
-        color: white;
-        text-decoration: none;
-        transition: background-color 0.3s;
-    }
-
-    .social-icon:hover {
-        background-color: #0056b3;
-    }
-
-    .social-icon .icon {
         font-size: 20px;
+        transition: all 0.3s ease-in-out;
+        text-decoration: none;
+    }
+
+    .footer-icon:hover {
+        transform: scale(1.15);
+        opacity: 0.85;
+        text-decoration: none;
     }
 </style>

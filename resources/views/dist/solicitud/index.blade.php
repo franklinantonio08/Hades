@@ -1,115 +1,243 @@
-@section('scripts')
-
-<script>
-	var BASEURL = '{{ url()->current() }}';
-	var token = '{{ csrf_token() }}';
-
-	</script>
-	
-    <script type="text/javascript" src="{{ asset('../js/dist/solicitud/solicitud.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('../js/comun/confirmacionModal.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('../js/comun/messagebasicModal.js') }}"></script>
-    
-
-@stop
-
 @extends('layouts.admin')
 
 @section('content')
-   
-
-	<div class="col-lg-12">
+    <div class="col-lg-12">
         <div class="card mb-4">
-			<div class="card-body p-4">
-			<div class="row">
-				<div class="col">
-				<div class="card-title fs-4 fw-semibold">Lista de Solicitudes</div>
-				<!--<div class="card-subtitle text-disabled mb-4">1.232.150 registered users</div> -->
-				</div>
-				
-			</div>
-
-
-		<!--	<div class="table-responsive"> -->
-
-        <!-- ACTION BUTTONS -->
-        <div class="row">
-
-            @include('includes/errors')
-            @include('includes/success')
-            
-            <div class="col-sm-7 m-b-12">
-                <div class="col-sm-3 m-b-12">
-                    <a href="{{ url()->current() }}/nuevo" class="btn bg-primary fs-8 fw-semibold text-white m-b-5"> <i class="glyphicon glyphicon-file m-r-5"></i> <span>Crear Nuevo</span></a>
+            <div class="card-body p-4">
+                <!-- Título en una fila separada -->
+                <div class="row mb-3">
+                    <div class="col-sm-12">
+                        <h4 class="card-title fw-semibold">Listado de Solicitudes</h4>
+                    </div>
                 </div>
-            </div>
-                
-            <div class="col-sm-5 m-b-12">
-                <div class="col-sm-12 m-b-10">
-                    <div class="input-group">
-                        <input type="text" id="search" name="search" class="form-control" placeholder="Buscar...">
-                        <span class="input-group-btn">
-                            <button type="button" id="searchButton" name="searchButton" class="btn btn-warning m-b-5">
-                                <svg class="icon me-2">
-                                    <use xlink:href="{{ asset('../vendors/@coreui/icons/svg/free.svg#cil-search') }}"></use>
-                                </svg>
+
+                @if (Auth::user()->usuariopermiso('035'))    
+
+                    <div class="row">                                        
+                        <div class="col-sm-6">
+                            
+                            <div class="row">
+
+                                <div class="col-6">
+                                    <div class="text-dark px-3 py-3 mb-3 rounded shadow-sm border border-info d-flex align-items-center"
+                                        style="background: linear-gradient(to right, #ffffff, #cff4fc);">
+                                        <div class="bg-info text-white rounded p-3 d-flex align-items-center justify-content-center me-3"
+                                            style="width: 60px; height: 60px;">
+                                            <i class="bi bi-person-square fs-4"></i>
+                                        </div>     
+                                        <div class="w-100 text-center">
+                                            <small class="d-block fw-semibold">Total Solicitudes </small>
+                                            <div class="fs-5 fw-bold" id="totalYearlyAmount">  {{ number_format($resumen['Total']->cantidad_infractores ?? 0 ) }}</div>
+                                            {{-- <small class="text-muted">Cantidad: <span id="totalYearlyCount">{{ $resumen['Año actual']->cantidad_multas ?? 0 }}</span></small> --}}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-6">
+                                    <div class="text-dark px-3 py-3 mb-3 rounded shadow-sm border border-primary d-flex align-items-center"
+                                        style="background: linear-gradient(to right, #ffffff, #f8d7da);">
+                                        <div class="bg-primary text-white rounded p-3 d-flex align-items-center justify-content-center me-3"
+                                            style="width: 60px; height: 60px;">
+                                            <i class="bi bi-person-square fs-4"></i>
+                                        </div>
+                                        <div class="w-100 text-center">
+                                            <small class="d-block fw-semibold">Total Año Actual</small>
+                                            <div class="fs-5 fw-bold" id="totalMonthly"> {{ number_format($resumen['Año actual']->cantidad_infractores ?? 0) }}</div>
+                                            {{-- <small class="text-muted">Cantidad: <span id="totalMonthlyCount">{{ $resumen['Mes actual']->cantidad_multas ?? 0 }}</span></small> --}}
+                                        </div>
+                                    </div>
+                                </div>                       
+                                
+                            </div>
+                            <div id="migrantes-semanal-weekly"></div> 
+                        </div>                
+
+                        <div class="col-sm-6">
+
+                            <div class="row">
+
+                                <div class="col-6">
+                                    <div class="text-dark px-3 py-3 mb-3 rounded shadow-sm border border-primary d-flex align-items-center"
+                                        style="background: linear-gradient(to right, #ffffff, #fff3cd);">
+                                        <div class="bg-primary text-white rounded p-3 d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px;">
+                                            <i class="bi bi-person-square fs-4"></i>
+                                        </div>        
+                                        <div class="w-100 text-center">
+                                            <small class="d-block fw-semibold">Total Mes Actual</small>
+                                            <div class="fs-5 fw-bold" id="totalLastWeek"> {{ number_format($resumen['Mes actual']->cantidad_infractores ?? 0 ) }}</div>
+                                            {{-- <small class="text-muted">Cantidad: <span id="totalLastWeekCount">{{ $resumen['Semana anterior']->cantidad_multas ?? 0 }} </span></small> --}}
+                                        </div>
+                                    </div>
+                                </div>       
+
+                                <div class="col-6">
+                                    <div class="text-dark px-3 py-3 mb-3 rounded shadow-sm border border-success d-flex align-items-center"
+                                        style="background: linear-gradient(to right, #ffffff, #d1e7dd);">
+                                        <div class="bg-success text-white rounded p-3 d-flex align-items-center justify-content-center me-3"
+                                            style="width: 60px; height: 60px;">
+                                            <i class="bi bi-person-square fs-4"></i>
+                                        </div>    
+                                        <div class="w-100 text-center">
+                                            <small class="d-block fw-semibold">Total Semana Actual</small>
+                                            <div class="fs-5 fw-bold" id="totalCurrentWeek">  {{ number_format($resumen['Semana actual']->cantidad_infractores ?? 0 ) }}</div>
+                                            {{-- <small class="text-muted">Cantidad: <span id="totalCurrentWeekCount">{{ $resumen['Semana actual']->cantidad_multas ?? 0 }} </span></small> --}}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>                    
+                            <div class="card-body" id="migrantes-edad">
+                            </div>
+                        </div> 
+                    </div>
+
+                @endif
+
+               <div class="row align-items-end flex-wrap gap-3 mb-4">
+                    <!-- Rango de Fechas -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold text-muted">Rango de Fechas</label>
+                        <div id="reportrange" class="form-control d-flex align-items-center shadow-sm border border-success-subtle rounded">
+                            <i class="bi bi-calendar-event me-2 text-success fs-5"></i>
+                            <span class="flex-grow-1">Seleccione la fecha</span>
+                            <i class="bi bi-caret-down-fill ms-auto text-muted"></i>
+                        </div>
+                    </div>
+
+                    <!-- Estado -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-muted">Estado</label>
+                        <select id="estadoFiltro" name="estadoFiltro" class="form-select shadow-sm">
+                            <option value="">Todos</option>
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Aprobado">Aprobado</option>
+                            <option value="Rechazado">Rechazado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </select>
+                    </div>
+
+                    {{-- <!-- Acciones -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-muted">Acciones</label>
+                        <select class="form-select shadow-sm" id="accionesId" name="accionesId">
+                            <option value="">Todos</option>
+                            @foreach ($acciones as $key => $value)
+                                <option value="{{ $value->id }}">{{ $value->descripcion }}</option>
+                            @endforeach
+                        </select>
+                    </div> --}}
+
+                    <!-- Nuevo -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-muted invisible">Nuevo</label>
+                        <a href="{{ url()->current() }}/nuevo" class="btn btn-primary w-100 shadow-sm fw-semibold text-white"">
+                            <i class="bi bi-file-earmark-plus me-1"></i> Nuevo Registro
+                        </a>
+                    </div>
+
+                    <!-- Reporte -->
+                    @if (Auth::user()->usuariopermiso('035'))
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-muted invisible">Reporte</label>
+                        <button id="reporteButton" class="btn btn-success w-100 shadow-sm descargarButton">
+                            <i class="bi bi-download me-1"></i> Generar Reporte
+                        </button>
+                    </div>
+                    @endif
+                </div>
+
+                <!-- Buscar alineado a la derecha -->
+                <div class="row justify-content-between align-items-end mb-4">
+                    <div class="col-md-3">
+                        <div class="input-group shadow-sm">
+                            <input type="text" id="search" name="search" class="form-control" placeholder="Buscar...">
+                            <button type="button" id="searchButton" class="btn btn-primary fw-semibold text-white">
+                                <i class="bi bi-search"></i>
                             </button>
-                        </span>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+
+                <!-- Mensajes de Error y Éxito -->
+                <div class="row">
+                    @include('includes.errors')
+                    @include('includes.success')
+                </div>
+
+                <!-- Tabla de Migrantes -->
+                <div class="row">
+                    <div class="table-responsive">
+                        <table class="table table-bordered data-table" id="solicitud">
+                            <thead>
+                                <tr>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">#</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Nombre</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Documento</th>                                    
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Nacionalidad</th>                                    
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Motivo</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Operativo</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Provincia</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Funcionario</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Aprobado por</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Estado</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Acción<i class="fa fa-ellipsis-h"></i></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="gradeX">
+                                    <td colspan="11" class="text-center">No hay datos disponibles</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-
-<br>
-
-<!-- ACTION BUTTONS -->
-
-    <div class="row">
-
-        <div class="table-responsive">
-                        
-            <table class="table table-bordered data-table" id="solicitud">
-                <thead>
-                    <tr>
-                        <th class="bg-primary fs-8 fw-semibold text-white">#</th>
-                        <th class="bg-primary fs-8 fw-semibold text-white">Departamento</th>
-                        <th class="bg-primary fs-8 fw-semibold text-white">Tipo Atencion</th>
-                        <th class="bg-primary fs-8 fw-semibold text-white">Codigo</th>
-                        <th class="bg-primary fs-8 fw-semibold text-white">Estatus</th>
-                        <th class="bg-primary fs-8 fw-semibold text-white">Detalle</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="gradeX">
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
-                </tbody>
-            </table>
+    <div class="modal fade" id="modalImagenes" tabindex="-1" aria-labelledby="modalImagenesLabel">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Galería de Imágenes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <iframe id="iframeImagenes" src="" style="width: 100%; height: 75vh; border: none;"></iframe>
+                </div>
+            </div>
         </div>
-                                
     </div>
 
 
-
-			<!-- </div> -->
-        </div>
-	</div>    
-</div>  
-
-
-
-
-
-</div>
-
-	@include('includes/confirmacionmodal')
-	@include('includes/messagebasicmodal')
-	
+    @include('includes.confirmacionmodal')
+    @include('includes.messagebasicmodal')
+    @include('includes.loader')
+    @include('includes.download')
+    {{-- @include('dist.infractor.mostrar') --}}
+    {{-- @include('dist.infractor.imprimir') --}}
 @endsection
 
+@section('scripts')
+    <script>
+        const BASEURL = '{{ url()->current() }}';
+        const token = '{{ csrf_token() }}';
+    </script>
+
+    <!-- JS Específicos -->
+    <script src="{{ asset('js/dist/solicitud/solicitud.js') }}"></script>
+    <script src="{{ asset('js/comun/confirmacionModal.js') }}"></script>
+    <script src="{{ asset('js/comun/messagebasicModal.js') }}"></script>
 
 
+    
+
+    <!-- Plugins -->
+    <script src="{{ asset('plugins/moment/moment.js') }}"></script>
+    <script src="{{ asset('plugins/bootstrap-daterangepicker/daterangepicker.js') }}"></script>
+@endsection

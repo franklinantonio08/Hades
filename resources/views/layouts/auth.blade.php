@@ -74,7 +74,7 @@
                 "{{ asset('images/background_1.jpg') }}",
                 "{{ asset('images/background_2.jpg') }}",
                 "{{ asset('images/background_3.jpg') }}",
-                "{{ asset('images/background_4.jpg') }}"
+                // "{{ asset('images/background_4.jpg') }}"
             ].filter(Boolean);
             const bg = document.getElementById('background-layer');
             let i = 0; function set(idx){ bg.style.backgroundImage = `url('${images[idx]}')`; }

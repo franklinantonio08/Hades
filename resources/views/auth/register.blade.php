@@ -120,7 +120,7 @@
       </div>
 
       <div class="col-12 col-md-6">
-        <label for="telefono" class="form-label fw-semibold">Teléfono (opcional)</label>
+        <label for="telefono" class="form-label fw-semibold">Teléfono</label>
         <div class="input-group">
           <span class="input-group-text"><i class="bi bi-telephone"></i></span>
           <input id="telefono" type="text" name="telefono" value="{{ old('telefono') }}"
