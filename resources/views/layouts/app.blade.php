@@ -35,8 +35,10 @@
     <meta name="msapplication-TileImage" content="assets/favicon/ms-icon-144x144.png">
     <meta name="theme-color" content="#ffffff">
 
-    <link rel="stylesheet" href="vendors/simplebar/css/simplebar.css">
-    <link rel="stylesheet" href="css/vendors/simplebar.css">
+    <!-- <link rel="stylesheet" href="vendors/simplebar/css/simplebar.css">
+    <link rel="stylesheet" href="css/vendors/simplebar.css"> -->
+    <link href="{{ asset('vendors/simplebar/css/simplebar.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
 
     <link href="css/style.css" rel="stylesheet">
 
@@ -240,8 +242,10 @@
     </footer>
 
 
-    <script src="vendors/@coreui/coreui-pro/js/coreui.bundle.min.js"></script>
-    <script src="vendors/simplebar/js/simplebar.min.js"></script>
+    <!--  <script src="vendors/@coreui/coreui-pro/js/coreui.bundle.min.js"></script>
+    <script src="vendors/simplebar/js/simplebar.min.js"></script> -->
+    <script src="{{ asset('vendors/@coreui/coreui-pro/js/coreui.bundle.min.js') }}"></script>
+    <script src="{{ asset('vendors/simplebar/js/simplebar.min.js') }}"></script>
     <script>
         if (document.body.classList.contains('dark-theme')) {
                 var element = document.getElementById('btn-dark-theme');

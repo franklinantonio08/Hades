@@ -26,7 +26,8 @@ use App\Http\Controllers\Dist\{
     CorregimientoController,
 
     PermisosController,
-    UsuariosController
+    UsuariosController,
+    PaymentController
 };
 
 use App\Http\Controllers\Admin\{
@@ -34,6 +35,7 @@ use App\Http\Controllers\Admin\{
     RIDMigrantesController,
     RIDPuestocontrolController,
     RIDEstaciontemporalController
+ 
 };
 
 
@@ -104,6 +106,13 @@ Route::middleware('guest')->group(function () {
             Route::post('/nuevo/buscatipoatencion', [SolicitudController::class, 'postBuscatipoatencion']) ->name('postBuscatipoatencion');
             Route::post('/nuevo/buscamotivo', [SolicitudController::class, 'postBuscamotivo']) ->name('postBuscamotivo');
 
+        });
+
+        Route::prefix('payment')->name('payment.')->group(function () {
+            Route::get('/tokenize', [PaymentController::class, 'showTokenizationForm'])->name('tokenize');
+            Route::post('/widget-callback', [PaymentController::class, 'handleWidgetCallback'])->name('handleWidgetCallback');
+            Route::post('/process', [PaymentController::class, 'processPayment'])->name('process');
+            Route::get('/success', [PaymentController::class, 'paymentSuccess'])->name('success');
         });
             
 
@@ -243,8 +252,16 @@ Route::middleware('guest')->group(function () {
         Route::get('admin/RIDafinidad/editar/{Id}', [RIDAfinidadController::class, 'Editar']) ->name('Editar');
         Route::post('admin/RIDafinidad/editar/{Id}', [RIDAfinidadController::class, 'PostEditar']) ->name('PostEditar'); 
         Route::get('admin/RIDafinidad/mostrar/{Id}', [RIDAfinidadController::class, 'Mostrar']) ->name('Mostrar');
+
+        //Pagos
+       // Route::get('/tokenize', [PaymentController::class, 'showTokenizationForm'])->name('tokenize');
+        //Route::post('/widget-callback', [PaymentController::class, 'handleWidgetCallback'])->name('handleWidgetCallback');
+        //Route::post('/process', [PaymentController::class, 'processPayment'])->name('process');
+        //Route::get('/success', [PaymentController::class, 'paymentSuccess'])->name('success');
       
     });
+
+    
 
 
 // Route::get('/dashboard', function () {

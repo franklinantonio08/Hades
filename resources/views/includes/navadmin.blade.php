@@ -83,6 +83,34 @@
                                         
                                         </ul>
                                 </li>
+
+
+                                <li class="nav-group">
+                                        <a class="nav-link nav-group-toggle" href="#">
+                                                   <svg class="nav-icon" style="color: #4fc501;">
+                                                        <use xlink:href="{{ asset('vendors/@coreui/icons/svg/free.svg#cil-cash') }}"></use>
+                                                </svg> 
+                                                <span class="nav-text">Pagos</span>  
+                                        </a>
+
+                                        <ul class="nav-group-items ms-4">
+
+                                                <li class="nav-item">
+                                                        <a class="nav-link d-flex align-items-center" href="/dist/solicitud">
+                                                                <svg class="nav-icon me-2" width="20" height="20" style="color: #c95e17;">
+                                                                        <use xlink:href="{{ asset('vendors/@coreui/icons/svg/free.svg#cil-dollar') }}"></use>
+                                                                </svg>
+                                                                <span class="nav-text">Pasarela de Pago</span>
+                                                        </a>
+                                                </li>
+
+
+                                                {{-- <li class="nav-item"><a class="nav-link" href="/dist/solicitud/nuevo"><span class="nav-icon"></span> Crear Solicitud</a></li> 
+                                                <li class="nav-item"><a class="nav-link" href="/dist/missolicitudes/{{ Auth::id() }}"><span class="nav-icon"></span> Mis Solicitudes</a></li> 
+                                                <li class="nav-item"><a class="nav-link" href="/dist/solicitud"><span class="nav-icon"></span> Solicitud</a></li>  --}}
+                                        
+                                        </ul>
+                                </li>
         
 
                                 <li class="nav-group modern-nav-group">
