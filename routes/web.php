@@ -117,6 +117,7 @@ Route::middleware('guest')->group(function () {
             Route::post('/widget-callback', [PaymentController::class, 'handleWidgetCallback'])->name('handleWidgetCallback');
             Route::post('/process', [PaymentController::class, 'processPayment'])->name('process');
             Route::get('/success', [PaymentController::class, 'paymentSuccess'])->name('success');
+            Route::get('/minimal', [PaymentController::class, 'showTokenizationFormMinimal']);
         });
             
 

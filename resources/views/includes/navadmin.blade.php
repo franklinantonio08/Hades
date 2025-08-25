@@ -96,7 +96,7 @@
                                         <ul class="nav-group-items ms-4">
 
                                                 <li class="nav-item">
-                                                        <a class="nav-link d-flex align-items-center" href="/dist/solicitud">
+                                                        <a class="nav-link d-flex align-items-center" href="/payment/tokenize">
                                                                 <svg class="nav-icon me-2" width="20" height="20" style="color: #c95e17;">
                                                                         <use xlink:href="{{ asset('vendors/@coreui/icons/svg/free.svg#cil-dollar') }}"></use>
                                                                 </svg>
