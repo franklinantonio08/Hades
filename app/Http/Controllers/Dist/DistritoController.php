@@ -272,4 +272,36 @@ class DistritoController extends Controller
 		return response()
               ->json(['response' => false]);
     }
+
+	public function BuscaDistrito() {
+
+        $provincia = $this->request->provincia;
+    
+        $distrito = DB::table('distrito')
+            ->where('estatus', '=', 'Activo')
+            ->where('provinciaId', '=', $provincia)
+            ->select('id', 'nombre')
+            ->get();
+    
+        // Initialize $data as an empty array
+        $data = [];
+    
+        foreach ($distrito as $key => $value) {
+    
+            $distritoId = $value->id;
+            $distritoDescripcion = $value->nombre;
+    
+            $data[] = array(
+                "detalle" => "<option value='".$distritoId."' >".$distritoDescripcion."</option>"
+            );
+        }
+    
+        $response = array(
+            'response' => TRUE,
+            'data' => $data,
+        );
+    
+        return response()
+            ->json($response); 
+    }
 }

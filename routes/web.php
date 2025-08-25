@@ -106,6 +106,10 @@ Route::middleware('guest')->group(function () {
             Route::post('/nuevo/buscatipoatencion', [SolicitudController::class, 'postBuscatipoatencion']) ->name('postBuscatipoatencion');
             Route::post('/nuevo/buscamotivo', [SolicitudController::class, 'postBuscamotivo']) ->name('postBuscamotivo');
 
+            Route::post('/buscaDistrito', [DistritoController::class, 'BuscaDistrito'])->name('BuscaDistrito');
+            Route::post('/buscaCorregimiento', [CorregimientoController::class, 'BuscaCorregimiento'])->name('BuscaCorregimiento');
+
+
         });
 
         Route::prefix('payment')->name('payment.')->group(function () {

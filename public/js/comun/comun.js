@@ -49,6 +49,41 @@ class Comun {
     return value;
   }
 
+  cargarSelectDependiente({ origenId, destinoId, rutaAjax, parametro, mensajeCargando = 'Cargando...', mensajeDefault = 'Selecciona...', limpiarDestinoId = null }) {
+    const origen = document.getElementById(origenId);
+    const destino = document.getElementById(destinoId);
+    const limpiar = limpiarDestinoId ? document.getElementById(limpiarDestinoId) : null;
+
+    if (!origen || !destino) return;
+
+    const valor = origen.value;
+
+    destino.innerHTML = `<option value="">${mensajeCargando}</option>`;
+    if (limpiar) limpiar.innerHTML = `<option value="">Selecciona el campo anterior primero</option>`;
+
+    $.ajax({
+        url: rutaAjax,
+        type: 'POST',
+        data: {
+            [parametro]: valor,
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (response) {
+            if (response.response === true) {
+                let options = `<option value="" selected disabled>${mensajeDefault}</option>`;
+                response.data.forEach(item => {
+                    options += item.detalle;
+                });
+                destino.innerHTML = options;
+            }
+        },
+        error: function () {
+            alert('Error al cargar los datos del selector.');
+        }
+    });
+  }
+
+
 }
 
 $(document).ready(function(){

@@ -6,52 +6,20 @@ class Distsolicitud {
         
         if($('#editarregistro').length) {
             this.cambia_motivo();
-            this.cambia_tipoAtencion();
-
-            const fechaNacimientoInput = document.getElementById('fechaNacimiento');
-
-            // Obtener la fecha actual
-            const fechaActual = new Date();
-        
-            // Establecer la fecha máxima como la fecha actual
-            fechaNacimientoInput.max = fechaActual.toISOString().split('T')[0];
       }
 
       if($('#nuevoregistro').length) {
-        //this.cambia_motivo();
-        this.cambia_tipoAtencion();
         
         this.validatesolicitud();
+
+        this.toggleViviendaFields();
       }
 
       if($('#solicitud').length) {
         this.solicitud();
     }
 
-      if($('#nuevoimportar').length) {
-        this.validateimportacion();
-            /*INICIO Para el input File*/
-            $(':file').on('fileselect', function(event, numFiles, label) {
-                  var input = $(this).parents('.input-group').find(':text'),
-                      log = numFiles > 1 ? numFiles + ' Archivo Seleccionado' : label;
-
-                  if( input.length ) {
-                      input.val(log);
-                  } else {
-                      if( log ) alert(log);
-                  }
-
-              });
-              
-            $(document).on('change', ':file', function() {
-                var input = $(this),
-                numFiles = input.get(0).files ? input.get(0).files.length : 1,
-                label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
-                input.trigger('fileselect', [numFiles, label]);
-            });
-            /*FINAL Para el input File*/
-    }
-     
+    
       this.acciones();
 
     }
@@ -62,154 +30,347 @@ class Distsolicitud {
                 
         $( "#searchButton" ).off('click');
         $( "#searchButton" ).click(function() {
-          _this.solicitud( $( "#search" ).val() );
-      });
+            _this.solicitud( $( "#search" ).val() );
+        });   
 
-      $('#search').keypress(function(event){
-          var keycode = (event.keyCode ? event.keyCode : event.which);
-          if(keycode == '13'){
-              _this.solicitud( $( "#search" ).val());
-              event.preventDefault();
-              return false;
-          }
-          event.stopPropagation();
-      });
+        $('#search').keypress(function(event){
+            var keycode = (event.keyCode ? event.keyCode : event.which);
+            if(keycode == '13'){
+                _this.solicitud( $( "#search" ).val());
+                event.preventDefault();
+                return false;
+            }
+            event.stopPropagation();
+        });
+
+        $('#tv_casa').on('change', function() { 
+              _this.toggleViviendaFields();
+        });
+
+        $('#tv_edificio').on('change', function() { 
+              _this.toggleViviendaFields();
+        });
+
+        $('#tv_hotel').on('change', function() { 
+              _this.toggleViviendaFields();
+        });
+
+
+        $('#recibo_tercero').on('change', function() {
+            _this.toggleReciboFields();
+        });    
+        
+        $('#recibo_mio').on('change', function() {
+            _this.toggleReciboFields();
+        });
+
+
+        $('#dom_escritura').on('change', function() {
+            _this.toggleDocsByDomicilio();
+        });
+
+        $('#dom_arrendamiento').on('change', function() {
+            _this.toggleDocsByDomicilio();
+        });
+        
+        $('#dom_responsabilidad').on('change', function() {
+            _this.toggleDocsByDomicilio();
+        });
+
+        $('#dom_juezpaz').on('change', function() {
+            _this.toggleDocsByDomicilio();
+        });
+
+        $('#dom_reservahotel').on('change', function() {
+            _this.toggleDocsByDomicilio();
+        });
+
+        $("#provincia").on("change", function () {
+            _this.buscaDistrito();
+        });
+
+        $("#distrito").on("change", function () {
+            _this.buscaCorregimiento();
+        });
+        
+
+        $('#guardarForm').off('click').on('click', function() {
+          _this.preSubmitCheck();
+        });
+
     
     }
 
-    cambia_tipoAtencion() {
-
-        //console.log(BASEURL);
-
-        const _this = this;
-    $('#departamento').on('change', function() { 
-
-        //console.log('post');
-
-        var departamento = $( "#departamento" ).val();  
-        var obj_div = document.getElementById('DivResultado_tipoAtencion'); 
-        var selec1 = '<div class="input-group mb-3">';
-        selec1 += '<label style="width: 130px;" class="input-group-text" for="tipoAtencion">Tipo Atencion</label>';
-        selec1 += '<select class="form-select" id="tipoAtencion" name="tipoAtencion">';
-        selec1 += '<option value="" selected disabled>Selecciona...</option>';
-        var selec2 = '</select> </div>';
-        var valor = selec1;
-             
-        if(departamento != ''){
-            $.post( BASEURL+'/buscatipoatencion', 
-                {
-                _token:token, departamento:departamento
-                }
-                ).done(function( data ) {
-                    if(data.response == true){ 
-                    $.each(data.data, function (id, value) {
-                        $.each(value, function (id, valur) {
-                            const tipoAtencion = valur;
-                            valor +=tipoAtencion;
-                        });
-                    });
-                    
-                    valor +=selec2;
-                    obj_div.innerHTML =valor;
-
-                    console.log(valor);
-                    //_this.cambia_corregimiento();
-                }
-                })
-                .fail(function() {
-                })
-                .always(function() {
-                }, "json");
-            //console.log(provincia, distrito, corregimiento);
-        }else{
-
-            //console.log('no post');
-
-
-            const tipoAtencion = '<option value="" seleted >S/A</option>';            
-            valor +=tipoAtencion;            
-            valor +=selec2;
-            obj_div.innerHTML =valor;
-           // _this.cambia_corregimiento();
+        buscaDistrito() {
+            objComun.cargarSelectDependiente({
+                origenId: "provincia",
+                destinoId: "distrito",
+                rutaAjax: "/dist/solicitud/buscaDistrito",
+                parametro: "provincia",
+                limpiarDestinoId: "corregimiento",
+                mensajeCargando: 'Cargando...',
+                mensajeDefault: 'Selecciona...',
+            });
         }
 
-      });
-
-    
-
-            $('#DivResultado_posiciones').on('change', function() { 
-                
-                  //  _this.cambia_corregimiento();
-                
+        buscaCorregimiento(){
+            objComun.cargarSelectDependiente({
+                origenId: "distrito",
+                destinoId: "corregimiento",
+                rutaAjax: "/dist/solicitud/buscaCorregimiento",
+                parametro: "distrito",
+                mensajeCargando: 'Cargando...',
+                mensajeDefault: 'Selecciona...',
             });
-    }
-
-    cambia_motivo() {
-
-        //console.log(BASEURL);
-
-        const _this = this;
-    $('#departamento').on('change', function() { 
-
-        //console.log('post');
-
-        var departamento = $( "#departamento" ).val();  
-        var obj_div = document.getElementById('DivResultado_motivo'); 
-        var selec1 = '<div class="input-group mb-3">';
-        selec1 += '<label style="width: 130px;" class="input-group-text" for="motivo">Motivo</label>';
-        selec1 += '<select class="form-select" id="motivo" name="motivo">';
-        selec1 += '<option value="" selected disabled>Selecciona...</option>';
-        var selec2 = '</select> </div>';
-        var valor = selec1;
-             
-        if(departamento != ''){
-            $.post( BASEURL+'/buscamotivo', 
-                {
-                _token:token, departamento:departamento
-                }
-                ).done(function( data ) {
-                    if(data.response == true){ 
-                    $.each(data.data, function (id, value) {
-                        $.each(value, function (id, valur) {
-                            const motivo = valur;
-                            valor +=motivo;
-                        });
-                    });
-                    
-                    valor +=selec2;
-                    obj_div.innerHTML =valor;
-
-                    console.log(valor);
-                    //_this.cambia_corregimiento();
-                }
-                })
-                .fail(function() {
-                })
-                .always(function() {
-                }, "json");
-            //console.log(provincia, distrito, corregimiento);
-        }else{
-
-            //console.log('no post');
-
-
-            const motivo = '<option value="" seleted >S/A</option>';            
-            valor +=motivo;            
-            valor +=selec2;
-            obj_div.innerHTML =valor;
-           // _this.cambia_corregimiento();
         }
 
-      });
 
-    
+        toggleViviendaFields() {
 
-            $('#DivResultado_posiciones').on('change', function() { 
-                
-                  //  _this.cambia_corregimiento();
-                
+            const isCasa     = document.getElementById('tv_casa')?.checked === true;
+            const isEdificio = document.getElementById('tv_edificio')?.checked === true;
+            const isHotel    = document.getElementById('tv_hotel')?.checked === true;
+
+            // Grupos
+            const gCasa   = document.getElementById('grupoCasa');
+            const gEdNom  = document.getElementById('grupoEdificio_nombre');
+            const gEdPiso = document.getElementById('grupoEdificio_piso');
+            const gEdApto = document.getElementById('grupoEdificio_apto');
+            const gHotel  = document.getElementById('grupoHotel');
+
+            // Inputs
+            const iCasa  = document.getElementById('numero_casa');
+            const iEdNom = document.getElementById('nombre_edificio');
+            const iPiso  = document.getElementById('piso');
+            const iApto  = document.getElementById('apartamento');
+            const iHotel = document.getElementById('nombre_hotel');
+
+            // Helper para mostrar/ocultar y required
+            const show = (el) => el?.classList.remove('d-none');
+            const hide = (el) => el?.classList.add('d-none');
+            const req  = (input, on) => {
+                if (!input) return;
+                if (on) input.setAttribute('required', 'required');
+                else    input.removeAttribute('required');
+            };
+
+            // 1) Ocultar todo y quitar required
+            [gCasa, gEdNom, gEdPiso, gEdApto, gHotel].forEach(hide);
+            [iCasa, iEdNom, iPiso, iApto, iHotel].forEach(inp => req(inp, false));
+
+            // 2) Mostrar según selección y marcar required
+            if (isCasa) {
+                show(gCasa);
+                req(iCasa, true);
+
+                // Limpiar lo que NO aplica
+                if (iEdNom) iEdNom.value = '';
+                if (iPiso)  iPiso.value  = '';
+                if (iApto)  iApto.value  = '';
+                if (iHotel) iHotel.value = '';
+            } else if (isEdificio) {
+                show(gEdNom); show(gEdPiso); show(gEdApto);
+                req(iEdNom, true); req(iPiso, true); req(iApto, true);
+
+                if (iCasa)  iCasa.value  = '';
+                if (iHotel) iHotel.value = '';
+            } else if (isHotel) {
+                show(gHotel);
+                req(iHotel, true);
+
+                if (iCasa)  iCasa.value  = '';
+                if (iEdNom) iEdNom.value = '';
+                if (iPiso)  iPiso.value  = '';
+                if (iApto)  iApto.value  = '';
+            }
+        }
+
+         toggleReciboFields() {
+            const isMio      = document.getElementById('recibo_mio')?.checked === true;
+            const isTercero  = document.getElementById('recibo_tercero')?.checked === true;
+
+            // Grupos
+            const gNotariado = document.getElementById('recibo_notariado_group');
+            const gCedula    = document.getElementById('cedula_titular_group');
+
+            // Inputs
+            const iNotariado = document.getElementById('recibo_notariado_archivo');
+            const iCedula    = document.getElementById('recibo_cedula_titular');
+
+            // Helpers
+            const show = (el) => el?.classList.remove('d-none');
+            const hide = (el) => el?.classList.add('d-none');
+            const req  = (input, on) => {
+                if (!input) return;
+                if (on) input.setAttribute('required', 'required');
+                else    input.removeAttribute('required');
+            };
+
+            // 1) Ocultar y limpiar todo
+            [gNotariado, gCedula].forEach(hide);
+            [iNotariado, iCedula].forEach(inp => {
+                req(inp, false);
+                if (inp?.type === 'file') inp.value = ''; // limpiar archivo si no aplica
             });
-    }
+
+            // 2) Mostrar según selección
+            if (isTercero) {
+                show(gNotariado); show(gCedula);
+                req(iNotariado, true);
+                req(iCedula, true);
+            }
+        }
+
+
+        toggleDocsByDomicilio() {
+
+            const _this = this
+
+            const show  = (el) => el?.classList.remove('d-none');
+            const hide  = (el) => el?.classList.add('d-none');
+            const req   = (input, on) => { if (!input) return; on ? input.setAttribute('required','required') : input.removeAttribute('required'); };
+            const dis   = (input, on) => { if (!input) return; input.disabled = !!on; };
+            const clearFile = (input) => { if (input && input.type === 'file') input.value = ''; };
+
+
+            const isHotel = document.getElementById('dom_reservahotel')?.checked === true;
+
+            // Bloque Recibo
+            const gRecibo = document.getElementById('grupoRecibo');
+
+            // Inputs dentro del bloque Recibo
+            const iReciboFile      = document.getElementById('recibo_archivo');
+            const iReciboMio       = document.getElementById('recibo_mio');
+            const iReciboTercero   = document.getElementById('recibo_tercero');
+            const iNotariado       = document.getElementById('recibo_notariado_archivo');
+            const iCedulaTitular   = document.getElementById('recibo_cedula_titular');
+
+            // Subgrupos para poder ocultarlos también si hace falta
+            const gNotariado = document.getElementById('recibo_notariado_group');
+            const gCedula    = document.getElementById('cedula_titular_group');
+
+            // Nota bajo “Prueba de domicilio”
+            const nota = document.getElementById('domicilioNota');
+
+            if (isHotel) {
+                // 1) Ocultar bloque
+                hide(gRecibo);
+
+                // 2) Quitar required y deshabilitar TODOS los campos del bloque
+                [iReciboFile, iNotariado, iCedulaTitular].forEach(inp => {
+                req(inp, false);
+                clearFile(inp);
+                dis(inp, true);
+                });
+                [iReciboMio, iReciboTercero].forEach(inp => dis(inp, true));
+
+                // 3) Asegurar que los subgrupos dependientes no quedan visibles
+                hide(gNotariado); hide(gCedula);
+
+                // 4) Mensaje guía
+                if (nota) nota.textContent = 'Si presenta reserva de hotel, no necesita recibo de servicio.';
+            } else {
+                // 1) Mostrar bloque
+                show(gRecibo);
+
+                // 2) Habilitar campos
+                [iReciboFile, iNotariado, iCedulaTitular, iReciboMio, iReciboTercero].forEach(inp => dis(inp, false));
+
+                // 3) Required por defecto del recibo principal
+                req(iReciboFile, true);
+
+                // 4) Volver a evaluar propio/tercero para pedir lo que corresponda
+                _this.toggleReciboFields();
+
+                // 5) Mensaje guía por defecto
+                if (nota) nota.textContent = 'Requiere notaría.';
+            }
+        }
+
+        preSubmitCheck() {
+
+            console.log('Por Aqui vamos');
+
+            const _this = this 
+
+            const $form = $("#nuevoregistro");
+
+            // 1) Ejecutar validación jQuery Validate
+            if (!$form.valid()) {
+                const objMessagebasicModal = new MessagebasicModal(
+                    'Validación',
+                    'Por favor corrige los campos marcados antes de continuar.'
+                );
+                objMessagebasicModal.init();
+                return;
+            }
+
+            // 2) Construir el HTML de vista previa
+            const previewHtml = this._buildPreviewHtml();
+
+            // 3) Usar MessagebasicModal
+            const objMessagebasicModal = new MessagebasicModal(
+                'Revisión de Datos',
+                previewHtml,
+                {
+                    showConfirm: true,           // mostramos botón "Confirmar"
+                    confirmText: 'Confirmar y Enviar',
+                    onConfirm: () => {
+                        $form.trigger('submit'); // al confirmar se envía el form
+                    }
+                }
+            );
+
+            objMessagebasicModal.init();
+        }
+
+        _buildPreviewHtml() {
+
+            console.log('Por Aqui vamos 2');
+
+
+            const val = (sel) => $(sel).val() || '';
+            const textOfSelect = (sel) => {
+                const v = $(sel).val();
+                return v ? $(sel).find('option:selected').text() : '';
+            };
+            const radioVal = (name) => $(`input[name="${name}"]:checked`).val() || '';
+            const fileNames = (inputSel) => {
+                const input = document.querySelector(inputSel);
+                if (!input || !input.files || input.files.length === 0) return '—';
+                return Array.from(input.files).map(f => f.name).join(', ');
+            };
+
+            // Armar listas de preview
+            return `
+                <h6 class="fw-bold text-primary">Datos Personales</h6>
+                <ul>
+                    <li><b>Nombre:</b> ${val('#primerNombre')} ${val('#segundoNombre')} ${val('#primerApellido')} ${val('#segundoApellido')}</li>
+                    <li><b>Correo:</b> ${val('#correo')}</li>
+                    <li><b>Pasaporte:</b> ${val('#pasaporte')}</li>
+                </ul>
+
+                <h6 class="fw-bold text-primary">Dirección</h6>
+                <ul>
+                    <li><b>Provincia:</b> ${textOfSelect('#provincia')}</li>
+                    <li><b>Distrito:</b> ${textOfSelect('#distrito')}</li>
+                    <li><b>Corregimiento:</b> ${textOfSelect('#corregimiento')}</li>
+                    <li><b>Barrio:</b> ${val('#barrio')}</li>
+                    <li><b>Calle:</b> ${val('#calle')}</li>
+                </ul>
+
+                <h6 class="fw-bold text-primary">Documentos</h6>
+                <ul>
+                    <li><b>Prueba domicilio:</b> ${fileNames('#domicilio_archivo')}</li>
+                    <li><b>Recibo:</b> ${fileNames('#recibo_archivo')}</li>
+                    <li><b>Carnet Frente:</b> ${fileNames('#carnet_frente')}</li>
+                    <li><b>Carnet Reverso:</b> ${fileNames('#carnet_reverso')}</li>
+                </ul>
+
+                <h6 class="fw-bold text-primary">Comentario</h6>
+                <div>${val('textarea[name="comentario"]') || '—'}</div>
+            `;
+        }
 
         /*BEGIN TABLA USUARIO*/
         solicitud(search){
@@ -322,10 +483,6 @@ class Distsolicitud {
                   }
               });
           }
-          /*END VALIDAR NUEVO USUARIO*/
-
-
-          /* BEGIN  Validacion de importacion*/
 
           validateimportacion(){
 
@@ -368,11 +525,7 @@ class Distsolicitud {
             
         }
 
-          /* End Validar Importacion */
-
-
-          /*BEGIN DESACTIVAR UN USUARIO*/
-          desactivarsolicitud(){
+                  desactivarsolicitud(){
 
               const _this = this
 
@@ -455,16 +608,6 @@ class Distsolicitud {
 
 
 $(document).ready(function(){
-
   const objDistsolicitud = new Distsolicitud();
   objDistsolicitud.init();
-
-  let valfon = "";
-
-
-   var maelissa =  "sebastian"; 
-
-   console.log(maelissa);
-
-
 });

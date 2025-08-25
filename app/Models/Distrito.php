@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class Distrito extends Model
 {
     use HasFactory;
-    protected $table = 'ca_distrito';
+    protected $table = 'distrito';
 }

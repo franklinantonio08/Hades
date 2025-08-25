@@ -13,6 +13,7 @@ use App\Models\Solicitud;
 
 use App\Models\User;
 
+use App\Models\Paises;
 use App\Models\Provincia;
 use App\Models\Distrito;
 use App\Models\Corregimiento;
@@ -221,38 +222,29 @@ class SolicitudController extends Controller
         
             public function Nuevo(){
 
-                $Usuario = User::find(Auth::user()->id)->first();
+                $Usuario = User::find(Auth::user()->id)->first();  
 
-                // Solicitud::find($solicitudId);
-        
-                if(!empty($solicitUsuarioudExiste)){
+                if(empty($Usuario)){
                     return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0001");
+                }
                 
+                $provincia = Provincia::where('estatus', 'Activo')->get();
+
+                if(empty($provincia)){
+                    return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0002");
                 }
 
-                
-                $provincia = User
-                ->where('estatus', '=', 'Activo')
-                ->get();
+                $distrito = Distrito::where('estatus', 'Activo')->get();
 
+                if(empty($distrito)){
+                    return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0002");
+                }
 
-                // $departamento = DB::table('departamento')
-                // ->where('estatus', '=', 'Activo')
-                // ->where('organizacionId', '=', '1')
-                // ->select('id', 'nombre', 'codigo')
-                // ->get();
+                $corregimiento = Corregimiento::where('estatus', 'Activo')->get();
 
-                // if(empty($departamento)){
-                //     return redirect('dist/dashboard')->withErrors("ERROR LA PROVINCIA ESTA VACIA CODE-0226");
-                // }	
-                // view()->share('departamento', $departamento);	
-
-
-                /*if(!$this->common->usuariopermiso('004')){
-                    return redirect('dist/dashboard')->withErrors($this->common->message);
-                }*/
-                
-                // return \View::make('dist/solicitud/nuevo');
+                if(empty($corregimiento)){
+                    return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0002");
+                }
 
 
                 return view('dist.solicitud.nuevo', compact('Usuario', 'provincia', 'distrito', 'corregimiento'));
@@ -261,11 +253,11 @@ class SolicitudController extends Controller
             public function postNuevo(){
         
                 
-                /*if(!$this->common->usuariopermiso('004')){
-                    return redirect('dist/dashboard')->withErrors($this->common->message);
-                }*/
+                // if(!$this->common->usuariopermiso('004')){
+                //     return redirect('dist/dashboard')->withErrors($this->common->message);
+                // }
         
-                //return $this->request->all();
+                return $this->request->all();
         
                 /*$solicitudExiste = Solicitud::where('nombre', $this->request->nombre)
                 //->where('distribuidorId', Auth::user()->distribuidorId)
