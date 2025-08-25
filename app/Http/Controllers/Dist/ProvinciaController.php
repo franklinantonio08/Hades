@@ -270,4 +270,6 @@ class ProvinciaController extends Controller
 		return response()
               ->json(['response' => false]);
     }
+
+	
 }

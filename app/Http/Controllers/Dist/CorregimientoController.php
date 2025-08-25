@@ -271,4 +271,36 @@ class CorregimientoController extends Controller
 		return response()
               ->json(['response' => false]);
     }
+
+	public function BuscaCorregimiento() {
+
+        $distrito = $this->request->distrito;
+    
+        $corregimiento = DB::table('corregimiento')
+            ->where('estatus', '=', 'Activo')
+            ->where('distritoId', '=', $distrito)
+            ->select('id', 'nombre')
+            ->get();
+    
+        // Initialize $data as an empty array
+        $data = [];
+    
+        foreach ($corregimiento as $key => $value) {
+    
+            $corregimientoId = $value->id;
+            $corregimientoDescripcion = ucwords(strtolower($value->nombre));
+    
+            $data[] = array(
+                "detalle" => "<option value='".$corregimientoId."' >".$corregimientoDescripcion."</option>"
+            );
+        }
+    
+        $response = array(
+            'response' => TRUE,
+            'data' => $data,
+        );
+    
+        return response()
+            ->json($response); 
+    }
 }
