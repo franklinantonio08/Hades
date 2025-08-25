@@ -1,68 +1,61 @@
-{{-- resources/views/payment/tokenize.blade.php --}}
-@extends($layout ?? 'layouts.app')
-
-@section('title', 'Agregar Método de Pago')
+@extends('layouts.app')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-md-12">
-        <!-- Contenedor del Widget -->
-        <div id="creditcard-container">
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Cargando widget...</span>
-                </div>
-                <p class="mt-3 text-muted">Cargando formulario seguro de pago</p>
-            </div>
-        </div>
-        
-        <!-- Mensajes de estado -->
-        <div id="widget-messages" class="alert alert-info" style="display: none;"></div>
-        
-        <!-- Formulario para procesar pagos (se mostrará después de tokenizar) -->
-        <div id="payment-form" class="mt-4 p-4 border rounded" style="display: none;">
-            <h5 class="mb-4">Tarjeta Tokenizada</h5>
-            <div class="card mb-4">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">Agregar Método de Pago</div>
+
                 <div class="card-body">
-                    <p><strong>Tarjeta:</strong> <span id="card-brand"></span> terminada en <span id="card-last-four"></span></p>
-                    <p><strong>Titular:</strong> <span id="cardholder-name"></span></p>
-                    <p><strong>Expira:</strong> <span id="card-expiry"></span></p>
+                    <!-- Contenedor del Widget -->
+                    <div id="creditcard-container"><!-- AQUÍ SE DESPLEGARÁ EL FORMULARIO --></div>
+                    
+                    <!-- Mensajes de estado -->
+                    <div id="widget-messages" class="alert alert-info mt-3" style="display: none;"></div>
+                    
+                    <!-- Formulario para procesar pagos (se mostrará después de tokenizar) -->
+                    <div id="payment-form" class="mt-3" style="display: none;">
+                        <h5>Tarjeta Tokenizada</h5>
+                        <div class="card">
+                            <div class="card-body">
+                                <p><strong>Tarjeta:</strong> <span id="card-brand"></span> terminada en <span id="card-last-four"></span></p>
+                                <p><strong>Titular:</strong> <span id="cardholder-name"></span></p>
+                                <p><strong>Expira:</strong> <span id="card-expiry"></span></p>
+                            </div>
+                        </div>
+                        
+                        <form id="process-payment-form" class="mt-3">
+                            @csrf
+                            <input type="hidden" name="token" id="token-input">
+                            <input type="hidden" name="account_number" id="account-number-input">
+                            
+                            <div class="form-group mb-3">
+                                <label>Monto</label>
+                                <input type="number" class="form-control" name="amount" 
+                                       step="0.01" min="0.01" required>
+                            </div>
+                            
+                            <div class="form-group mb-3">
+                                <label>Moneda</label>
+                                <select class="form-control" name="currency" required>
+                                    <option value="USD">USD</option>
+                                    <option value="GTQ">GTQ</option>
+                                </select>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success">Procesar Pago</button>
+                        </form>
+                    </div>
                 </div>
             </div>
-            
-            <form id="process-payment-form">
-                @csrf
-                <input type="hidden" name="token" id="token-input">
-                <input type="hidden" name="account_number" id="account-number-input">
-                
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Monto</label>
-                        <input type="number" class="form-control" name="amount" 
-                               step="0.01" min="0.01" required>
-                    </div>
-                    
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label">Moneda</label>
-                        <select class="form-control" name="currency" required>
-                            <option value="USD">USD - Dólar Americano</option>
-                            <option value="GTQ">GTQ - Quetzal Guatemalteco</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="text-center">
-                    <button type="submit" class="btn btn-payment">
-                        <i class="fas fa-credit-card me-2"></i>Procesar Pago
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 @endsection
 
 @section('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 // Variables globales para los callbacks
 var cardToken;
@@ -186,10 +179,11 @@ $(document).ready(function() {
     // Determinar la URL del widget según el ambiente
     const isTestMode = {{ config('payment.test_mode', true) ? 'true' : 'false' }};
     const widgetUrl = isTestMode 
-        ? 'https://apicomponentv2-test.merchantprocess.net/UIComponent/CreditCard'
-        : 'https://gateway.merchantprocess.net/securecomponent/v2/UIComponent/CreditCard';
+        ? '{{ config("payment.widget_url_test") }}'
+        : '{{ config("payment.widget_url_prod") }}';
 
     console.log('Cargando widget desde:', widgetUrl);
+    console.log('API Key:', '{{ config("payment.api_key") }}');
 
     // Cargar el widget
     $.ajax({
@@ -230,10 +224,12 @@ document.getElementById('process-payment-form')?.addEventListener('submit', asyn
         
         if (result.success) {
             showMessage('¡Pago procesado exitosamente!', 'success');
-            // Redirigir a página de éxito
-            setTimeout(() => {
-                window.location.href = '{{ route("payment.success") }}?transaction=' + (result.transaction?.id || '');
-            }, 2000);
+            // Redirigir a página de éxito si existe la ruta
+            @if (Route::has('payment.success'))
+                setTimeout(() => {
+                    window.location.href = '{{ route("payment.success") }}?transaction=' + (result.transaction?.id || '');
+                }, 2000);
+            @endif
         } else {
             showMessage('Error en el pago: ' + result.message, 'danger');
         }
@@ -242,4 +238,23 @@ document.getElementById('process-payment-form')?.addEventListener('submit', asyn
     }
 });
 </script>
+@endsection
+
+@section('styles')
+<style>
+    /* Estilos mínimos para probar */
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f8f9fa; }
+    .card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .card-header { background: #007bff; color: white; padding: 15px; border-radius: 8px 8px 0 0; }
+    .card-body { padding: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .form-control { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .alert { padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+    .alert-info { background: #d1ecf1; color: #0c5460; }
+    .alert-success { background: #d4edda; color: #155724; }
+    .alert-danger { background: #f8d7da; color: #721c24; }
+</style>
 @endsection

@@ -21,7 +21,7 @@ class PaymentController extends Controller
     // Mostrar formulario con Widget
     public function showTokenizationForm()
     {
-        // Depuración temporal
+        //Depuración temporal
         \Log::info('Accediendo a showTokenizationForm');
         \Log::info('Usuario autenticado: ' . (auth()->check() ? 'Sí' : 'No'));
         \Log::info('User ID: ' . (auth()->check() ? auth()->id() : 'N/A'));
@@ -31,8 +31,14 @@ class PaymentController extends Controller
         }
         
         return view('payment.tokenize', [
-            'api_key' => config('payment.api_key')
+            'api_key' => config('payment.api_key'),
+            'layout' => 'layouts.payment' // Usar layout de pagos
         ]);
+       // Vista mínima sin layout
+    //    return response()->view('payment.minimal-tokenize', [
+    //     'api_key' => config('payment.api_key')
+    // ]);
+    
     }
 
     // Procesar callback del Widget

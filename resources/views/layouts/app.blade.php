@@ -36,13 +36,14 @@
     <meta name="theme-color" content="#ffffff">
 
     <!-- <link rel="stylesheet" href="vendors/simplebar/css/simplebar.css">
-    <link rel="stylesheet" href="css/vendors/simplebar.css"> -->
+    <link rel="stylesheet" href="css/vendors/simplebar.css"> 
+    <link href="css/style.css" rel="stylesheet">
+    <link href="css/examples.css" rel="stylesheet">-->
+
     <link href="{{ asset('vendors/simplebar/css/simplebar.css') }}" rel="stylesheet">
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
-
-    <link href="css/style.css" rel="stylesheet">
-
-    <link href="css/examples.css" rel="stylesheet">
+    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/examples.css') }}" rel="stylesheet">
     <script>
         (function(w, d, s, l, i) {
             w[l] = w[l] || [];
@@ -108,7 +109,8 @@
                                       <div class="card-title text-disabled">Masculino</div>
                                       <div class="bg-primary bg-opacity-25 text-primary p-2 rounded">
                                           <svg class="icon icon-xl">
-                                              <use xlink:href="vendors/@coreui/icons/svg/free.svg#cil-user"></use>
+                                              {{-- <use xlink:href="vendors/@coreui/icons/svg/free.svg#cil-user"></use> --}}
+                                              <use xlink:href="{{ asset('vendors/@coreui/icons/svg/free.svg') }}#cil-user"></use>
                                           </svg>
                                       </div>
                                   </div>
@@ -131,7 +133,8 @@
                                       <div class="card-title text-disabled">Femenino</div>
                                       <div class="bg-primary bg-opacity-25 text-primary p-2 rounded">
                                           <svg class="icon icon-xl">
-                                              <use xlink:href="vendors/@coreui/icons/svg/free.svg#cil-user-female"></use>
+                                             {{-- <use xlink:href="vendors/@coreui/icons/svg/free.svg#cil-user-female"></use> --}}
+                                              <use xlink:href="{{ asset('vendors/@coreui/icons/svg/free.svg') }}#cil-user-female"></use>
                                           </svg>
                                       </div>
                                   </div>
