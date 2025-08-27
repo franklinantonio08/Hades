@@ -23,6 +23,11 @@ use App\Models\MultasArchivos;
 use App\Models\MultasMonto;
 use App\Models\MultasTipo;
 
+use App\Models\SolicitudCambioArchivos;
+use App\Models\SolicitudCambioEstados;
+use App\Models\SolicitudCambioResidencia;
+
+use App\Helpers\CommonHelper;
 
 use DB;
 use Excel;
@@ -30,14 +35,13 @@ use Excel;
 class SolicitudController extends Controller
 {
     //
-
-
-
     private $request;
     private $common;
 
     public function __construct(Request $request){
+
         $this->request = $request;
+        $this->common = New CommonHelper();
     }
 
     public function Index(){
@@ -63,26 +67,40 @@ class SolicitudController extends Controller
                     return $currentPage;
                 });
         
-                $query = DB::table('solicitud')
-                ->leftjoin('departamento', 'departamento.id', '=', 'solicitud.departamentoId')
-                ->leftjoin('tipoAtencion', 'tipoAtencion.id', '=', 'solicitud.idTipoAtencion');
+                $query = DB::table('solicitudes_cambio_residencia')
+                ->leftjoin('users', 'users.id', '=', 'solicitudes_cambio_residencia.usuario_id')
+                ->leftjoin('provincia', 'provincia.id', '=', 'solicitudes_cambio_residencia.provincia_id')
+                ->leftjoin('distrito', 'distrito.id', '=', 'solicitudes_cambio_residencia.distrito_id')
+                ->leftjoin('corregimiento', 'corregimiento.id', '=', 'solicitudes_cambio_residencia.corregimiento_id')
+                ->where('solicitudes_cambio_residencia.usuario_id', Auth::id())
+                ->select(
+                        'solicitudes_cambio_residencia.*',
+                        'users.documento_numero as filiacion',
+                        // DB::raw("CONCAT(SUBSTRING(unidad_solicitante.descripcion, 1, 20), '...') as unidad"),
+                        // DB::raw("CONCAT(SUBSTRING(motivo_operativo.descripcion, 1, 20), '...') as motivo"),  
+                         DB::raw("CONCAT(users.primer_nombre, ' ', users.primer_apellido) AS nombre_completo"),
+                        // DB::raw("CONCAT(aprobado.name, ' ', aprobado.lastName) AS aprob"),
+                        // 'pais.pais as pais',              
+                        // 'nacionalidad.nacionalidad as nacionalidad',
+                         'provincia.nombre as provincia',
+                         'distrito.nombre as distrito',
+                         'corregimiento.nombre as corregimiento',
+                        // 'infractor.primerNombre',
+                        // 'infractor.primerApellido',
+                        // 'infractor.documento',
+                        // 'infractor.genero',
+                        // 'infractores_operativos.estatus',
+                        DB::raw("ROW_NUMBER() OVER (ORDER BY solicitudes_cambio_residencia.id) AS cuenta")      
 
-                // Agrega la variable de usuario para simular ROW_NUMBER()
-                $query->select([
-                        DB::raw('@row_num := @row_num + 1 AS row_number'),
-                        'solicitud.*',
-                        'departamento.nombre',
-                        'tipoAtencion.descripcion'
-                    ])
-                    ->from(DB::raw('(SELECT @row_num := 0) AS vars, solicitud'))
-                    ->orderBy($orderBy, $order);
+                    )
+                ->orderBy($orderBy, $order);
 
         
                 if(isset($request['searchInput']) && trim($request['searchInput']) != ""){
                     $query->where(
                         function ($query) use ($request) {
-                            $query->orWhere('solicitud.nombre', 'like', '%'.trim($request['searchInput']).'%');
-                            $query->orWhere('solicitud.codigo', 'like', '%'.trim($request['searchInput']).'%');
+                            $query->orWhere('users.primer_nombre', 'like', '%'.trim($request['searchInput']).'%');
+                            $query->orWhere('users.primer_apellido', 'like', '%'.trim($request['searchInput']).'%');
                         }
                      );		
                 }
@@ -102,15 +120,18 @@ class SolicitudController extends Controller
                                         <a href="/dist/solicitud/editar/'.$value->id.'" class="btn btn-icon waves-effect waves-light bg-secondary text-white m-b-5"> <i class="bi bi-pencil"></i> </a>
                                         <a href="#" attr-id="'.$value->id.'" class="btn btn-icon waves-effect waves-light bg-primary text-white m-b-5 desactivar"> <i class="bi bi-check2-square"></i> </a>';
                     }
+
+                   
         
                     $data[] = array(
-                          "DT_RowId" => $value->row_number,
-                          "id" => $value->id,
-                          "TipoAtencion"=> $value->descripcion,
-                          "codigo"=> $value->codigo,
-                          "departamento"=> $value->nombre,
-                          "estatus"=> $value->estatus,
-                          "detalle"=> $detalle
+                        "DT_RowId" => $value->id,
+                        "id" => $value->cuenta,
+                        "nombre"=> $value->nombre_completo,
+                        "ruex"=> $value->filiacion,
+                        "codigo"=> $value->calle,
+                        "direccion"=> $value->provincia .', '. $value->distrito .', '. $value->corregimiento,
+                        "estatus"     =>  $value->estatus,
+                        "detalle"=> $detalle
                     );
                 }
         
@@ -250,233 +271,145 @@ class SolicitudController extends Controller
                 return view('dist.solicitud.nuevo', compact('Usuario', 'provincia', 'distrito', 'corregimiento'));
             }
         
-            public function postNuevo(){
+    public function postNuevo(){
+
+        $request = $this->request;
 
 
-                $request->validate([
-                    // Ubicación
-                    'provincia'      => 'required|integer',
-                    'distrito'       => 'required|integer',
-                    'corregimiento'  => 'required|integer',
-                    'barrio'         => 'required|string|max:191',
-                    'calle'          => 'required|string|max:191',
-                    'punto_referencia' => 'required|string|max:255',
+        $validated = $request->validate([
+            // Ubicación
+            'provincia'         => 'required|integer',
+            'distrito'          => 'required|integer',
+            'corregimiento'     => 'required|integer',
+            'barrio'            => 'required|string|max:191',
+            'calle'             => 'required|string|max:191',
+            'punto_referencia'  => 'required|string|max:255',
 
-                    // Tipo de vivienda dinámico (el JS ya pone required condicional)
-                    'numero_casa'      => 'nullable|string|max:50',
-                    'nombre_edificio'  => 'nullable|string|max:191',
-                    'piso'             => 'nullable|string|max:10',
-                    'apartamento'      => 'nullable|string|max:50',
-                    'nombre_hotel'     => 'nullable|string|max:191',
+            // Tipo de vivienda (condicional vía JS)
+            'numero_casa'       => 'nullable|string|max:50',
+            'nombre_edificio'   => 'nullable|string|max:191',
+            'piso'              => 'nullable|string|max:10',
+            'apartamento'       => 'nullable|string|max:50',
+            'nombre_hotel'      => 'nullable|string|max:191',
 
-                    // Radios de “Prueba de domicilio”
-                    'domicilio_opcion' => 'required|in:escritura,arrendamiento,responsabilidad,juez_paz,reserva_hotel',
-                    'domicilio_archivo'=> 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            // Prueba de domicilio (siempre)
+            'domicilio_opcion'  => 'required|in:escritura,arrendamiento,responsabilidad,juez_paz,reserva_hotel',
+            'domicilio_archivo' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
 
-                    // Recibo (si NO es hotel)
-                    'recibo_tipo'                => 'nullable|in:propio,tercero',
-                    'recibo_archivo'             => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-                    'recibo_notariado_archivo'   => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-                    'recibo_cedula_titular'      => 'nullable|array',
-                    'recibo_cedula_titular.*'    => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+            // Recibo (si NO es reserva de hotel)
+            'recibo_tipo'               => 'nullable|in:propio,tercero',
+            'recibo_archivo'            => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'recibo_notariado_archivo'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'recibo_cedula_titular'     => 'nullable|array',
+            'recibo_cedula_titular.*'   => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
 
-                    // Carnet (siempre)
-                    'carnet_frente' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
-                    'carnet_reverso'=> 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            // Carnet (siempre)
+            'carnet_frente'     => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'carnet_reverso'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
 
-                    // Selfies (enviadas por JS como arreglo)
-                    'selfies'        => 'nullable|array',
-                    'selfies.*'      => 'file|mimes:jpg,jpeg,png|max:4096',
+            // Selfies (tu JS las manda como selfies[])
+            'selfies'           => 'nullable|array',
+            'selfies.*'         => 'file|mimes:jpg,jpeg,png|max:4096',
 
-                    // Otros
-                    'inversionista'  => 'required|in:Si,No',
-                    'comentario'     => 'nullable|string',
-                ]);
-        
-                
-                // if(!$this->common->usuariopermiso('004')){
-                //     return redirect('dist/dashboard')->withErrors($this->common->message);
-                // }
-        
-                // return $this->request->all();
-        
-                /*$solicitudExiste = Solicitud::where('nombre', $this->request->nombre)
-                //->where('distribuidorId', Auth::user()->distribuidorId)
-                ->first();
-        
-                if(!empty($solicitudExiste)){
-                    return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0001");
-                }*/
+            // Otros
+            'inversionista'     => 'required|in:Si,No',
+            'comentario'        => 'nullable|string',
+        ]);
 
-                // $departamento = DB::table('departamento')
-                // ->where('departamento.id', '=', trim($this->request->departamento))
-                // ->select(DB::raw("SUBSTRING(departamento.codigo, 1, 1) as cod_depart"))
-                // ->first();
+        return DB::transaction(function () use ($request, $validated) {
 
-                // $cod_depart = $departamento->cod_depart;
+            // 2) CREAR SOLICITUD
+            $solicitud = SolicitudCambioResidencia::create([
+                'codigo'           => $this->common->generaCodigoSCR(),
+                'usuario_id'       => auth()->id(),
+                'inversionista'    => $request->input('inversionista', 'No'),
 
-                //return $departamento;
-        
-                DB::beginTransaction();
-                try { 	
-                    $solicitud = new Multas;
-                    $solicitud->IdTipoAtencion          = trim($this->request->tipoAtencion);
-                    $solicitud->departamentoId          = trim($this->request->departamento);
-                    if(isset($this->request->comentario)){
-                    $solicitud->infoextra               = trim($this->request->comentario); 
-                    }
-                    
-                    $solicitud->estatus                 = 'Activo';
-                    $solicitud->fechaAtencion           = date('Y-m-d H:i:s');
-                    $solicitud->created_at              = date('Y-m-d H:i:s');
-                    $solicitud->funcionarioId           = Auth::user()->id;
-                    $solicitud->usuarioId               = Auth::user()->id;
-                    //$solicitud->organizacionId          = 1;
-                    $result = $solicitud->save();
+                'provincia_id'     => $validated['provincia'],
+                'distrito_id'      => $validated['distrito'],
+                'corregimiento_id' => $validated['corregimiento'],
+                'barrio'           => $validated['barrio'],
+                'calle'            => $validated['calle'],
+                'numero_casa'      => $request->input('numero_casa'),
+                'nombre_edificio'  => $request->input('nombre_edificio'),
+                'piso'             => $request->input('piso'),
+                'apartamento'      => $request->input('apartamento'),
+                'nombre_hotel'     => $request->input('nombre_hotel'),
+                'punto_referencia' => $validated['punto_referencia'],
 
-                    $solicitudId = $solicitud->id;
-        
-                    if(empty($solicitudId)){
-                        DB::rollBack();
-                        return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR EL CONTRATO NO SE GENERO UN # DE CONTRATO CORRECTO CODE-0196");
-                    }
+                'domicilio_opcion' => $validated['domicilio_opcion'],
+                'recibo_tipo'      => $request->input('recibo_tipo'), // puede ser null si hotel
 
-                    $ultimoCodigo = Solicitud::whereNotNull('codigo')
-                    ->orderBy('id', 'desc')
-                    ->value('codigo');
+                'comentario'       => $request->input('comentario'),
+                'estatus'          => 'Recibida',
+        ]);
 
-                    $ultimoCodigoletra = substr($ultimoCodigo, 0, 1);
-                    $ultimoCodigoN = intval(substr($ultimoCodigo, 1));
+        $solicitud->estados()->create([
+            'estatus'    => 'Recibida',
+            'comentario' => 'Solicitud registrada por el usuario.',
+            'usuario_id' => auth()->id(),
+            'created_at' => now(),
+        ]);
 
-                    $ultimoCodigoN++;
-                    
-                    // $departamento = Departamento::where('nombre', 'Atención al Cliente')->first();
-                    // if ($departamento) {
-                    //     $cod_depart = $departamento->codigo;
-                    // } 
-
-                    //$letra = substr($ultimaSolicitudCodigo, 0, 1); // Obtener la última letra del código de solicitud
-                         //$numeros = intval(substr($ultimaSolicitudCodigo, 1)); // Obtener la parte numérica del código de solicitud
+        $store = function ($uploadedFile, string $tipo) use ($solicitud) {
+            $path = $uploadedFile->store("solicitudes_cambio/{$solicitud->id}", 'public');
+            $solicitud->archivos()->create([
+                'tipo'            => $tipo,
+                'ruta'            => $path,
+                'nombre_original' => $uploadedFile->getClientOriginalName(),
+                'mime'            => $uploadedFile->getMimeType(),
+                'tamano'          => $uploadedFile->getSize(),
+                'usuario_id'      => auth()->id(),
+                'estatus'         => 'Activo',
+            ]);
+        };
 
 
-                     // Verificar si se necesita cambiar de letra y reiniciar el número de solicitud
-                     if ($ultimoCodigoN > 999) {
-                        $ultimoCodigoN = 1; // Reiniciar el número de solicitud
-                        $ultimoCodigoletra = chr(ord($ultimoCodigoletra) + 1); // Obtener la siguiente letra ASCII
-                        if ($ultimoCodigoletra > 'Z') {
-                            $ultimoCodigoletra = 'A'; // Volver a 'A' si llega a 'Z'
-                        }
-                    }
+        $store($request->file('domicilio_archivo'), 'domicilio');
 
-                    // Crear el nuevo código de solicitud
-                    $solicitudCode = $ultimoCodigoletra . str_pad($ultimoCodigoN, 3, "0", STR_PAD_LEFT);
-
-                    //return $solicitudCode;
-
-                    //$solicitudCode =  $cod_depart . str_pad($ultimoCodigo,3, "0",STR_PAD_LEFT);
-
-                    $solicitudUpdate = Solicitud::find($solicitudId);
-                    $solicitudUpdate->codigo = $solicitudCode;
-                    $result = $solicitudUpdate->save();	
-
-                    //return $solicitudCode;
-
-
-                    // Obtener el último código de solicitud
-                    //$ultimaSolicitud = Solicitud::orderBy('id', 'desc')->first();
-
-                    //return $ultimaSolicitud;
-                    //
-                    // if ($ultimaSolicitud) {
-
-                    //     $ultimaSolicitudCodigo = $ultimaSolicitud->codigo;
-
-                    //     return $ultimaSolicitudCodigo;
-
-                    //   
-                        
-                    // } 
-
-                    //return  $cod_depart;
-
-                    // Incrementar el número de solicitud
-                    //$numeros++;
-
-                   
-
-                    //  $solicitudUpdate = Solicitud::find($solicitudId);
-                    //  $solicitudUpdate->codigo = $solicitudCode;
-                    //  $result = $solicitudUpdate->save();	
-
-                    //$cubiculoCount = Cubiculo::count();
-                    $cubiculoCount = Cubiculo::where('estatus', 'Activo')->count();
-                    //return $cubiculoCount;
-
-                    if ($cubiculoCount < 7) {
-                        //return $cubiculoCount;
-
-                    $colaboradorSinCubiculo = Colaboradores::where('estatus', 'Activo')
-                    ->whereNotIn('id', function ($query) {
-                    $query
-                    ->select('funcionarioId')
-                    ->where('estatus', 'Activo')
-                    ->from('cubiculo');
-                    })
-                    ->first();
-
-                    /*$colaboradorSinCubiculo = Colaboradores::where('estatus', 'Activo')
-                    ->whereNotIn('id', function ($query) use ($solicitudId) {
-                        $query
-                            ->select('funcionarioId')
-                            ->where('estatus', 'Activo')
-                            ->where('solicitudId', '<>', $solicitudId)
-                            ->from('cubiculo');
-                    })
-                    ->first();*/
-
-                    //return $colaboradorSinCubiculo;
-
-                    if ($colaboradorSinCubiculo) {
-
-                        $cubiculo = new Cubiculo;
-                        $cubiculo->solicitudId      = $solicitudId;
-                        $cubiculo->funcionarioId    = $colaboradorSinCubiculo->id;
-                        $cubiculo->llamado          = 0;
-                        $cubiculo->estatus          = 'Activo';
-                        $cubiculo->codigo           = $solicitudCode;
-                        $cubiculo->usuarioId        = Auth::user()->id;
-                        $result = $cubiculo->save();
-                
-                        if ($result) {
-                            Solicitud::where('id', $solicitudId)
-                                ->update([
-                                    'usuarioId' => $colaboradorSinCubiculo->id,
-                                    'funcionarioId' => $colaboradorSinCubiculo->id
-                                ]);
-                        }
-                
-
-                        // Puedes realizar alguna acción adicional después de asignar el cubículo si es necesario
-                    }
-                    
-                
-                    
+        // Recibo (si NO es hotel)
+        if ($validated['domicilio_opcion'] !== 'reserva_hotel') {
+            if ($request->hasFile('recibo_archivo')) {
+                $store($request->file('recibo_archivo'), 'recibo');
+            }
+            if ($request->input('recibo_tipo') === 'tercero') {
+                if ($request->hasFile('recibo_notariado_archivo')) {
+                    $store($request->file('recibo_notariado_archivo'), 'recibo_notariado');
                 }
-
-
-        
-                } catch(\Illuminate\Database\QueryException $ex){ 
-                    DB::rollBack();
-                    return redirect('dist/solicitud/nuevo')->withErrors('ERROR AL GUARDAR STORE CEBECECO CODE-0002'.$ex);
+                if ($request->hasFile('recibo_cedula_titular')) {
+                    foreach ($request->file('recibo_cedula_titular') as $ced) {
+                        $store($ced, 'cedula_titular');
+                    }
                 }
-                
-                if($result != 1){
-                    DB::rollBack();
-                    return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0003");
-                }
-                DB::commit();
-        
-                return redirect('dist/solicitud')->with('alertSuccess', 'STORE CEBECECO HA SIDO INGRESADA');
+            }
+        }
+
+         // Carnet (siempre)
+        $store($request->file('carnet_frente'),  'carnet_frente');
+        $store($request->file('carnet_reverso'), 'carnet_reverso');
+
+        // Selfies (opcionales, si tu JS ya las adjunta)
+        if ($request->hasFile('selfies')) {
+            foreach ($request->file('selfies') as $file) {
+                $base = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $tipo = str_starts_with($base, 'frente')    ? 'selfie_frente' :
+                        (str_starts_with($base, 'izquierda') ? 'selfie_izquierda' :
+                        (str_starts_with($base, 'derecha')   ? 'selfie_derecha' :
+                        (str_starts_with($base, 'arriba')    ? 'selfie_arriba' :
+                        (str_starts_with($base, 'abajo')     ? 'selfie_abajo' : 'selfie_frente'))));
+                $store($file, $tipo);
+            }
+        }
+
+         // 5) RESPUESTA
+            return response()->json([
+                'ok'      => true,
+                'id'      => $solicitud->id,
+                'codigo'  => $solicitud->codigo,
+                'message' => 'Solicitud registrada correctamente.',
+                // 'redirect' => route('dist.solicitud.show', $solicitud->id),
+            ]);
+        });
+
             }
         
             public function Editar($solicitudId){
