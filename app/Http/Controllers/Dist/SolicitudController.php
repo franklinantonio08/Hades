@@ -18,10 +18,10 @@ use App\Models\Provincia;
 use App\Models\Distrito;
 use App\Models\Corregimiento;
 
-use App\Models\Motivo;
-use App\Models\Submotivo;
-use App\Models\Consumidor;
-use App\Models\Departamento;
+use App\Models\Multas;
+use App\Models\MultasArchivos;
+use App\Models\MultasMonto;
+use App\Models\MultasTipo;
 
 
 use DB;
@@ -251,13 +251,54 @@ class SolicitudController extends Controller
             }
         
             public function postNuevo(){
+
+
+                $request->validate([
+                    // Ubicación
+                    'provincia'      => 'required|integer',
+                    'distrito'       => 'required|integer',
+                    'corregimiento'  => 'required|integer',
+                    'barrio'         => 'required|string|max:191',
+                    'calle'          => 'required|string|max:191',
+                    'punto_referencia' => 'required|string|max:255',
+
+                    // Tipo de vivienda dinámico (el JS ya pone required condicional)
+                    'numero_casa'      => 'nullable|string|max:50',
+                    'nombre_edificio'  => 'nullable|string|max:191',
+                    'piso'             => 'nullable|string|max:10',
+                    'apartamento'      => 'nullable|string|max:50',
+                    'nombre_hotel'     => 'nullable|string|max:191',
+
+                    // Radios de “Prueba de domicilio”
+                    'domicilio_opcion' => 'required|in:escritura,arrendamiento,responsabilidad,juez_paz,reserva_hotel',
+                    'domicilio_archivo'=> 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+
+                    // Recibo (si NO es hotel)
+                    'recibo_tipo'                => 'nullable|in:propio,tercero',
+                    'recibo_archivo'             => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                    'recibo_notariado_archivo'   => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                    'recibo_cedula_titular'      => 'nullable|array',
+                    'recibo_cedula_titular.*'    => 'file|mimes:pdf,jpg,jpeg,png|max:5120',
+
+                    // Carnet (siempre)
+                    'carnet_frente' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+                    'carnet_reverso'=> 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+
+                    // Selfies (enviadas por JS como arreglo)
+                    'selfies'        => 'nullable|array',
+                    'selfies.*'      => 'file|mimes:jpg,jpeg,png|max:4096',
+
+                    // Otros
+                    'inversionista'  => 'required|in:Si,No',
+                    'comentario'     => 'nullable|string',
+                ]);
         
                 
                 // if(!$this->common->usuariopermiso('004')){
                 //     return redirect('dist/dashboard')->withErrors($this->common->message);
                 // }
         
-                return $this->request->all();
+                // return $this->request->all();
         
                 /*$solicitudExiste = Solicitud::where('nombre', $this->request->nombre)
                 //->where('distribuidorId', Auth::user()->distribuidorId)
@@ -267,18 +308,18 @@ class SolicitudController extends Controller
                     return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0001");
                 }*/
 
-                $departamento = DB::table('departamento')
-                ->where('departamento.id', '=', trim($this->request->departamento))
-                ->select(DB::raw("SUBSTRING(departamento.codigo, 1, 1) as cod_depart"))
-                ->first();
+                // $departamento = DB::table('departamento')
+                // ->where('departamento.id', '=', trim($this->request->departamento))
+                // ->select(DB::raw("SUBSTRING(departamento.codigo, 1, 1) as cod_depart"))
+                // ->first();
 
-                $cod_depart = $departamento->cod_depart;
+                // $cod_depart = $departamento->cod_depart;
 
                 //return $departamento;
         
                 DB::beginTransaction();
                 try { 	
-                    $solicitud = new Solicitud;
+                    $solicitud = new Multas;
                     $solicitud->IdTipoAtencion          = trim($this->request->tipoAtencion);
                     $solicitud->departamentoId          = trim($this->request->departamento);
                     if(isset($this->request->comentario)){

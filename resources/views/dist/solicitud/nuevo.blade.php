@@ -60,6 +60,13 @@
 
                     <div class="card-body">
 
+                        <!-- Contenedor de errores visuales -->
+                        <div id="formErrorBox" class="alert alert-danger d-none">
+                        <div class="fw-bold mb-2">Por favor corrige lo siguiente:</div>
+                        <ul id="formErrorList" class="mb-0"></ul>
+                        </div>
+
+
                         {{-- <h5 class="text-primary fw-bold mb-3">Datos Personales</h5> --}}
                         <h5 class="form-label fw-bold text-primary" style="background-color: #f0f0f0; padding: 5px;">Datos Personales</h5>
                         <div class="row mb-4">
@@ -241,7 +248,7 @@
                                     <input type="radio" class="btn-check" name="tipo_vivienda" id="tv_edificio" value="Edificio">
                                     <label class="btn btn-outline-primary" for="tv_edificio">Edificio / PH</label>
 
-                                    <input type="radio" class="btn-check" name="tipo_vivienda" id="tv_hotel" value="Edificio">
+                                    <input type="radio" class="btn-check" name="tipo_vivienda" id="tv_hotel" value="Hotel">
                                     <label class="btn btn-outline-primary" for="tv_hotel">Hotel</label>
 
                                     </div>
@@ -389,7 +396,7 @@
                     <!-- Botones -->
                     <div class="card-footer text-end">
                         <button id="guardarForm" type="button" class="btn btn-primary shadow">
-                            Guardar
+                            Siguiente
                         </button>
                         <a href="{{ url()->previous() }}" class="btn btn-secondary shadow">
                             Cancelar
@@ -422,11 +429,16 @@
         display: inline-block !important;
         color: var(--bs-white);
     }
+    .btn-invalid {
+        border-color: #dc3545 !important;
+        color: #dc3545 !important;
+    } 
 </style>
 
 {{-- @include('dist.solicitud.monto') --}}
 @include('includes.messagebasicmodal')
 @include('dist.solicitud.instruciones')
+@include('dist.solicitud.capturafoto')
 {{-- @include('includes.operativoslist') --}}
 @endsection
 
