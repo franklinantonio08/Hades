@@ -183,13 +183,6 @@
         <script src="{{ asset('plugins/jquery-validation/dist/additional-methods.js') }}"></script>
 
         <script src="{{ asset('js/comun/comun.js') }}"></script>
-
-        
-        
-
-        <script>
-            </script>
-
    
 
 @yield('scripts')

@@ -177,20 +177,20 @@
                                 <tr>
                                     <th class="bg-primary fs-8 fw-semibold text-white">#</th>
                                     <th class="bg-primary fs-8 fw-semibold text-white">Nombre</th>
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Documento</th>                                    
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Nacionalidad</th>                                    
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Motivo</th>
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Operativo</th>
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Provincia</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Ruex</th>                                    
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Codigo</th>                                    
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Dirección</th>
+                                    {{-- <th class="bg-primary fs-8 fw-semibold text-white">Operativo</th> --}}
+                                    {{-- <th class="bg-primary fs-8 fw-semibold text-white">Provincia</th>
                                     <th class="bg-primary fs-8 fw-semibold text-white">Funcionario</th>
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Aprobado por</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Aprobado por</th> --}}
                                     <th class="bg-primary fs-8 fw-semibold text-white">Estado</th>
                                     <th class="bg-primary fs-8 fw-semibold text-white">Acción<i class="fa fa-ellipsis-h"></i></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr class="gradeX">
-                                    <td colspan="11" class="text-center">No hay datos disponibles</td>
+                                    <td colspan="7" class="text-center">No hay datos disponibles</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -230,12 +230,12 @@
     </script>
 
     <!-- JS Específicos -->
-    <script src="{{ asset('js/dist/solicitud/solicitud.js') }}"></script>
+   
     <script src="{{ asset('js/comun/confirmacionModal.js') }}"></script>
     <script src="{{ asset('js/comun/messagebasicModal.js') }}"></script>
 
 
-    
+     <script src="{{ asset('js/dist/solicitud/solicitud.js') }}"></script>
 
     <!-- Plugins -->
     <script src="{{ asset('plugins/moment/moment.js') }}"></script>

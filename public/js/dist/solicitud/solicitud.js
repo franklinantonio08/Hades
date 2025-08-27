@@ -13,6 +13,18 @@ class Distsolicitud {
             { id: 'abajo',     texto: 'Mira hacia abajo',     icon: 'indicador-abajo' }
         ];
 
+        this.estatusColors = {
+            'Recibida': 'bg-secondary bg-gradient',
+            'En revisión':  'bg-info bg-gradient',
+            'Observada': 'bg-warning bg-gradient',
+            'Aprobada - con pago':  'bg-success bg-gradient',
+            'Aprobada - sin pago':  'bg-success bg-gradient',
+            'Multa emitida':    'bg-primary bg-gradient',
+            'Rechazada':   'bg-danger bg-gradient',
+            'Cancelada':   'bg-dark bg-gradient',
+            'default':   'bg-light bg-gradient text-dark'
+        };
+
     }
 
 
@@ -127,6 +139,11 @@ class Distsolicitud {
             _this.preSubmitCheck();
         });
     
+    }
+
+    getBadgeEstatus(estatus) {
+        const badgeClass = this.estatusColors[estatus] || this.estatusColors['default'];
+        return `<div class="${badgeClass} text-white text-center p-2" style="border-radius:4px; width:100%;">${estatus}</div>`;
     }
 
     getUserMediaCompat = function (constraints) {
@@ -676,11 +693,6 @@ class Distsolicitud {
 
         }
 
-        capturaFoto(){
-
-
-        }
-
         enviarFormulario() {
 
             console.log('Por Aqui vamos 2');
@@ -727,68 +739,77 @@ class Distsolicitud {
 
             //var BASEURL = window.location.origin; 
 
-        console.log(BASEURL);
+            console.log(BASEURL);
 
-          const _this = this
+            const _this = this
 
-              const table = $('#solicitud').DataTable( {
-                  "destroy": true,
-                  "searching": false,
-                  "serverSide": true,
-                  "info": true,
-                  "lengthMenu": objComun.lengthMenuDataTable,
-                  "pageLength": pageLengthDataTable, //Variable global en el layout
-                  "language": {
-                      "lengthMenu": "Mostrar _MENU_ por página",
-                      "zeroRecords": "No se ha encontrado información",
-                      "info": "Mostrando _PAGE_ de _PAGES_",
-                      "infoEmpty": "",
-                  },
-                  "ajax": {
-                      "url":BASEURL,
-                      "type": "POST",
-                      "error": this.handleAjaxError, 
-                      "data": function ( d ) {
-                          var info = $('#solicitud').DataTable().page.info();
-                          
-                          var orderColumnNumber = d.order[0].column;
-                          
-                          objComun.orderDirReporte = d.order[0].dir; //Variable global en comun.js
-                          objComun.orderColumnReporte = d.columns[orderColumnNumber].data; //Variable global en comun.js
-                          objComun.lengthActualReporte = info.length; //Variable global en comun.js
-                          objComun.paginaActualReporte = info.page+1; //Variable global en comun.js
-                          
-                          d.currentPage = info.page + 1;
-                          d.searchInput = search;
-                          d._token=token;
-                      }
-                  },
-                  "columns": [
-                      { "data": "id"},
-                      { "data": "departamento" },
-                      { "data": "TipoAtencion"},
-                      { "data": "codigo" },
-                      { "data": "estatus" },
-                      { "data": "detalle" , "orderable": false, className: "actions text-right"},
-                  ],
-                  "initComplete": function (settings, json) {
+            const table = $('#solicitud').DataTable( {
+                "destroy": true,
+                "searching": false,
+                "serverSide": true,
+                "autoWidth": false,
+                "info": true,
+                "lengthMenu": objComun.lengthMenuDataTable,
+                "pageLength": pageLengthDataTable, //Variable global en el layout
+                "language": {
+                    "lengthMenu": "Mostrar _MENU_ por página",
+                    "zeroRecords": "No se ha encontrado información",
+                    "info": "Mostrando _PAGE_ de _PAGES_",
+                    "infoEmpty": "",
+                },
+                "ajax": {
+                    "url":BASEURL,
+                    "type": "POST",
+                    "error": this.handleAjaxError, 
+                    "data": function ( d ) {
+                        var info = $('#solicitud').DataTable().page.info();
+                        
+                        var orderColumnNumber = d.order[0].column;
+                        
+                        objComun.orderDirReporte = d.order[0].dir; //Variable global en comun.js
+                        objComun.orderColumnReporte = d.columns[orderColumnNumber].data; //Variable global en comun.js
+                        objComun.lengthActualReporte = info.length; //Variable global en comun.js
+                        objComun.paginaActualReporte = info.page+1; //Variable global en comun.js
+                        
+                        d.currentPage = info.page + 1;
+                        d.searchInput = search;
+                        d._token=token;
+                    }
+                },
+                "columns": [
+                    { "data": "id"},
+                    { "data": "nombre" },
+                    { "data": "ruex"},
+                    { "data": "codigo" },
+                    { "data": "direccion" },
+                    // { "data": "estatus" },
+                    {
+                        "data": "estatus",
+                        render: function (data) {
+                            return _this.getBadgeEstatus(data);
+                        }
+                    },
 
-                  },
-                  "infoCallback": function( settings, start, end, max, total, pre ) {
+                    { "data": "detalle" , "orderable": false, className: "actions text-end"},
+                ],
 
-                      _this.desactivarsolicitud();
+                "initComplete": function (settings, json) {
 
-                      var api = this.api();
-                      var pageInfo = api.page.info();
-                      return 'Mostrando '+ (pageInfo.page+1) +' de '+ pageInfo.pages;
-                  }
-              });
-  
-          }
+                },
+                "infoCallback": function( settings, start, end, max, total, pre ) {
 
-          handleAjaxError( xhr, textStatus, error ) {
-              console.log(error);
-          }
+                    _this.desactivarsolicitud();
+
+                    var api = this.api();
+                    var pageInfo = api.page.info();
+                    return 'Mostrando '+ (pageInfo.page+1) +' de '+ pageInfo.pages;
+                }
+            });  
+        }
+
+        handleAjaxError( xhr, textStatus, error ) {
+            console.log(error);
+        }
 
           /*END TABLA USUARIO*/
 
@@ -957,12 +978,13 @@ class Distsolicitud {
   }
 
 
-// $(document).ready(function(){
+$(document).ready(function(){
+  const objDistsolicitud = new Distsolicitud();
+  objDistsolicitud.init();
+});
+
+// document.addEventListener("DOMContentLoaded", () => {
 //   const objDistsolicitud = new Distsolicitud();
 //   objDistsolicitud.init();
 // });
 
-document.addEventListener("DOMContentLoaded", () => {
-  const objDistsolicitud = new Distsolicitud();
-  objDistsolicitud.init();
-});

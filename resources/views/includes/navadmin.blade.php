@@ -72,7 +72,7 @@
                                                                 <svg class="nav-icon me-2" width="20" height="20" style="color: #c7eb74;">
                                                                         <use xlink:href="{{ asset('vendors/@coreui/icons/svg/free.svg#cil-description') }}"></use>
                                                                 </svg>
-                                                                <span class="nav-text">Mis Solicitud</span>
+                                                                <span class="nav-text">Mis Solicitudes</span>
                                                         </a>
                                                 </li>
 
