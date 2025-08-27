@@ -12,6 +12,13 @@
 
     const ENDPOINT_FILIACION = @json(route('registro.consultaFiliacion'));
 
+    document.addEventListener("DOMContentLoaded", function() {
+      const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+      })
+    });
+
   </script>
 
 @endsection
@@ -145,7 +152,9 @@
           @error('documento_tipo') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
         </div>
         <div class="col-12 col-md-6">
-          <label for="documento_numero" class="form-label fw-semibold">N.º de documento</label>
+          <label for="documento_numero" class="form-label fw-semibold">N.º de documento
+              <i class="bi bi-info-circle ms-1 text-primary" data-bs-toggle="tooltip" data-bs-html="true" title="<img src='{{ asset('images/carnet.png') }}' alt='Ejemplo N° Filiación' width='400'>"></i>      
+          </label>
           <input id="documento_numero" type="text" name="documento_numero" value="{{ old('documento_numero') }}"
                  class="form-control @error('documento_numero') is-invalid @enderror"
                  placeholder="Ej: 701234">

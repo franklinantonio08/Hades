@@ -1,26 +1,56 @@
 class Distsolicitud {
+
     constructor() {
+
+        this.stream = null;
+        this.capturas = [];
+
+        this.instrucciones = [
+            { id: 'frente',    texto: 'Mira al frente',       icon: 'indicador-frente' },
+            { id: 'izquierda', texto: 'Mira a la izquierda',  icon: 'indicador-izquierda' },
+            { id: 'derecha',   texto: 'Mira a la derecha',    icon: 'indicador-derecha' },
+            { id: 'arriba',    texto: 'Mira hacia arriba',    icon: 'indicador-arriba' },
+            { id: 'abajo',     texto: 'Mira hacia abajo',     icon: 'indicador-abajo' }
+        ];
+
     }
+
 
     init(){
         
         if($('#editarregistro').length) {
             this.cambia_motivo();
-      }
+        }
 
-      if($('#nuevoregistro').length) {
-        
-        this.validatesolicitud();
+        if($('#nuevoregistro').length) {
+            
+            this.validatesolicitud();
+            this.toggleViviendaFields();
+        }
 
-        this.toggleViviendaFields();
-      }
-
-      if($('#solicitud').length) {
-        this.solicitud();
-    }
+        if($('#solicitud').length) {
+            this.solicitud();
+        }
 
     
-      this.acciones();
+        this.acciones();
+
+        const $modal = $('#tomarFotoModal');
+        $modal.on('shown.bs.modal', () => this.iniciarCamara());
+        $modal.on('hidden.bs.modal', () => this.detenerCamara());
+
+        // Botones del modal
+        $(document)
+          .off('click', '#btnCapturarMovimiento')
+          .on('click', '#btnCapturarMovimiento', () => this.runSelfieFlow());
+
+        $(document)
+          .off('click', '#btnRepetirSelfie')
+          .on('click', '#btnRepetirSelfie', () => this.resetSelfieUI(true));
+
+        $(document)
+          .off('click', '#btnFinalizar')
+          .on('click', '#btnFinalizar', () => this.finalizarSelfieYEnviar());
 
     }
 
@@ -28,15 +58,14 @@ class Distsolicitud {
 
         const _this = this;
                 
-        $( "#searchButton" ).off('click');
-        $( "#searchButton" ).click(function() {
-            _this.solicitud( $( "#search" ).val() );
+        $("#searchButton").off('click').click(function() {
+            _this.solicitud($("#search").val());
         });   
 
         $('#search').keypress(function(event){
             var keycode = (event.keyCode ? event.keyCode : event.which);
             if(keycode == '13'){
-                _this.solicitud( $( "#search" ).val());
+                _this.solicitud($("#search").val());
                 event.preventDefault();
                 return false;
             }
@@ -95,11 +124,228 @@ class Distsolicitud {
         
 
         $('#guardarForm').off('click').on('click', function() {
-          _this.preSubmitCheck();
+            _this.preSubmitCheck();
         });
-
     
     }
+
+    getUserMediaCompat = function (constraints) {
+        const nav = navigator;
+        // Moderno
+        if (nav.mediaDevices && typeof nav.mediaDevices.getUserMedia === 'function') {
+            return nav.mediaDevices.getUserMedia(constraints);
+        }
+        // Legacy (Chrome/Safari viejos/Firefox viejos)
+        const legacy = nav.getUserMedia || nav.webkitGetUserMedia || nav.mozGetUserMedia || nav.msGetUserMedia;
+        if (legacy) {
+            return new Promise((resolve, reject) => legacy.call(nav, constraints, resolve, reject));
+        }
+        return Promise.reject(new Error('getUserMedia no soportado en este navegador/origen.'));
+    };
+
+
+    async iniciarCamara() {
+        const _this = this
+
+
+        const video = document.getElementById('videoSelfie');
+        if (!video) return;
+
+        // Cerrar stream previo
+        if (this.stream) _this.detenerCamara();
+
+        // Verifica origen seguro: HTTPS o localhost
+        const isSecure = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
+        if (!isSecure) {
+            console.error('getUserMedia requiere HTTPS o localhost.');
+            alert('Para usar la cámara, abre esta página en HTTPS o desde localhost.');
+            return;
+        }
+
+        try {
+            // Intenta frontal; si falla, genérico
+            try {
+            this.stream = await _this.getUserMediaCompat({ video: { facingMode: 'user' }, audio: false });
+            } catch (e1) {
+            this.stream = await _this.getUserMediaCompat({ video: true, audio: false });
+            }
+
+            video.srcObject = this.stream;
+            await video.play();
+        } catch (err) {
+            console.error(err);
+            alert('No se pudo acceder a la cámara: ' + (err && err.message ? err.message : err));
+        }
+    }
+
+    detenerCamara() {
+            if (this.stream) {
+                this.stream.getTracks().forEach(t => t.stop());
+                this.stream = null;
+            }
+            const video = document.getElementById('videoSelfie');
+            if (video) video.srcObject = null;
+    }
+
+    /* ====== UTILIDADES ====== */
+    delay(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+    async cuentaRegresiva(el) {
+        const _this = this
+        if (!el) return;
+        el.innerText = "Capturando en 3...";
+        await _this.delay(800);
+        el.innerText = "Capturando en 2...";
+        await _this.delay(800);
+        el.innerText = "Capturando en 1...";
+        await _this.delay(800);
+    }
+
+    timestampYYYYMMDD_HHMMSS() {
+        const d = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+    }
+
+    /* ====== CAPTURA FOTO -> AL FINAL ENVÍA FORMULARIO ====== */
+    resetSelfieUI(clearCapture){
+
+        const _this = this;
+        const canvas = document.getElementById('canvasSelfie');
+        const estado = document.getElementById('estadoCaptura');
+        const instruccionDiv = document.getElementById('instruccionSelfie');
+        const loader = document.getElementById('loaderCircular');
+
+        // Limpiar TODOS los indicadores
+        _this.instrucciones.forEach(s => {
+            const el = document.getElementById(s.icon);
+            el?.classList.remove('completado','activo');
+        });
+
+        // textos + loader
+        if (estado) estado.innerText = '';
+        if (instruccionDiv) instruccionDiv.innerHTML = `<span class="text-primary fw-bold">Por favor, mantente mirando al frente</span>`;
+        if (loader) loader.style.display = 'none';
+
+        // canvas
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.classList.add('d-none');
+        }
+
+        // botones
+        $('#btnRepetirSelfie').addClass('d-none');
+        $('#btnCapturarMovimiento').prop('disabled', false);
+
+        // capturas
+        if (clearCapture) this.capturas = [];
+    }
+
+    async runSelfieFlow(){
+        
+        const _this = this
+
+        const video = document.getElementById('videoSelfie');
+        const canvas = document.getElementById('canvasSelfie');
+        const estado = document.getElementById('estadoCaptura');
+        const instruccionDiv = document.getElementById('instruccionSelfie');
+        const loader = document.getElementById('loaderCircular');
+        const btn = document.getElementById('btnCapturarMovimiento');
+
+        if (!video || !canvas) return;
+        if (!this.stream) await _this.iniciarCamara();
+
+        // UI inicial
+        btn.disabled = true;
+        $('#btnRepetirSelfie').addClass('d-none');
+        this.instrucciones.forEach(s => {
+            const el = document.getElementById(s.icon);
+            el?.classList.remove('completado','activo');
+        });
+        canvas.classList.add('d-none');
+        if (estado) estado.innerText = '';
+        if (instruccionDiv) instruccionDiv.innerHTML = `<span class="text-primary fw-bold">Por favor, mantente mirando al frente</span>`;
+
+        // limpiamos capturas: guardaremos SOLO el último set
+        this.capturas = [];
+
+        // helper para capturar un paso
+        const capturarPaso = async (step) => {
+            // loader + escaneo (solo frente puede ser más largo; aquí uso mismo)
+            if (loader) loader.style.display = 'block';
+            if (estado) estado.innerText = "Escaneando rostro...";
+            await this.delay(1000);
+            if (loader) loader.style.display = 'none';
+
+            // indicador activo
+            const iconEl = document.getElementById(step.icon);
+            iconEl?.classList.add('activo');
+
+            // instrucción + cuenta regresiva
+            if (instruccionDiv) instruccionDiv.innerText = step.texto;
+            await _this.cuentaRegresiva(estado);
+
+            // dibujar en canvas y mostrar
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.classList.remove('d-none');
+
+            // canvas a blob
+            const nombre = step.id + '_' + _this.timestampYYYYMMDD_HHMMSS();
+            const blob = await new Promise((resolve) => {
+            canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.92);
+            });
+            if (!blob) throw new Error('No se pudo capturar blob');
+
+            // guardar
+            this.capturas.push({ nombre, blob });
+
+            // feedback
+            iconEl?.classList.remove('activo');
+            iconEl?.classList.add('completado');
+            if (estado) estado.innerText = "✔ Capturado";
+            await this.delay(500);
+        };
+
+        try {
+            // frente primero, luego resto
+            await capturarPaso(_this.instrucciones[0]);
+            for (let i = 1; i < _this.instrucciones.length; i++){
+            await capturarPaso(this.instrucciones[i]);
+            }
+
+            // fin
+            if (instruccionDiv) instruccionDiv.innerText = '✅ Captura completa';
+            if (estado) estado.innerText = '';
+            $('#btnRepetirSelfie').removeClass('d-none');
+
+        } catch (err) {
+            console.error(err);
+            if (estado) estado.innerText = 'Error durante la captura: ' + (err?.message || err);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async finalizarSelfieYEnviar(){
+
+        const _this = this
+        // Verifica que exista selfie
+        if (!this.capturas.length) {
+            const estado = document.getElementById('estadoCaptura');
+            if (estado) estado.innerText = "Por favor, toma la selfie antes de finalizar.";
+            return;
+        }
+
+        // Cierra modal y cámara
+        $('#tomarFotoModal').modal('hide');
+        _this.detenerCamara();
+
+        // Envía el formulario con la selfie adjunta
+        _this.enviarFormulario();
+    }
+
 
         buscaDistrito() {
             objComun.cargarSelectDependiente({
@@ -289,87 +535,191 @@ class Distsolicitud {
 
         preSubmitCheck() {
 
-            console.log('Por Aqui vamos');
+            const _this = this
 
-            const _this = this 
+            console.log('Ejecutando preSubmitCheck');
 
-            const $form = $("#nuevoregistro");
+            // Asegurar visibilidad correcta antes de validar
+            this.toggleViviendaFields();
+            this.toggleReciboFields();
+            this.toggleDocsByDomicilio();
 
-            // 1) Ejecutar validación jQuery Validate
-            if (!$form.valid()) {
-                const objMessagebasicModal = new MessagebasicModal(
-                    'Validación',
-                    'Por favor corrige los campos marcados antes de continuar.'
-                );
-                objMessagebasicModal.init();
+            // --- helpers visuales ---
+            const clearErrors = () => {
+                $("#formErrorList").empty();
+                $("#formErrorBox").addClass("d-none");
+                $("#nuevoregistro .is-invalid").removeClass("is-invalid").removeAttr("aria-invalid");
+                $("#nuevoregistro .invalid-feedback.js-inline").remove();
+            };
+
+            const addError = (msg) => {
+                $("#formErrorList").append(`<li>${msg}</li>`);
+            };
+
+            // registra una sola vez listeners para limpiar el error al corregir
+            const attachLiveValidation = (selector) => {
+                const $el = $(selector);
+                if (!$el.length) return;
+                if ($el.data('live-bound')) return; // evita duplicar listeners
+                $el.data('live-bound', true);
+
+                const type = ($el.attr('type') || '').toLowerCase();
+
+                // texto/number/select: quitar rojo al escribir/cambiar
+                $el.on('input change', function () {
+                $(this).removeClass('is-invalid').removeAttr('aria-invalid');
+                const $fb = $(this).next('.invalid-feedback.js-inline');
+                if ($fb.length) $fb.remove();
+                });
+
+                // archivos: change basta
+                if (type === 'file') {
+                $el.on('change', function () {
+                    $(this).removeClass('is-invalid').removeAttr('aria-invalid');
+                    const $fb = $(this).next('.invalid-feedback.js-inline');
+                    if ($fb.length) $fb.remove();
+                });
+                }
+            };
+
+            const requireField = (selector, message) => {
+                const $el = $(selector);
+                attachLiveValidation(selector);
+                if (!$el.length) return true;
+
+                const isFile = ($el.attr("type") || "").toLowerCase() === "file";
+                const valOk = isFile ? ($el[0].files && $el[0].files.length > 0)
+                                    : !!$el.val()?.toString().trim();
+
+                if (!valOk) {
+                $el.addClass("is-invalid").attr("aria-invalid", "true");
+                // feedback inline (asegura texto rojo visible)
+                const $next = $el.next(".invalid-feedback");
+                if ($next.length === 0 || !$next.hasClass('js-inline')) {
+                    $el.after(`<div class="invalid-feedback js-inline d-block">${message}</div>`);
+                } else {
+                    $next.addClass("d-block").text(message);
+                }
+                addError(message);
+                return false;
+                }
+                return true;
+            };
+
+            const showErrors = () => {
+                $("#formErrorBox").removeClass("d-none");
+                document.getElementById("formErrorBox")
+                .scrollIntoView({ behavior: "smooth", block: "start" });
+                const $firstInvalid = $("#nuevoregistro .is-invalid").first();
+                if ($firstInvalid.length) $firstInvalid.trigger("focus");
+            };
+
+            // --- iniciar ---
+            clearErrors();
+            let hasErrors = false;
+            const flag = (bad) => { if (bad) hasErrors = true; };
+
+            // === Ubicación ===
+            flag(!requireField("#provincia", "Debe seleccionar la provincia."));
+            flag(!requireField("#distrito", "Debe seleccionar el distrito."));
+            flag(!requireField("#corregimiento", "Debe seleccionar el corregimiento."));
+
+            // === Dirección específica ===
+            flag(!requireField("#barrio", "Debe ingresar el barrio o urbanización."));
+            flag(!requireField("#calle", "Debe ingresar la calle o avenida."));
+            flag(!requireField("#punto_referencia", "Debe ingresar un punto de referencia."));
+
+            // === Tipo de vivienda (NO pintamos los radios; solo sus campos) ===
+            const isCasa     = document.getElementById("tv_casa")?.checked === true;
+            const isEdificio = document.getElementById("tv_edificio")?.checked === true;
+            const isHotel    = document.getElementById("tv_hotel")?.checked === true;
+
+            if (isCasa) {
+                flag(!requireField("#numero_casa", "Debe ingresar el número de casa."));
+            }
+            if (isEdificio) {
+                flag(!requireField("#nombre_edificio", "Debe ingresar el nombre del edificio."));
+                flag(!requireField("#piso", "Debe ingresar el piso."));
+                flag(!requireField("#apartamento", "Debe ingresar el apartamento."));
+            }
+            if (isHotel) {
+                flag(!requireField("#nombre_hotel", "Debe ingresar el nombre del hotel."));
+            }
+
+            // === Documento de domicilio (siempre) ===
+            flag(!requireField("#domicilio_archivo", "Debe adjuntar el documento de domicilio."));
+
+            // === Recibo de servicio (si NO es reserva de hotel) ===
+            const isReservaHotel = document.getElementById("dom_reservahotel")?.checked === true;
+            if (!isReservaHotel) {
+                flag(!requireField("#recibo_archivo", "Debe adjuntar el recibo de servicio."));
+                const isTercero = document.getElementById("recibo_tercero")?.checked === true;
+                if (isTercero) {
+                flag(!requireField("#recibo_notariado_archivo", "Debe adjuntar el comprobante notariado del recibo de tercero."));
+                flag(!requireField("#recibo_cedula_titular", "Debe adjuntar la cédula del titular del recibo (frente y reverso)."));
+                }
+            }
+
+            // === Carnet migratorio (siempre) ===
+            flag(!requireField("#carnet_frente", "Debe adjuntar el carnet migratorio (anverso)."));
+            flag(!requireField("#carnet_reverso", "Debe adjuntar el carnet migratorio (reverso)."));
+
+            // resultado
+            if (hasErrors) {
+                showErrors();
                 return;
             }
 
-            // 2) Construir el HTML de vista previa
-            const previewHtml = this._buildPreviewHtml();
+            $("#tomarFotoModal").modal("show");          
 
-            // 3) Usar MessagebasicModal
-            const objMessagebasicModal = new MessagebasicModal(
-                'Revisión de Datos',
-                previewHtml,
-                {
-                    showConfirm: true,           // mostramos botón "Confirmar"
-                    confirmText: 'Confirmar y Enviar',
-                    onConfirm: () => {
-                        $form.trigger('submit'); // al confirmar se envía el form
-                    }
-                }
-            );
+            // _this.enviarFormulario();             
 
-            objMessagebasicModal.init();
         }
 
-        _buildPreviewHtml() {
+        capturaFoto(){
+
+
+        }
+
+        enviarFormulario() {
 
             console.log('Por Aqui vamos 2');
 
+            const $form = $("#nuevoregistro");
+            const formData = new FormData($form[0]);
 
-            const val = (sel) => $(sel).val() || '';
-            const textOfSelect = (sel) => {
-                const v = $(sel).val();
-                return v ? $(sel).find('option:selected').text() : '';
-            };
-            const radioVal = (name) => $(`input[name="${name}"]:checked`).val() || '';
-            const fileNames = (inputSel) => {
-                const input = document.querySelector(inputSel);
-                if (!input || !input.files || input.files.length === 0) return '—';
-                return Array.from(input.files).map(f => f.name).join(', ');
-            };
+            $.ajax({
+                url: $form.attr("action"),   // apunta a /dist/solicitud/nuevo
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (resp) {
+                    console.log("Respuesta servidor:", resp);
 
-            // Armar listas de preview
-            return `
-                <h6 class="fw-bold text-primary">Datos Personales</h6>
-                <ul>
-                    <li><b>Nombre:</b> ${val('#primerNombre')} ${val('#segundoNombre')} ${val('#primerApellido')} ${val('#segundoApellido')}</li>
-                    <li><b>Correo:</b> ${val('#correo')}</li>
-                    <li><b>Pasaporte:</b> ${val('#pasaporte')}</li>
-                </ul>
+                    const objMessagebasicModal = new MessagebasicModal(
+                        "Solicitud",
+                        "Se ha enviado correctamente la información."
+                    );
+                    objMessagebasicModal.init();
+                },
+                error: function (xhr) {
+                    console.error(xhr);
+                    const objMessagebasicModal = new MessagebasicModal(
+                        "Error",
+                        "Hubo un problema al enviar la solicitud."
+                    );
+                    objMessagebasicModal.init();
+                }
+            });
+        
+            // const m = new MessagebasicModal(
+            //     'Validación',
+            //     'Por favor corrige los campos marcados antes de continuar.',
+            //     { type: 'warning' } // opcional: info | warning | danger | success | primary
+            // );
 
-                <h6 class="fw-bold text-primary">Dirección</h6>
-                <ul>
-                    <li><b>Provincia:</b> ${textOfSelect('#provincia')}</li>
-                    <li><b>Distrito:</b> ${textOfSelect('#distrito')}</li>
-                    <li><b>Corregimiento:</b> ${textOfSelect('#corregimiento')}</li>
-                    <li><b>Barrio:</b> ${val('#barrio')}</li>
-                    <li><b>Calle:</b> ${val('#calle')}</li>
-                </ul>
-
-                <h6 class="fw-bold text-primary">Documentos</h6>
-                <ul>
-                    <li><b>Prueba domicilio:</b> ${fileNames('#domicilio_archivo')}</li>
-                    <li><b>Recibo:</b> ${fileNames('#recibo_archivo')}</li>
-                    <li><b>Carnet Frente:</b> ${fileNames('#carnet_frente')}</li>
-                    <li><b>Carnet Reverso:</b> ${fileNames('#carnet_reverso')}</li>
-                </ul>
-
-                <h6 class="fw-bold text-primary">Comentario</h6>
-                <div>${val('textarea[name="comentario"]') || '—'}</div>
-            `;
+            // m.init();
         }
 
         /*BEGIN TABLA USUARIO*/
@@ -525,21 +875,21 @@ class Distsolicitud {
             
         }
 
-                  desactivarsolicitud(){
+            desactivarsolicitud(){
 
-              const _this = this
+                const _this = this
 
-              $( ".desactivar" ).off('click');
-                $( ".desactivar" ).click(function() {
+                $( ".desactivar" ).off('click');
+                    $( ".desactivar" ).click(function() {
+                        
+                        const solicitudId = $( this ).attr( "attr-id" );
+                        var opciones = {solicitudId:solicitudId};
+                        const message = 'Seguro que desea cambiar de estatus el solicitud?'
+                        const objConfirmacionmodal = new Confirmacionmodal(message, opciones, _this.callbackDesactivarsolicitud);
+                    objConfirmacionmodal.init();
                     
-                    const solicitudId = $( this ).attr( "attr-id" );
-                    var opciones = {solicitudId:solicitudId};
-                    const message = 'Seguro que desea cambiar de estatus el solicitud?'
-                    const objConfirmacionmodal = new Confirmacionmodal(message, opciones, _this.callbackDesactivarsolicitud);
-                  objConfirmacionmodal.init();
-                  
-              });
-          }
+                });
+            }
           
 
           callbackDesactivarsolicitud(response, opciones){
@@ -557,7 +907,7 @@ class Distsolicitud {
                   )
                   .done(function( data ) {
 
-                    console.log('por aqui vamos')
+                    console.log('por aqui vamos callbackDesactivarsolicitud')
 
 
                       if(data.response == true){
@@ -607,7 +957,12 @@ class Distsolicitud {
   }
 
 
-$(document).ready(function(){
+// $(document).ready(function(){
+//   const objDistsolicitud = new Distsolicitud();
+//   objDistsolicitud.init();
+// });
+
+document.addEventListener("DOMContentLoaded", () => {
   const objDistsolicitud = new Distsolicitud();
   objDistsolicitud.init();
 });

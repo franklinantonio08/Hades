@@ -11,7 +11,6 @@ class RIDProcesslogs extends Model
 
     protected $table = 'rid_processlogs';
 
-
     protected $fillable = [
         'log_status',
         'message',
