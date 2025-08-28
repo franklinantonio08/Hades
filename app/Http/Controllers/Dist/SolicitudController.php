@@ -732,5 +732,15 @@ class SolicitudController extends Controller
                         
             }
 
+    public function ValidarSolicitud(){
+
+        $tieneActiva = SolicitudCambioResidencia::where('usuario_id', Auth::id())
+            ->whereNotIn('estatus', ['Rechazada', 'Cancelada'])
+            ->exists();
+
+            return response()->json(['tieneActiva' => $tieneActiva]);
+
+        }
+
 
 }
