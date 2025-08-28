@@ -138,7 +138,40 @@ class Distsolicitud {
         $('#guardarForm').off('click').on('click', function() {
             _this.preSubmitCheck();
         });
+
+        $('#nuevoRegistroBtn').off('click').on('click', function() {
+            _this.validaSolicitud();
+        });
+
+
+
     
+    }
+
+    validaSolicitud(){
+
+        fetch(BASEURL + "/validar-solicitud", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": token
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.tieneActiva) {
+                // Mostrar modal si ya hay solicitud activa
+                var modal = new bootstrap.Modal(document.getElementById('modalSolicitudActiva'));
+                modal.show();
+            } else {
+                // Redirigir a la vista de nuevo registro
+                window.location.href = BASEURL + "/nuevo";
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+        });
     }
 
     getBadgeEstatus(estatus) {
