@@ -1,0 +1,52 @@
+/* public/css/payment/payment.css */
+#creditcard-container {
+    width: 100%;
+    min-height: 400px;
+    max-height: 70vh; /* 70% de la altura de la ventana */
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    overflow: auto;
+    background: #ffffff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+    padding: 0;
+}
+
+iframe#creditcard-widget {
+    width: 100%;
+    height: 850px; /* Altura suficiente para generar scroll */
+    border: none;
+    border-radius: 12px;
+}
+
+/* Mejora la experiencia mobile */
+@media (max-width: 768px) {
+    #creditcard-container {
+        max-height: 60vh;
+        margin: 15px 0;
+    }
+    
+    iframe#creditcard-widget {
+        height: 900px; /* Más altura en mobile */
+    }
+}
+
+/* Estilos para la barra de scroll (opcional pero recomendado) */
+#creditcard-container::-webkit-scrollbar {
+    width: 10px;
+}
+
+#creditcard-container::-webkit-scrollbar-track {
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+#creditcard-container::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 10px;
+    border: 2px solid #f8f9fa;
+}
+
+#creditcard-container::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}
