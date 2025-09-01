@@ -36,15 +36,16 @@
             <div class="col-md-6 mb-4">
                 <label class="form-label">Moneda</label>
                 <select class="form-control" name="currency" required>
-                    <option value="840">USD - Dólar Americano</option>
+                    <option value="USD">USD - Dólar Americano</option>
                 </select>
             </div>
         </div>
 
         <h4>Datos del Tarjetahabiente</h4>
         <div class="card p-3 mb-3">
-            <!-- Aquí se cargará dinámicamente el widget -->
             <div id="creditcard-container">
+                {{-- ❌ REMUEVE el iframe estático --}}
+                {{-- ✅ Se cargará DINÁMICAMENTE después de que JS esté listo --}}
                 <div id="widget-loading" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Cargando pasarela de pago...</span>
@@ -56,15 +57,12 @@
 
         <div id="widget-messages" class="alert alert-info mt-3" style="display: none;"></div>
 
-        <!-- Formulario oculto para procesar pagos -->
+        <!-- Formulario para procesar pagos -->
         <div id="payment-form" class="mt-4 p-4 border rounded">
             <form id="process-payment-form">
                 @csrf
                 <input type="hidden" name="token" id="token-input">
                 <input type="hidden" name="account_number" id="account-number-input">
-
-                <div id="card-element"><!-- Aquí se renderiza la tarjeta --></div>
-                <button id="submit-button" type="button">Generar Token</button>
 
                 <div class="text-center">
                     <button type="submit" class="btn btn-primary btn-lg fw-bold" id="btn-process">
@@ -72,17 +70,19 @@
                     </button>
                 </div>
             </form>
-            <input type="hidden" id="payment_token" name="payment_token">
-
         </div>
 
+        <div class="mt-3">
+            <button onclick="testRealToken()" class="btn btn-success btn-sm">
+                🧪 Probar con Token Real
+            </button>
+        </div>
     </div>
 </div>
 @endsection
 
 @section('scripts')
 <script>
-    // Configuración global que usará payment.js
     window.paymentConfig = {
         routes: {
             handleWidgetCallback: '{{ route("payment.handleWidgetCallback") }}',
@@ -98,6 +98,28 @@
         }
     };
 </script>
-<script src="https://code.jquery.com/jquery-migrate-3.4.1.min.js"></script>
 <script src="{{ asset('js/dist/payment/payment.js') }}"></script>
+<script>
+    function testRealToken() {
+        // Simular la respuesta REAL del widget
+        const realResponse = {
+            TokenDetails: {
+                AccountToken: 'd64d152d-ceef-4c70-8bf1-f673229ee63f', // Token REAL
+                AccountNumber: '123456789',
+                CardHolderName: 'Jonathan De Bello',
+                CardNumber: '5240013861347542',
+                ExpirationDate: '12/2025'
+            }
+        };
+        
+        console.log('🧪 Probando con token REAL:', realResponse.TokenDetails.AccountToken);
+        
+        // Llamar al callback manualmente
+        if (window.SaveCreditCard_SuccessCallback) {
+            window.SaveCreditCard_SuccessCallback(realResponse);
+        } else {
+            alert('❌ Callback no disponible. Recarga la página.');
+        }
+    }
+    </script>
 @endsection
