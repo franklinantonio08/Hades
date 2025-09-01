@@ -246,8 +246,8 @@
     @include('includes.messagebasicmodal')
     @include('includes.loader')
     @include('includes.download')
-    {{-- @include('dist.infractor.mostrar') --}}
-    {{-- @include('dist.infractor.imprimir') --}}
+    @include('dist.solicitud.mostrar')
+    @include('dist.solicitud.buscar')
 @endsection
 
 @section('scripts')
