@@ -10,8 +10,8 @@ class CommonHelper
 {
     public $message = 'No tiene permiso para acceder a esta sección.';
 
-    public function usuariopermiso($codigoPermiso)
-    {
+    public function usuariopermiso($codigoPermiso) {
+
         $usuariopermiso = DB::table('usuario_permiso')
         ->where('usuario_permiso.usuarioId', '=', Auth::user()->id)
         ->where('usuario_permiso.codigo', '=', $codigoPermiso)
@@ -25,5 +25,10 @@ class CommonHelper
         }
 
         return true;
+    }
+
+    public function generaCodigoSCR(): string {
+        // Ajusta a tu formato preferido (y/o valida uniqueness si quieres)
+        return 'SCR-' . now()->format('YmdHis') . '-' . random_int(100, 999);
     }
 }

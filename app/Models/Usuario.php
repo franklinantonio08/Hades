@@ -13,5 +13,6 @@ class Usuario extends Model
 {
     use HasFactory;
 
+    protected $table = 'users';
     
 }

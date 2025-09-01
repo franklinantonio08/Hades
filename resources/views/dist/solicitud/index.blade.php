@@ -128,12 +128,21 @@
                     </div> --}}
 
                     <!-- Nuevo -->
-                    <div class="col-md-2">
+                    {{-- <div class="col-md-2">
                         <label class="form-label fw-semibold text-muted invisible">Nuevo</label>
                         <a href="{{ url()->current() }}/nuevo" class="btn btn-primary w-100 shadow-sm fw-semibold text-white"">
                             <i class="bi bi-file-earmark-plus me-1"></i> Nuevo Registro
                         </a>
+                    </div> --}}
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-muted invisible">Nuevo</label>
+                        <button type="button" id="nuevoRegistroBtn" 
+                                class="btn btn-primary w-100 shadow-sm fw-semibold text-white">
+                            <i class="bi bi-file-earmark-plus me-1"></i> Nuevo Registro
+                        </button>
                     </div>
+
 
                     <!-- Reporte -->
                     @if (Auth::user()->usuariopermiso('035'))
@@ -177,20 +186,20 @@
                                 <tr>
                                     <th class="bg-primary fs-8 fw-semibold text-white">#</th>
                                     <th class="bg-primary fs-8 fw-semibold text-white">Nombre</th>
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Documento</th>                                    
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Nacionalidad</th>                                    
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Motivo</th>
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Operativo</th>
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Provincia</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Ruex</th>                                    
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Codigo</th>                                    
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Dirección</th>
+                                    {{-- <th class="bg-primary fs-8 fw-semibold text-white">Operativo</th> --}}
+                                    {{-- <th class="bg-primary fs-8 fw-semibold text-white">Provincia</th>
                                     <th class="bg-primary fs-8 fw-semibold text-white">Funcionario</th>
-                                    <th class="bg-primary fs-8 fw-semibold text-white">Aprobado por</th>
+                                    <th class="bg-primary fs-8 fw-semibold text-white">Aprobado por</th> --}}
                                     <th class="bg-primary fs-8 fw-semibold text-white">Estado</th>
                                     <th class="bg-primary fs-8 fw-semibold text-white">Acción<i class="fa fa-ellipsis-h"></i></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr class="gradeX">
-                                    <td colspan="11" class="text-center">No hay datos disponibles</td>
+                                    <td colspan="7" class="text-center">No hay datos disponibles</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -214,6 +223,24 @@
         </div>
     </div>
 
+    <div class="modal fade" id="modalSolicitudActiva" tabindex="-1" aria-labelledby="modalSolicitudActivaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title">Solicitud Activa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Ya tienes una solicitud activa. Debes finalizarla antes de crear una nueva.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
     @include('includes.confirmacionmodal')
     @include('includes.messagebasicmodal')
@@ -230,12 +257,12 @@
     </script>
 
     <!-- JS Específicos -->
-    <script src="{{ asset('js/dist/solicitud/solicitud.js') }}"></script>
+   
     <script src="{{ asset('js/comun/confirmacionModal.js') }}"></script>
     <script src="{{ asset('js/comun/messagebasicModal.js') }}"></script>
 
 
-    
+     <script src="{{ asset('js/dist/solicitud/solicitud.js') }}"></script>
 
     <!-- Plugins -->
     <script src="{{ asset('plugins/moment/moment.js') }}"></script>
