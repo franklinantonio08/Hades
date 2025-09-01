@@ -1,92 +1,97 @@
-@section('scripts')
-
-<script>
-	var token = '{{ csrf_token() }}';
-</script>
-	
-<script type="text/javascript" src="{{ asset('../js/dist/solicitud/solicitud.js') }}"></script>
-
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> 
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-
-@stop
-
-@extends('layouts.admin')
-
-@section('content')
-
-   
-<!-- ACTION BUTTONS -->
-<div class="row">
-
-    @include('includes/errors')
-    @include('includes/success')
-
-</div>
-
-	<div class="col-lg-12">
-        <div class="card mb-4">
-			
-            <div class="card-body p-4">
-                <div class="row">
-                    <div class="col">
-                        <div class="card-title fs-4 fw-semibold">Solicitud</div>
-                    </div>
-                </div>
-			</div>
-
-            <div class="table-responsive">
-
-                   
-                <!-- Formulario -->
-
-                <div class="container-fluid px-2 my-2">
-                            {{ csrf_field() }}
-                        <div class="col-lg-5 m-b-6">
-
-                                <div class="form-floating mb-3">
-                                    <input class="form-control" id="nombre" name="nombre" type="text" placeholder="Nombre" readonly value="{{$solicitud->nombre}}"/>
-                                    <label for="nombre">Nombre</label>
-                                </div>
-
-                                <div class="form-floating mb-3">
-                                    <input class="form-control" id="codigo" name="codigo" type="text" placeholder="Codigo" readonly value="{{$solicitud->codigo}}"/>
-                                    <label for="codigo">Codigo</label>
-                                </div>
-
-                                <div class="form-floating mb-3">
-                                    <input class="form-control" id="estatus" name="estatus" type="text" placeholder="Estatus" readonly value="{{$solicitud->estatus}}"/>
-                                    <label for="estatus">Estatus</label>
-                                </div>
-                                
-                               <!-- <div class="form-floating mb-3">
-                                    <textarea class="form-control" id="comentario" name="comentario" type="text" placeholder="Comentario" style="height: 10rem;" ></textarea>
-                                    <label for="comentario">Comentario</label>
-                                </div> -->
-
-                                <!-- ACTION BUTTONS -->
-                                    <div class="form-group row">
-                                        <div class="offset-12 col-12">
-                                            <a href="{{ url()->previous() }}"  class="btn btn-secondary text-white"><i class="fa fa-remove m-r-5"></i> Volver</a>
-                                        </div>
-                                    </div>
-                                <!-- end ACTION BUTTONS -->
-
-                               
-                        </div>
-                </div>
-            
-                <!-- Fin Formulario-->
-
+<!-- Modal Mejorado -->
+<div class="modal fade" id="solicitudModal" tabindex="-1" aria-labelledby="solicitudModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!-- Header del Modal -->
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="solicitudModalLabel">Detalles de la Multa</h5>
+                <button type="button" class="btn-close btn-secondary btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-	    </div>    
-    </div>  
+            
+            <!-- Cuerpo del Modal -->
+            <div class="modal-body">
 
+                <div id="estado-progress" class="mb-3"></div>
 
+                <div id="modal-content" class="text-start">
+                    <p class="text-muted">Cargando datos...</p>
+                </div>
+            </div>
+            
+            <!-- Footer del Modal -->
+       
 
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
 </div>
 
-@endsection
+<!-- Estilos personalizados opcionales -->
+<style>
+    #solicitudModalLabel {
+        font-weight: bold;
+    }
+    #modal-content p {
+        font-size: 1rem;
+    }
+    .modal-footer button {
+        font-size: 0.9rem;
+    }
+    /* --- Timeline Pro --- */
+    .t-card{
+    background: var(--bs-light);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .75rem;
+    padding: 1rem;
+    box-shadow: 0 .125rem .25rem rgba(0,0,0,.06);
+    }
 
+    .tline{ position:relative; margin:.25rem 0 0; padding-top:32px; }
+    .tline-bg{
+    position:absolute; left:0; right:0; top:14px;
+    height:8px; background: var(--bs-gray-200); border-radius:6px;
+    }
+    .tline-fill{
+    position:absolute; left:0; top:14px;
+    height:8px; width:0%;
+    background: linear-gradient(90deg, #198754 0%, #1f9d68 50%, #198754 100%); /* verde, un solo tono con degradé suave */
+    border-radius:6px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.02) inset, 0 .125rem .25rem rgba(25,135,84,.15);
+    transition: width .45s cubic-bezier(.22,.61,.36,1);
+    }
+    .tsteps{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    position:relative; z-index:2;
+    }
 
+    .t-step{ position:relative; text-align:center; flex:1; }
+    .t-dot{
+    position:absolute; top:5px; left:50%; transform:translateX(-50%);
+    width:18px; height:18px; border-radius:50%;
+    background: var(--bs-body-bg);
+    border:3px solid var(--bs-success);
+    transition: all .25s ease-in-out;
+    }
+    .t-step.current .t-dot{ box-shadow: 0 0 0 .35rem rgba(25,135,84,.12); }
+    .t-step.done .t-dot{ background: var(--bs-success); color:#fff; }
+    .t-dot i{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    font-size:12px; line-height:1; pointer-events:none;
+    }
 
+    .t-label{
+    display:block; font-size:.8rem; margin-top:24px; line-height:1.15;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width:120px; margin-left:auto; margin-right:auto;
+    color: var(--bs-secondary-color);
+    }
+    .t-step.done .t-label{ color: var(--bs-success); font-weight:600; }
+
+    @media (max-width:576px){ .t-label{ max-width:80px; font-size:.74rem; } }
+
+</style>
+
+<!-- Scripts adicionales si es necesario -->
