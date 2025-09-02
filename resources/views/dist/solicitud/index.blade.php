@@ -223,27 +223,14 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalSolicitudActiva" tabindex="-1" aria-labelledby="modalSolicitudActivaLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-warning text-dark">
-        <h5 class="modal-title">Solicitud Activa</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        Ya tienes una solicitud activa. Debes finalizarla antes de crear una nueva.
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-      </div>
-    </div>
-  </div>
-</div>
+
+
 
 
 
     @include('includes.confirmacionmodal')
     @include('includes.messagebasicmodal')
+    @include('includes.messagevalidationmodal')
     @include('includes.loader')
     @include('includes.download')
     @include('dist.solicitud.mostrar')

@@ -134,6 +134,17 @@ class SolicitudController extends Controller
                             </a>
                         </li>';
                 }
+
+                // debe pagar si está Aprobada - con pago
+                if ($value->estatus == 'Aprobada - con pago') {
+                    $detalle .= '
+                        <li>
+                            <a class="dropdown-item text-success" href="/payment/tokenize/">
+                                <i class="bi bi-currency-dollar me-2 text-success"></i> Por Pagar
+                            </a>
+                        </li>';
+                }
+                  
                                 
                 $detalle .= '
                     </ul>
@@ -506,7 +517,7 @@ class SolicitudController extends Controller
         return DB::transaction(function () use ($validated, $titularNF) {
 
             // 3.1 Solicitud
-            $solicitud = \App\Models\SolicitudCambioResidencia::create([
+            $solicitud = SolicitudCambioResidencia::create([
                 'codigo'           => $this->common->generaCodigoSCR(),
                 'usuario_id'       => auth()->id(),
                 'inversionista'    => $this->request->input('inversionista', 'No'),
@@ -818,7 +829,9 @@ class SolicitudController extends Controller
 
         $solicitud = DB::table('solicitudes_cambio_residencia')
             ->where('solicitudes_cambio_residencia.id', '=', $solicitudId)
-            ->leftjoin('users', 'users.id', '=', 'solicitudes_cambio_residencia.usuario_id')
+            ->leftjoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
+
+            ->leftjoin('users', 'users.id', '=', 'solicitudes_cambio_residencia.usuario_id')       
             ->leftjoin('provincia', 'provincia.id', '=', 'solicitudes_cambio_residencia.provincia_id')
             ->leftjoin('distrito', 'distrito.id', '=', 'solicitudes_cambio_residencia.distrito_id')
             ->leftjoin('corregimiento', 'corregimiento.id', '=', 'solicitudes_cambio_residencia.corregimiento_id')
@@ -826,6 +839,7 @@ class SolicitudController extends Controller
             ->select(
                 'solicitudes_cambio_residencia.*',
                 DB::raw("CONCAT(users.primer_nombre, ' ', users.primer_apellido) AS nombre_completo"),
+                'solicitudes_cambio_personas.num_filiacion',
                 'provincia.nombre as provincia',
                 'distrito.nombre as distrito',
                 'corregimiento.nombre as corregimiento',
