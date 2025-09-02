@@ -257,30 +257,59 @@ class Distsolicitud {
     
     }
 
-    validaSolicitud(){
+    validaSolicitud() {
 
         fetch(BASEURL + "/validar-solicitud", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": token
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": token
             },
             body: JSON.stringify({})
         })
-        .then(response => response.json())
+
+        .then(r => r.json())
+
         .then(data => {
             if (data.tieneActiva) {
-                // Mostrar modal si ya hay solicitud activa
-                var modal = new bootstrap.Modal(document.getElementById('modalSolicitudActiva'));
-                modal.show();
+
+            const modalActivaEl = document.getElementById('modalSolicitudActiva');
+            const modalActiva = bootstrap.Modal.getOrCreateInstance(modalActivaEl);
+            modalActiva.show();
+
+            const btnFamiliar = document.getElementById('btnTramitarFamiliar');
+
+                if (btnFamiliar) {
+                    btnFamiliar.addEventListener('click', () => {
+
+                    modalActiva.hide();
+
+                    const modalRegistroEl = document.getElementById('modalRegistro');
+                    if (!modalRegistroEl) {
+                      
+                        return;
+                    }
+                    const modalRegistro = bootstrap.Modal.getOrCreateInstance(modalRegistroEl, { backdrop: 'static', keyboard: false });
+                    modalRegistro.show();
+
+                    setTimeout(() => {
+                        const inputNombre = document.getElementById('nombre');
+                        if (inputNombre) inputNombre.focus();
+                    }, 250);
+                    }, { once: true });
+                }
             } else {
-                // Redirigir a la vista de nuevo registro
-                window.location.href = BASEURL + "/nuevo";
+
+            window.location.href = BASEURL + "/nuevo";
+
             }
+
         })
-        .catch(error => {
-            console.error("Error:", error);
+
+        .catch(err => {
+            console.error("Error:", err);
         });
+
     }
 
     getBadgeEstatus(estatus) {
@@ -1062,14 +1091,15 @@ class Distsolicitud {
 
                         const modalContent = `
                             <table class="table table-sm align-middle mb-0">
-                            <tr><td><strong>Nombre:</strong></td><td>${data.provincia ?? ''}</td></tr>
-                            <tr><td><strong>Apellido:</strong></td><td>${data.distrito ?? ''}</td></tr>
-                            <tr><td><strong>Documento:</strong></td><td>${data.corregimiento ?? ''}</td></tr>
-                            <tr><td><strong>Correo:</strong></td><td>${data.barrio ?? ''}</td></tr>
-                            <tr><td><strong>País de Nacimiento:</strong></td><td>${data.calle ?? ''}</td></tr>
-                            <tr><td><strong>Nacionalidad:</strong></td><td>${data.numero_casa ?? ''}</td></tr>
-                            <tr><td><strong>Tiene Hijos en Panamá:</strong></td><td>${data.punto_referencia ?? ''}</td></tr>
-                            <tr><td><strong>Casado con Panameño(a):</strong></td><td>${data.domicilio_opcion ?? ''}</td></tr>
+                            <tr><td><strong>Nombre Completo:</strong></td><td>${data.nombre_completo ?? ''}</td></tr>
+                            <tr><td><strong>Documento:</strong></td><td>${data.num_filiacion ?? ''}</td></tr>
+                            <tr><td><strong>Provincia:</strong></td><td>${data.provincia ?? ''}</td></tr>
+                            <tr><td><strong>Distrito:</strong></td><td>${data.distrito ?? ''}</td></tr>
+                            <tr><td><strong>Corregimiento:</strong></td><td>${data.corregimiento ?? ''}</td></tr>
+                            <tr><td><strong>Barrio / Urbanización:</strong></td><td>${data.barrio ?? ''}</td></tr>
+                            <tr><td><strong>Calle / Avenida:</strong></td><td>${data.calle ?? ''}</td></tr>
+                            <tr><td><strong>N° de casa:</strong></td><td>${data.numero_casa ?? ''}</td></tr>
+                            <tr><td><strong>Punto de referencia:</strong></td><td>${data.punto_referencia ?? ''}</td></tr>
                             <tr><td><strong>Estado:</strong></td><td>${data.estatus ?? ''}</td></tr>
                             </table>`;
                         $("#modal-content").html(modalContent);
