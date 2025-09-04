@@ -153,6 +153,10 @@ class Distsolicitud {
             this.solicitud();
         }
 
+        document.getElementById('modalRegistro')?.addEventListener('hidden.bs.modal', () => {
+            resetResultados();
+        });
+
     
         this.acciones();
 
@@ -253,8 +257,179 @@ class Distsolicitud {
         });
 
 
+        $('#btnBuscar').off('click').on('click', function (e) {
+
+            e.preventDefault();
+            _this.BuscaFamiliar();
+            console.log('por aqui vamos');
+        });
+
+        $('#btnLimpiar').off('click').on('click', function () {
+            $('#nombre, #apellido, #ruex, #fecha_nacimiento').val('');
+            $('#genero, #afinidadId').val('');
+            _this.resetResultados();
+        });
+
+        $(document).off('click', '.seleccionar-familiar').on('click', '.seleccionar-familiar', function () {  
+            // $('#nombre, #apellido, #ruex, #fecha_nacimiento').val('');
+            // $('#genero, #afinidadId').val('');
+            // _this.resetResultados();
+            console.log('Por Aqui vamos');
+            _this.selecionarFamiliar();
+        });
 
     
+    }
+
+    resetResultados() {
+        $('#tablaResultados tbody').empty();
+        $('#DivResultado_busqueda').addClass('d-none');
+        $('#modalRegistroDesc')
+            .removeClass('text-danger')
+            .text('Completa uno o más criterios y presiona Buscar.');
+    }
+
+    selecionarFamiliar(){
+
+        const documento  = $('#ruex').val(); 
+        const afinidadId = $('#afinidadId').val(); 
+
+        console.log(documento);
+        console.log(afinidadId);
+
+        if (!afinidadId) {
+            alert('Selecciona una afinidad antes de continuar.');
+            return;
+        }
+
+        // UI: loading
+        $('#buscarSpinner').removeClass('d-none');
+        $('#buscarEstado').removeClass('d-none').text('Cargando…');
+
+        // POST solo con { documento, afinidad_id }
+        $.ajax({
+            url: `${BASEURL}/seleccion-familiar`,
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': token }, // usa tu variable global 'token'
+            data: { documento: documento, afinidad_id: afinidadId }
+        })
+        .done(function (res) {
+            if (res && res.ok && res.redirect) {
+            // /dist/solicitud/nuevo?sel=UUID (token efímero)
+            window.location.href = res.redirect;
+            } else {
+            alert(res?.msg || 'No fue posible seleccionar a la persona.');
+            }
+        })
+        .fail(function () {
+            alert('Error al seleccionar a la persona.');
+        })
+        .always(function () {
+            $('#buscarSpinner').addClass('d-none');
+            $('#buscarEstado').addClass('d-none').text('');
+        });
+
+    }
+
+    BuscaFamiliar(){
+
+        const _this = this
+
+        const payload = {
+            nombre: $('#nombre').val().trim(),
+            apellido: $('#apellido').val().trim(),
+            ruex: $('#ruex').val().trim(),
+            genero: $('#genero').val(),
+            fecha_nacimiento: $('#fecha_nacimiento').val(),
+            afinidadId: $('#afinidadId').val() // cuando lo uses
+        };
+
+        if (!payload.nombre && !payload.apellido && !payload.ruex && !payload.genero && !payload.fecha_nacimiento) {
+            $('#modalRegistroDesc').addClass('text-danger').text('Indica al menos un criterio de búsqueda.');
+            setTimeout(() => {
+            $('#modalRegistroDesc').removeClass('text-danger').text('Completa uno o más criterios y presiona Buscar.');
+            }, 2500);
+            return;
+        }
+
+        $('#buscarSpinner').removeClass('d-none');
+        $('#buscarEstado').removeClass('d-none').text('Buscando…');
+        $('#btnBuscar').prop('disabled', true);
+
+        $.ajax({
+            url: `${BASEURL}/buscafamiliar`,
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': _this.getCsrfToken() },
+            data: payload,
+            dataType: 'json'
+        })
+        .done(function (res) {
+            const $tbody = $('#tablaResultados tbody');
+            $tbody.empty();
+
+            if (res && res.ok && Array.isArray(res.data) && res.data.length > 0) {
+            res.data.forEach((item, idx) => {
+                const fila = `
+                <tr>
+                    <td class="text-center">${idx + 1}</td>
+                    <td>${_this.escapeHtml(item.nombre)}</td>
+                    <td class="text-center">${_this.escapeHtml(item.documento)}</td>
+                    <td class="text-center">${_this.escapeHtml(item.genero)}</td>
+                    <td class="text-center">${_this.escapeHtml(item.nacionalidad || '—')}</td>
+                    <td class="text-center">${_this.escapeHtml(item.fecha_nacimiento)}</td>
+                    <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary seleccionar-familiar"
+                            data-documento="${encodeURIComponent(item.documento)}">
+                        <i class="bi bi-check2-circle"></i> Seleccionar
+                    </button>
+                    </td>
+                </tr>`;
+                $tbody.append(fila);
+            });
+
+            $('#DivResultado_busqueda').removeClass('d-none');
+            } else {
+            const msg = (res && res.empty) ? (res.msg || 'Sin resultados') : 'Sin resultados';
+            $tbody.append(`
+                <tr>
+                <td class="text-center" colspan="7">${_this.escapeHtml(msg)}</td>
+                </tr>
+            `);
+            $('#DivResultado_busqueda').removeClass('d-none');
+            }
+        })
+        .fail(function () {
+            const $tbody = $('#tablaResultados tbody');
+            $tbody.empty().append(`
+            <tr>
+                <td class="text-center text-danger" colspan="7">
+                Ocurrió un error al buscar. Intenta nuevamente.
+                </td>
+            </tr>
+            `);
+            $('#DivResultado_busqueda').removeClass('d-none');
+        })
+        .always(function () {
+            $('#buscarSpinner').addClass('d-none');
+            $('#buscarEstado').addClass('d-none').text('');
+            $('#btnBuscar').prop('disabled', false);
+        });
+
+
+    }
+
+    escapeHtml(text) {
+        if (text === null || text === undefined) return '';
+        return String(text)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    getCsrfToken() {
+        return $('#csrfToken').val() || $('input[name="_token"]').val();
     }
 
     validaSolicitud() {

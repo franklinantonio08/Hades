@@ -3,13 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 
-/*use App\Http\Controllers\Dist\DepartamentoController;
-use App\Http\Controllers\Dist\TipoatencionController;
-use App\Http\Controllers\Dist\PosicionesController;
-use App\Http\Controllers\Dist\ColaboradoresController;
-use App\Http\Controllers\Dist\DashboardController;
-use App\Http\Controllers\Dist\SolicitudController; */
-
 use App\Http\Controllers\Dist\{
     DashboardController,
     SolicitudController,
@@ -96,6 +89,8 @@ Route::middleware('guest')->group(function () {
             Route::get('/nuevo', [SolicitudController::class, 'Nuevo']) ->name('Nuevo'); 
             Route::post('/nuevo', [SolicitudController::class, 'PostNuevo']) ->name('PostNuevo'); 
 
+            Route::post('/seleccion-familiar', [SolicitudController::class, 'SeleccionFamiliar'])->name('SeleccionFamiliar');
+
             Route::post('/validar-solicitud', [SolicitudController::class, 'ValidarSolicitud']) ->name('ValidarSolicitud'); 
             Route::post('/validar-filiacion-activa', [SolicitudController::class, 'validarFiliacionActiva']) ->name('validarFiliacionActiva'); 
 
@@ -113,6 +108,7 @@ Route::middleware('guest')->group(function () {
 
             Route::post('/buscaDistrito', [DistritoController::class, 'BuscaDistrito'])->name('BuscaDistrito');
             Route::post('/buscaCorregimiento', [CorregimientoController::class, 'BuscaCorregimiento'])->name('BuscaCorregimiento');
+            Route::post('/buscafamiliar', [SolicitudController::class, 'BuscaFamiliar']) ->name('BuscaFamiliar'); 
 
 
         });
