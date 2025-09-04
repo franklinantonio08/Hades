@@ -31,4 +31,21 @@ class CommonHelper
         // Ajusta a tu formato preferido (y/o valida uniqueness si quieres)
         return 'SCR-' . now()->format('YmdHis') . '-' . random_int(100, 999);
     }
+
+    public function algunaPersonaTieneSolicitudActiva(array $numFiliaciones): bool{
+
+        $numFiliaciones = array_values(array_unique(
+            array_map(fn($v) => trim((string)$v), $numFiliaciones)
+        ));
+
+        if (empty($numFiliaciones)) return false;
+
+        return DB::table('solicitudes_cambio_personas as p')
+            ->join('solicitudes_cambio_residencia as s', 's.id', '=', 'p.solicitud_id')
+            ->whereIn('p.num_filiacion', $numFiliaciones)
+            ->whereNotIn('s.estatus', ['Rechazada','Cancelada'])
+            ->exists();
+
+    }
+
 }

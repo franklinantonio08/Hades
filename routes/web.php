@@ -97,6 +97,9 @@ Route::middleware('guest')->group(function () {
             Route::post('/nuevo', [SolicitudController::class, 'PostNuevo']) ->name('PostNuevo'); 
 
             Route::post('/validar-solicitud', [SolicitudController::class, 'ValidarSolicitud']) ->name('ValidarSolicitud'); 
+            Route::post('/validar-filiacion-activa', [SolicitudController::class, 'validarFiliacionActiva']) ->name('validarFiliacionActiva'); 
+
+            
             
             Route::get('/instruciones', [SolicitudController::class, 'instruciones']) ->name('instruciones'); 
 

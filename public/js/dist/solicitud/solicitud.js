@@ -15,8 +15,8 @@ class Distsolicitud {
 
         this.estatusColors = {
             'Recibida': 'bg-secondary bg-gradient',
-            'En revisión':  'bg-info bg-gradient',
-            'Observada': 'bg-warning bg-gradient',
+            'Por revisión':  'bg-info bg-gradient',
+            'Por corregir': 'bg-warning bg-gradient',
             'Aprobada - con pago':  'bg-success bg-gradient',
             'Aprobada - sin pago':  'bg-success bg-gradient',
             'Multa emitida':    'bg-primary bg-gradient',
@@ -25,7 +25,116 @@ class Distsolicitud {
             'default':   'bg-light bg-gradient text-dark'
         };
 
+        this.STEPS = [
+            'Recibida',
+            'Por revisión',
+            'Por corregir',
+            'Aprobada - con pago',
+            'Aprobada - sin pago',
+            'Multa emitida',
+            'Rechazada',
+            'Cancelada'
+        ];     
+
     }
+
+    getStatusOfficial(estatus) {
+        const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+        const c = norm(estatus);
+
+        // Aliases para datos viejos o variaciones
+        const alias = {
+            'en revision': 'Por revisión',
+            'en revisión': 'Por revisión',
+            'por revisar': 'Por revisión',
+            'por corregir': 'Por corregir',
+            'aprobada con pago': 'Aprobada - con pago',
+            'aprobada sin pago': 'Aprobada - sin pago',
+            'multa emitida': 'Multa emitida',
+            'observada': 'Por corregir' // si tenías "Observada" antes, la llevamos a "Por corregir"
+        };
+
+        return alias[c] || this.STEPS.find(s => norm(s) === c) || 'Recibida';
+    }
+
+    getFlowForStatus(oficial) {
+        // Muestra SOLO la rama relevante
+        switch (oficial) {
+            case 'Recibida':
+            case 'Por revisión':
+            return ['Recibida', 'Por revisión'];
+
+            case 'Por corregir':
+            return ['Recibida', 'Por revisión', 'Por corregir'];
+
+            case 'Aprobada - sin pago':
+            return ['Recibida', 'Por revisión', 'Aprobada - sin pago'];
+
+            case 'Aprobada - con pago':
+            // mostremos el paso final esperado
+            return ['Recibida', 'Por revisión', 'Aprobada - con pago', 'Multa emitida'];
+
+            case 'Multa emitida':
+            return ['Recibida', 'Por revisión', 'Aprobada - con pago', 'Multa emitida'];
+
+            case 'Rechazada':
+            return ['Recibida', 'Por revisión', 'Rechazada'];
+
+            case 'Cancelada':
+            return ['Recibida', 'Por revisión', 'Cancelada'];
+
+            default:
+            return ['Recibida', 'Por revisión'];
+        }
+    }
+
+
+    renderTimeline(estatus) {
+        const oficial = this.getStatusOfficial(estatus);
+        const steps = this.getFlowForStatus(oficial);
+
+        const reached = Math.max(0, steps.indexOf(oficial));
+        const pct = steps.length > 1 ? Math.round(reached * 100 / (steps.length - 1)) : 0;
+
+        const isDanger = ['Rechazada','Cancelada'].includes(oficial);
+        const isWarn   = oficial === 'Por corregir';
+
+        const pillClass = isDanger
+            ? 'bg-danger-subtle text-danger border border-danger-subtle'
+            : (isWarn
+                ? 'bg-warning-subtle text-warning border border-warning-subtle'
+                : 'bg-success-subtle text-success border border-success-subtle');
+
+        const fillColor = isDanger ? '#dc3545' : (isWarn ? '#ffc107' : '#198754');
+
+        let stepsHtml = '';
+        steps.forEach((etapa, i) => {
+            const done = i <= reached;
+            const current = i === reached;
+            const dotStyle = done ? `style="background:${fillColor}; border-color:${fillColor};"` : '';
+            stepsHtml += `
+            <div class="t-step ${done ? 'done' : ''} ${current ? 'current' : ''}">
+                <span class="t-dot" ${dotStyle}>${done ? '<i class="bi bi-check-lg"></i>' : ''}</span>
+                <span class="t-label" data-bs-toggle="tooltip" data-bs-placement="bottom" title="${etapa}">${etapa}</span>
+            </div>`;
+        });
+
+        return `
+            <div class="t-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="badge rounded-pill ${pillClass}">Estatus: ${oficial}</span>
+                <small class="text-muted">Progreso: ${pct}%</small>
+            </div>
+
+            <div class="tline">
+                <div class="tline-bg"></div>
+                <div class="tline-fill" style="width:${pct}%; background:${fillColor}"></div>
+                <div class="tsteps">${stepsHtml}</div>
+            </div>
+            </div>`;
+    }
+
+
 
 
     init(){
@@ -62,7 +171,7 @@ class Distsolicitud {
 
         $(document)
           .off('click', '#btnFinalizar')
-          .on('click', '#btnFinalizar', () => this.finalizarSelfieYEnviar());
+          .on('click', '#btnFinalizar', () => this.finalizarSelfieYEnviar());          
 
     }
 
@@ -148,30 +257,59 @@ class Distsolicitud {
     
     }
 
-    validaSolicitud(){
+    validaSolicitud() {
 
         fetch(BASEURL + "/validar-solicitud", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": token
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": token
             },
             body: JSON.stringify({})
         })
-        .then(response => response.json())
+
+        .then(r => r.json())
+
         .then(data => {
             if (data.tieneActiva) {
-                // Mostrar modal si ya hay solicitud activa
-                var modal = new bootstrap.Modal(document.getElementById('modalSolicitudActiva'));
-                modal.show();
+
+            const modalActivaEl = document.getElementById('modalSolicitudActiva');
+            const modalActiva = bootstrap.Modal.getOrCreateInstance(modalActivaEl);
+            modalActiva.show();
+
+            const btnFamiliar = document.getElementById('btnTramitarFamiliar');
+
+                if (btnFamiliar) {
+                    btnFamiliar.addEventListener('click', () => {
+
+                    modalActiva.hide();
+
+                    const modalRegistroEl = document.getElementById('modalRegistro');
+                    if (!modalRegistroEl) {
+                      
+                        return;
+                    }
+                    const modalRegistro = bootstrap.Modal.getOrCreateInstance(modalRegistroEl, { backdrop: 'static', keyboard: false });
+                    modalRegistro.show();
+
+                    setTimeout(() => {
+                        const inputNombre = document.getElementById('nombre');
+                        if (inputNombre) inputNombre.focus();
+                    }, 250);
+                    }, { once: true });
+                }
             } else {
-                // Redirigir a la vista de nuevo registro
-                window.location.href = BASEURL + "/nuevo";
+
+            window.location.href = BASEURL + "/nuevo";
+
             }
+
         })
-        .catch(error => {
-            console.error("Error:", error);
+
+        .catch(err => {
+            console.error("Error:", err);
         });
+
     }
 
     getBadgeEstatus(estatus) {
@@ -832,6 +970,7 @@ class Distsolicitud {
                 "infoCallback": function( settings, start, end, max, total, pre ) {
 
                     _this.desactivarsolicitud();
+                    _this.mostrarsolicitud();
 
                     var api = this.api();
                     var pageInfo = api.page.info();
@@ -928,6 +1067,66 @@ class Distsolicitud {
             });	
             
         }
+
+        mostrarsolicitud(){
+
+            const _this = this;
+
+            $(document).off('click', '.mostrar').on('click', '.mostrar', function() {
+                const multasId = $(this).attr("attr-id");
+
+                $.ajax({
+                    url: `solicitud/mostrar/${multasId}`,
+                    method: "GET",
+                    success: function (data) {
+                        if (data.error) { alert(data.error); return; }
+
+                        $("#estado-progress").html(_this.renderTimeline(data.estatus));
+
+                        document.querySelectorAll('#solicitudModal [data-bs-toggle="tooltip"]').forEach(el => {
+                            const t = bootstrap.Tooltip.getInstance(el);
+                            if (t) t.dispose();
+                            new bootstrap.Tooltip(el);
+                        });
+
+                        const modalContent = `
+                            <table class="table table-sm align-middle mb-0">
+                            <tr><td><strong>Nombre Completo:</strong></td><td>${data.nombre_completo ?? ''}</td></tr>
+                            <tr><td><strong>Documento:</strong></td><td>${data.num_filiacion ?? ''}</td></tr>
+                            <tr><td><strong>Provincia:</strong></td><td>${data.provincia ?? ''}</td></tr>
+                            <tr><td><strong>Distrito:</strong></td><td>${data.distrito ?? ''}</td></tr>
+                            <tr><td><strong>Corregimiento:</strong></td><td>${data.corregimiento ?? ''}</td></tr>
+                            <tr><td><strong>Barrio / Urbanización:</strong></td><td>${data.barrio ?? ''}</td></tr>
+                            <tr><td><strong>Calle / Avenida:</strong></td><td>${data.calle ?? ''}</td></tr>
+                            <tr><td><strong>N° de casa:</strong></td><td>${data.numero_casa ?? ''}</td></tr>
+                            <tr><td><strong>Punto de referencia:</strong></td><td>${data.punto_referencia ?? ''}</td></tr>
+                            <tr><td><strong>Estado:</strong></td><td>${data.estatus ?? ''}</td></tr>
+                            </table>`;
+                        $("#modal-content").html(modalContent);
+
+                        $("#solicitudModal").modal("show");
+                    },
+
+                    error: function (xhr) {
+                        alert("Error al cargar los datos. Intente nuevamente.");
+                        console.error(xhr);
+                    },
+                });
+            });
+
+            // Limpia tooltips al cerrar (evita ghosts si reabres)
+            const modalEl = document.getElementById('solicitudModal');
+            if (modalEl && !modalEl._tooltipCleanupBound) {
+                modalEl.addEventListener('hidden.bs.modal', () => {
+                document.querySelectorAll('#solicitudModal .tooltip.show').forEach(t => t.remove());
+                });
+                modalEl._tooltipCleanupBound = true;
+            }
+        }
+
+
+
+
 
             desactivarsolicitud(){
 
