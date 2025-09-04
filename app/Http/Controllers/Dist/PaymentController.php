@@ -394,6 +394,15 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function paymentError(Request $request)
+    {
+        // Solo renderiza la vista; los datos llegan por querystring
+        return view('payment.error', ['layout' => 'layouts.payment']);
+    }
+
+
+
+
     // Método para verificar estado del servicio (opcional)
     public function checkServiceStatus()
     {

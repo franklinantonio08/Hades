@@ -121,6 +121,7 @@ Route::middleware('guest')->group(function () {
             Route::get('/success', [PaymentController::class, 'paymentSuccess'])->name('success');
             Route::get('/minimal', [PaymentController::class, 'showTokenizationFormMinimal']);
             Route::get('/status', [PaymentController::class, 'checkServiceStatus'])->name('status');
+            Route::get('error',   [PaymentController::class, 'paymentError'])->name('error');  // nueva
 
             
         });
