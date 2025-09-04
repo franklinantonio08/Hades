@@ -26,8 +26,15 @@ class PaymentTransaction extends Model
         return $this->belongsTo(User::class);
     }
 
+    // public function token()
+    // {
+    //     return $this->belongsTo(PaymentToken::class);
+    // }
+
     public function token()
     {
-        return $this->belongsTo(PaymentToken::class);
+        return $this->belongsTo(\App\Models\PaymentToken::class, 'token_id', 'id')
+                    ->withDefault(); // para que $transaction->token no sea null
     }
+        
 }

@@ -1,52 +1,205 @@
-/* public/css/payment/payment.css */
-#creditcard-container {
-    width: 100%;
-    min-height: 400px;
-    max-height: 70vh; /* 70% de la altura de la ventana */
-    border: 2px solid #e9ecef;
-    border-radius: 12px;
-    overflow: auto;
-    background: #ffffff;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin: 20px 0;
-    padding: 0;
-}
-
-iframe#creditcard-widget {
-    width: 100%;
-    height: 850px; /* Altura suficiente para generar scroll */
-    border: none;
-    border-radius: 12px;
-}
-
-/* Mejora la experiencia mobile */
-@media (max-width: 768px) {
-    #creditcard-container {
-        max-height: 60vh;
-        margin: 15px 0;
+:root{
+    --pay-primary:#595a5c;
+    --pay-bg:#f7f9fc;
+    --pay-border:#e9ecef;
+    --pay-success:#12b886;
+    --pay-warning:#f08c00;
+  }
+  
+  /* Fondo general de la pantalla de pago */
+  body.payment {
+    background: var(--pay-bg);
+  }
+  
+  /* ========== LAYOUT GLOBAL ========== */
+  .payment-max{
+    max-width: 1360px;   /* ensancha el canvas principal */
+    margin: 24px auto;
+    padding: 0 16px;
+  }
+  
+  /* Columna izquierda (form+widget) más ancha que el resumen */
+  @media (min-width: 1200px){
+    .pay-left  { flex: 0 0 auto; width: 72%; } /* antes ~66% */
+    .pay-right { flex: 0 0 auto; width: 28%; }
+  }
+  @media (min-width: 1400px){
+    .payment-max{ max-width: 1400px; } /* opcional: más ancho en pantallas muy grandes */
+    .pay-left  { width: 75%; }
+    .pay-right { width: 25%; }
+  }
+  
+  /* Un poco más de aire interno en el contenedor del formulario */
+  .payment-shell{ padding: 24px; }
+  
+  /* ========== HERO CON IMAGEN ========== */
+  .payment-hero {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    min-height: 200px;
+    background-repeat: no-repeat;    /* ⬅️ mantener */
+    background-size: 20% auto;       /* ⬅️ mantener */
+    background-position: center right;
+    box-shadow: 0 10px 20px rgba(0,0,0,.08);
+    margin-bottom: 24px;
+  }
+  .payment-hero::after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(
+      90deg,
+      rgba(3,16,34,.75) 0%,
+      rgba(3,16,34,.55) 40%,
+      rgba(3,16,34,.00) 85%
+    );
+  }
+  .payment-hero .hero-content{
+    position:relative; z-index:1; color:#fff; padding:24px;
+  }
+  .payment-hero .hero-content h2,
+  .payment-hero .hero-content p{
+    text-shadow: 0 2px 8px rgba(0,0,0,.35);
+  }
+  .payment-hero .lock-chip{
+    display:inline-flex; align-items:center; gap:8px;
+    background: rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.25);
+    padding:6px 10px; border-radius:999px; font-size:.875rem;
+  }
+  
+  /* ========== CARD/SHELL PRINCIPAL ========== */
+  .payment-shell {
+    background:#fff; border:1px solid var(--pay-border);
+    border-radius:16px; 
+    box-shadow: 0 6px 16px rgba(16,24,40,.06);
+  }
+  
+  /* Títulos de pasos */
+  .step-title{
+    display:flex; align-items:center; gap:10px; margin:8px 0 14px;
+  }
+  .step-title .step-dot{
+    width:28px; height:28px; border-radius:999px;
+    background: var(--pay-primary); color:#fff; display:grid; place-items:center;
+    font-weight:700; font-size:.9rem;
+  }
+  
+  /* ========== WIDGET DE TARJETA ========== */
+  #creditcard-container{
+    width:100%;
+    min-height:420px;
+    max-height:70vh;
+    border:1px solid var(--pay-border);
+    border-radius:12px;
+    background:#fff;
+    /* evita scroll horizontal, permite vertical */
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 8px;
+    margin: 6px 0 0;
+    box-shadow: inset 0 0 0 1px rgba(13,110,253,.04);
+  }
+  
+  /* Forzar un ancho ideal dentro del widget para evitar scroll horizontal */
+  #creditcard-container #card-ui-component-form-creditcard{
+    width: 100% !important;
+    max-width: 640px !important;   /* ajusta 560–680 según tu gusto */
+    margin: 0 auto !important;     /* centrado */
+  }
+  #creditcard-container .jp-card-container{
+    width: 100% !important;
+    max-width: 660px !important;
+    margin: 0 auto !important;
+  }
+  
+  /* Estética del widget (opcional, no funcional) */
+  #creditcard-container .card-ui-component-outer{
+    border: 1px solid #e9ecef !important;
+    border-radius: 12px !important;
+    box-shadow: 0 6px 16px rgba(16,24,40,.06) !important;
+  }
+  #creditcard-container .card-ui-component-heading{
+    background: #0d6efd !important;
+    border-radius: 12px 12px 0 0 !important;
+  }
+  #creditcard-container .card-ui-component-field,
+  #creditcard-container .card-ui-component-ddl-expiry{
+    border-radius: 10px !important;
+    height: 44px !important;
+  }
+  /* Por si algún hijo del widget trae width fijo mayor al contenedor */
+    #creditcard-container .card-ui-component-inner-body,
+    #creditcard-container .card-ui-component-input-style{
+    max-width: 100% !important;
+    overflow: hidden;
     }
-    
-    iframe#creditcard-widget {
-        height: 900px; /* Más altura en mobile */
+  
+ 
+  
+  /* ========== RESUMEN (DERECHA) ========== */
+  .payment-summary{
+    position: sticky; top:16px;
+    background:#fff; border:1px solid var(--pay-border);
+    border-radius:16px; padding:16px;
+    box-shadow:0 6px 16px rgba(16,24,40,.06);
+
+    width: 100%;          /* ocupa todo el ancho de la col derecha */
+    max-width: 100%;
+/*    min-width: 0;  */
+    overflow: hidden; 
+  }
+  .summary-row{
+    display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;
+  }
+  
+  .summary-amount{
+    font-size: clamp(1.4rem, 2.2vw, 2rem);  /* se reduce un poco si el contenedor es chico */
+    font-weight: 800;
+    letter-spacing: .2px;   /* antes .5px ensanchaba el texto */
+    line-height: 1.05;
+    max-width: 100%;
+    word-break: break-word; /* por si hay cifras muy largas */
+  }
+  #summary-currency{  
+    white-space: nowrap;    /* USD no se parte */
+    flex: 0 0 auto; 
     }
-}
+  
+  .payment-summary hr{ margin: 14px 0; }
+  .badges{
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;
+  }
+  .badge-soft{
+    border:1px solid var(--pay-border); border-radius:999px;
+    padding:6px 10px; background:#fff; font-size:.8rem;
+    font-weight:600; letter-spacing:.2px;
+  }
+  .badge-success-soft{ border-color:#d3f9d8; background:#f1fff4; color:#2b8a3e; }
+  .badge-info-soft{ border-color:#cfe8ff; background:#f1f7ff; color:#0b63c5; }
+  
+  /* ========== FORM Y CTA ========== */
+  .form-control:focus{
+    box-shadow: 0 0 0 .2rem rgba(13,110,253,.15);
+    border-color: #0d6efd;
+  }
+  
 
-/* Estilos para la barra de scroll (opcional pero recomendado) */
-#creditcard-container::-webkit-scrollbar {
-    width: 10px;
-}
-
-#creditcard-container::-webkit-scrollbar-track {
-    background: #f8f9fa;
-    border-radius: 10px;
-}
-
-#creditcard-container::-webkit-scrollbar-thumb {
-    background: #007bff;
-    border-radius: 10px;
-    border: 2px solid #f8f9fa;
-}
-
-#creditcard-container::-webkit-scrollbar-thumb:hover {
-    background: #0056b3;
-}
+  /* Botón principal */
+  #btn-process{
+    border-radius:12px; padding:14px 20px; font-size:1.05rem;
+    box-shadow:0 8px 18px rgba(13,110,253,.2);
+  }
+  #btn-process:focus{ box-shadow: 0 0 0 .25rem rgba(13,110,253,.25); }
+  
+  /* Inputs de monto/currency compactos en escritorio para no empujar diseño */
+  @media (min-width: 992px){
+    .row .col-md-3 input[name="amount"]{ max-width: 220px; }
+    .row .col-md-3 select[name="currency"]{ max-width: 240px; }
+  }
+  
+  /* ========== MOBILE ========== */
+  @media (max-width: 992px){
+    .payment-summary{ position:relative; top:auto; margin-top:18px; min-width: auto; }
+  }
+  
