@@ -162,7 +162,25 @@
                                         Sin Foto
                                     </div>
                                 @endif
-                            </div>      
+                            </div>   
+                            
+                            
+                            @if(!empty($afiliacion->foto_url))
+                            <hr class="mb-4">
+                            <h5 class="form-label fw-bold text-primary" style="background-color:#f0f0f0;padding:5px;">Inversionista Calificado</h5>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-primary d-block">¿Eres Inversionista Calificado?</label>
+                                    <div class="btn-group w-100" role="group" aria-label="Tipo de vivienda">
+                                        <input type="radio" class="btn-check" name="inversionista" id="inversionista_si" value="Si" >
+                                        <label class="btn btn-outline-primary" for="inversionista_si">Si</label>
+
+                                        <input type="radio" class="btn-check" name="inversionista" id="inversionista_no" value="No" checked>
+                                        <label class="btn btn-outline-primary" for="inversionista_no">No</label>
+
+                                    </div>
+                                </div>
+                            @endif
                             
                             <hr class="mb-4">
                             <h5 class="form-label fw-bold text-primary" style="background-color:#f0f0f0;padding:5px;">Inversionista Calificado</h5>

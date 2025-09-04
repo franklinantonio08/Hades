@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 use App\Models\Solicitud;
 
@@ -27,6 +29,8 @@ use App\Models\SolicitudCambioArchivos;
 use App\Models\SolicitudCambioEstados;
 use App\Models\SolicitudCambioResidencia;
 
+use App\Models\Afinidad;
+
 use App\Helpers\CommonHelper;
 
 use DB;
@@ -44,6 +48,16 @@ class SolicitudController extends Controller
     }
 
     public function Index(){
+
+        $afinidad = Afinidad::where('estatus', 'Activo')
+            ->select('id', 'descripcion')
+            ->get();
+
+        if ($afinidad->isEmpty()) {
+            return back()->withErrors("ERROR ESTATUS OPERATIVO ESTA VACIO CODE-0002");
+        }
+
+        view()->share('afinidad', $afinidad);
         
         return view('dist.solicitud.index');
 
@@ -294,8 +308,35 @@ class SolicitudController extends Controller
             return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0002");
         }
 
+         // NUEVO: leer token efímero (si viene) para prefill
+        $prefillTitularNF  = null; // Ruex seleccionado
+        $prefillAfinidadId = null; // Afinidad seleccionada
 
-        return view('dist.solicitud.nuevo', compact('Usuario', 'provincia', 'distrito', 'corregimiento'));
+        if ($token = request()->query('sel')) {
+            $payload = Cache::pull("sel:$token"); // single-use
+            if (!$payload) {
+                return back()->withErrors('El enlace de selección expiró. Vuelve a buscar.');
+            }
+            $prefillTitularNF  = $payload['nf']          ?? null;
+            $prefillAfinidadId = $payload['afinidad_id'] ?? null;
+        }
+
+        // (Opcional) lista para mostrar nombre de la afinidad elegida
+        $afinidad = Afinidad::where('estatus', 'Activo')
+            ->where('id', $prefillAfinidadId)
+            ->select('id','descripcion')
+            ->first();
+
+
+        return view('dist.solicitud.nuevo', compact(
+            'Usuario',
+            'provincia',
+            'distrito',
+            'corregimiento',
+            'prefillTitularNF',
+            'prefillAfinidadId',
+            'afinidad'
+        ));
     }
         
     // public function postNuevo(){
@@ -1003,6 +1044,132 @@ class SolicitudController extends Controller
             'ok' => true,
             'tieneActiva' => $tieneActiva
         ]);
+    }
+
+
+    public function BuscaFamiliar(){
+
+         $data = $this->request->validate([
+        'nombre'           => ['nullable', 'string', 'max:100'],
+        'apellido'         => ['nullable', 'string', 'max:100'],
+        'ruex'             => ['nullable', 'regex:/^[0-9]{1,15}$/'],
+        'genero'           => ['nullable', 'in:Masculino,Femenino'],
+        'fecha_nacimiento' => ['nullable', 'date'],
+        ]);
+
+        if (
+            empty($data['nombre']) &&
+            empty($data['apellido']) &&
+            empty($data['ruex']) &&
+            empty($data['genero']) &&
+            empty($data['fecha_nacimiento'])
+        ) {
+            return response()->json([
+                'ok'   => true,
+                'data' => [],
+                'msg'  => 'Debe indicar al menos un criterio de búsqueda.',
+                'empty'=> true
+            ]);
+        }
+
+        $q = DB::connection('simpanama')
+            ->table('dbo.SIM_FI_GENERALES AS SFG')
+            ->leftJoin('SIM_GE_PAIS AS SGP', 'SGP.COD_PAIS', '=', 'SFG.COD_NACION_ACTUAL')
+            ->select([
+                'SFG.NUM_REG_FILIACION',
+                'SFG.NOM_PRIMER_APELL',
+                'SFG.NOM_SEGUND_APELL',
+                'SFG.NOM_PRIMER_NOMB',
+                'SFG.NOM_SEGUND_NOMB',
+                'SFG.IND_SEXO',
+                'SFG.FEC_NACIM',
+                'SGP.NOM_NACIONALIDAD',
+            ]);
+
+
+        if (!empty($data['ruex'])) {
+            $q->where('NUM_REG_FILIACION', (int) $data['ruex']);
+        }
+
+        if (!empty($data['nombre'])) {
+            $nombre = trim($data['nombre']);
+            $q->where(function ($w) use ($nombre) {
+                $w->where('NOM_PRIMER_NOMB', 'like', "%{$nombre}%")
+                ->orWhere('NOM_SEGUND_NOMB', 'like', "%{$nombre}%");
+            });
+        }
+
+        if (!empty($data['apellido'])) {
+            $apellido = trim($data['apellido']);
+            $q->where(function ($w) use ($apellido) {
+                $w->where('NOM_PRIMER_APELL', 'like', "%{$apellido}%")
+                ->orWhere('NOM_SEGUND_APELL', 'like', "%{$apellido}%");
+            });
+        }
+
+        if (!empty($data['genero'])) {
+            $g = $data['genero'] === 'Masculino' ? ['M', 'Masculino'] : ['F', 'Femenino'];
+            $q->whereIn('IND_SEXO', $g);
+        }
+
+        if (!empty($data['fecha_nacimiento'])) {
+            $q->whereDate('FEC_NACIM', $data['fecha_nacimiento']);
+        }
+
+        $result = $q->limit(100)->get();
+
+        $dataOut = $result->map(function ($r) {
+            $nombres   = trim((mb_convert_case(strtolower($r->NOM_PRIMER_NOMB), MB_CASE_TITLE, "UTF-8") ?? '') . ' ' . (mb_convert_case(strtolower($r->NOM_SEGUND_NOMB), MB_CASE_TITLE, "UTF-8") ?? ''));
+            $apellidos = trim((mb_convert_case(strtolower($r->NOM_PRIMER_APELL), MB_CASE_TITLE, "UTF-8") ?? '') . ' ' . (mb_convert_case(strtolower($r->NOM_SEGUND_APELL), MB_CASE_TITLE, "UTF-8") ?? ''));
+            $nombreCompleto = trim($nombres . ' ' . $apellidos);
+
+            $genero = $r->IND_SEXO;
+            if ($genero === 'M') $genero = 'Masculino';
+            if ($genero === 'F') $genero = 'Femenino';
+
+            return [
+                'nombre'           => $nombreCompleto ?: '—',
+                'documento'        => $r->NUM_REG_FILIACION ?? '—',
+                'genero'           => $genero ?: '—',
+                'nacionalidad'     => $r->NOM_NACIONALIDAD?: '—', // puedes añadir si tu tabla la trae
+                'fecha_nacimiento' => $r->FEC_NACIM 
+                    ? \Illuminate\Support\Carbon::parse($r->FEC_NACIM)->format('Y-m-d') 
+                    : '—',
+            ];
+        })->values();
+
+        return response()->json([
+            'ok'   => true,
+            'data' => $dataOut,
+        ]);
+    }
+
+    public function SeleccionFamiliar(){
+
+        // Resolver el nombre real de la tabla de Afinidad para evitar errores de pluralización
+        $tablaAfinidad = (new Afinidad)->getTable();
+
+        $validated = $this->request->validate([
+            'documento'   => ['required', 'regex:/^[0-9]{1,15}$/'],          // Ruex
+            'afinidad_id' => ['required', 'integer', "exists:{$tablaAfinidad},id"],
+        ], [
+            'documento.required' => 'Debe indicar el N° de filiación.',
+            'documento.regex'    => 'El N° de filiación no es válido.',
+            'afinidad_id.*'      => 'Debe seleccionar una afinidad válida.',
+        ]);
+
+        // Token de un solo uso (TTL 15 min)
+        $token = (string) Str::uuid();
+
+        Cache::put("sel:{$token}", [
+            'nf'          => $validated['documento'],          // Ruex
+            'afinidad_id' => (int) $validated['afinidad_id'],  // Afinidad elegida
+        ], now()->addMinutes(15));
+
+        // Redirige a /dist/solicitud/nuevo con el token
+        $redirect = route('solicitud.Nuevo', ['sel' => $token]);
+
+        return response()->json(['ok' => true, 'redirect' => $redirect]);
     }
 
 
