@@ -69,3 +69,24 @@ CREATE TABLE `payment_logs` (
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+CREATE TABLE payment_email_logs (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    payment_transaction_id BIGINT UNSIGNED NOT NULL,
+    to_email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NULL,
+    was_sent TINYINT(1) DEFAULT 0,
+    error_message TEXT NULL,
+    provider_message_id VARCHAR(255) NULL,
+    sent_at TIMESTAMP NULL,
+    created_at TIMESTAMP NULL,
+    updated_at TIMESTAMP NULL,
+    
+    INDEX payment_email_logs_payment_transaction_id_index (payment_transaction_id),
+    INDEX payment_email_logs_to_email_index (to_email),
+    INDEX payment_email_logs_was_sent_index (was_sent),
+    
+    FOREIGN KEY (payment_transaction_id) 
+        REFERENCES payment_transactions(id) 
+        ON DELETE CASCADE
+) ENGINE=InnoDB;

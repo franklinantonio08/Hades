@@ -59,7 +59,7 @@
           <div class="col-md-6">
             <div class="border rounded p-3 h-100">
               <h6 class="text-muted mb-2">Código de Autorización</h6>
-              <div class="fw-semibold">{{ $t->authorization_code ?? '—' }}</div>
+              <div class="fw-semibold">{{ $t->authorization_number ?? '—' }}</div>
             </div>
           </div>
 

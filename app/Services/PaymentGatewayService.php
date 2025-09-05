@@ -179,92 +179,122 @@ class PaymentGatewayService
 
     // private function formatResponse(array $r)
     // {
-    //     // Normaliza mayúsculas/minúsculas para claves comunes
-    //     $code = $r['Code'] ?? $r['code'] ?? null;
-    //     $res  = $r['Result'] ?? $r['result'] ?? null;
-    //     $desc = $r['Description'] ?? $r['description'] ?? null;
-    //     $txid = $r['TransactionId'] ?? $r['transactionId'] ?? $r['transaction_id'] ?? null;
-    //     $auth = $r['AuthorizationNumber'] ?? $r['authorizationNumber'] ?? $r['authorization_number'];
+    //     // Si todavía viene envuelto por cualquier razón, desenvuelve defensivo
+    //     if (isset($r['SaleResult']) && is_array($r['SaleResult'])) {
+    //         $r = $r['SaleResult'];
+    //     }
 
+    //     // Mapea claves con variantes
+    //     $code = $r['Code'] 
+    //         ?? $r['ResponseCode'] 
+    //         ?? $r['code'] 
+    //         ?? $r['responseCode'] 
+    //         ?? null;
 
-    //     $isApproved = ($code === '00') && (strtolower((string)$res) === 'approved');
-        
+    //     $res  = $r['Result'] 
+    //         ?? $r['result'] 
+    //         ?? null;
+
+    //     $desc = $r['Description'] 
+    //         ?? $r['ResponseDescription'] 
+    //         ?? $r['description'] 
+    //         ?? null;
+
+    //     $txid = $r['TransactionId'] 
+    //         ?? $r['TransactionID'] 
+    //         ?? $r['transactionId'] 
+    //         ?? $r['transaction_id'] 
+    //         ?? null;
+
+    //     $auth = $r['AuthorizationNumber'] 
+    //         ?? $r['AuthorizationCode'] 
+    //         ?? $r['authorizationNumber'] 
+    //         ?? $r['authorization_code'] 
+    //         ?? $r['authCode'] 
+    //         ?? null;
+
+    //     // Aprobación: acepta Code '00' o Result 'Approved'
+    //     $isApproved =
+    //         ($code === '00') ||
+    //         (is_string($res)  && strcasecmp($res,  'approved') === 0) ||
+    //         (is_string($desc) && strcasecmp($desc, 'approved') === 0);
+
     //     return [
-    //    'success' => $isApproved,
-    //    'transaction_id' => $txid,
-    //    'authorization_number' => $auth,
-    //    'response_code' => $code ?? 'UNKNOWN',
-    //    'response_description' => $desc ?? '',
-    //    'result' => $res,
-    //    'bin_id' => $r['BinId'] ?? $r['binId'] ?? null,
-    //    'processor_id' => $r['ProcessorId'] ?? $r['processorId'] ?? null,
-    //    'tracking' => $r['Tracking'] ?? $r['tracking'] ?? null,
-    //    'system_tracking' => $r['SystemTracking'] ?? $r['systemTracking'] ?? null,
-    //    'request_date' => $r['RequestDate'] ?? $r['requestDate'] ?? null,
-    //    'response_date' => $r['ResponseDate'] ?? $r['responseDate'] ?? null,
-    //    'raw_response' => $r,
+    //         'success'               => (bool) $isApproved,
+    //         'transaction_id'        => $txid,
+    //         'authorization_number'  => $auth,
+    //         'response_code'         => $code ?? 'UNKNOWN',
+    //         'response_description'  => $desc ?? '',
+    //         'result'                => $res ?? null,
+    //         'bin_id'                => $r['BinId'] ?? $r['binId'] ?? null,
+    //         'processor_id'          => $r['ProcessorId'] ?? $r['processorId'] ?? null,
+    //         'tracking'              => $r['Tracking'] ?? $r['tracking'] ?? null,
+    //         'system_tracking'       => $r['SystemTracking'] ?? $r['systemTracking'] ?? null,
+    //         'request_date'          => $r['RequestDate'] ?? $r['requestDate'] ?? null,
+    //         'response_date'         => $r['ResponseDate'] ?? $r['responseDate'] ?? null,
+    //         'raw_response'          => $r,
     //     ];
     // }
 
     private function formatResponse(array $r)
     {
-        // Si todavía viene envuelto por cualquier razón, desenvuelve defensivo
-        if (isset($r['SaleResult']) && is_array($r['SaleResult'])) {
-            $r = $r['SaleResult'];
+        // Desanidar defensivamente
+        foreach (['SaleWithTokenResult','SaleResult','SaleWithTokenResponse','SaleResponse','Result','result'] as $k) {
+            if (isset($r[$k]) && is_array($r[$k])) { $r = $r[$k]; break; }
         }
 
-        // Mapea claves con variantes
-        $code = $r['Code'] 
-            ?? $r['ResponseCode'] 
-            ?? $r['code'] 
-            ?? $r['responseCode'] 
-            ?? null;
+        // Mapa case-insensitive
+        $flat  = json_decode(json_encode($r), true) ?: [];
+        $lower = [];
+        foreach ($flat as $k => $v) { $lower[strtolower($k)] = $v; }
+        $get = function ($keys) use ($flat, $lower) {
+            foreach ((array)$keys as $k) {
+                if (array_key_exists($k, $flat)) return $flat[$k];
+                $lk = strtolower($k);
+                if (array_key_exists($lk, $lower)) return $lower[$lk];
+            }
+            return null;
+        };
 
-        $res  = $r['Result'] 
-            ?? $r['result'] 
-            ?? null;
+        // Campos
+        $code   = (string)($get(['Code','ResponseCode','code','responseCode']) ?? '');
+        $result = (string)($get(['Result','result']) ?? '');
+        $desc   = (string)($get(['Description','ResponseDescription','description']) ?? '');
 
-        $desc = $r['Description'] 
-            ?? $r['ResponseDescription'] 
-            ?? $r['description'] 
-            ?? null;
+        // Aprobada si Code === '00' o Result/Description dicen Approved
+        $approved = ($code === '00')
+            || (strcasecmp($result, 'approved') === 0)
+            || (strcasecmp($desc,   'approved') === 0);
 
-        $txid = $r['TransactionId'] 
-            ?? $r['TransactionID'] 
-            ?? $r['transactionId'] 
-            ?? $r['transaction_id'] 
-            ?? null;
-
-        $auth = $r['AuthorizationNumber'] 
-            ?? $r['AuthorizationCode'] 
-            ?? $r['authorizationNumber'] 
-            ?? $r['authorization_code'] 
-            ?? $r['authCode'] 
-            ?? null;
-
-        // Aprobación: acepta Code '00' o Result 'Approved'
-        $isApproved =
-            ($code === '00') ||
-            (is_string($res)  && strcasecmp($res,  'approved') === 0) ||
-            (is_string($desc) && strcasecmp($desc, 'approved') === 0);
+        // Autorización: cubrir sinónimos comunes
+        $auth = $get([
+            'AuthorizationNumber','authorization_number',
+            'AuthorizationCode','authorizationCode',
+            'AuthCode','ApprovalCode','ApprovalNumber','authorization'
+        ]);
 
         return [
-            'success'               => (bool) $isApproved,
-            'transaction_id'        => $txid,
-            'authorization_number'  => $auth,
-            'response_code'         => $code ?? 'UNKNOWN',
-            'response_description'  => $desc ?? '',
-            'result'                => $res ?? null,
-            'bin_id'                => $r['BinId'] ?? $r['binId'] ?? null,
-            'processor_id'          => $r['ProcessorId'] ?? $r['processorId'] ?? null,
-            'tracking'              => $r['Tracking'] ?? $r['tracking'] ?? null,
-            'system_tracking'       => $r['SystemTracking'] ?? $r['systemTracking'] ?? null,
-            'request_date'          => $r['RequestDate'] ?? $r['requestDate'] ?? null,
-            'response_date'         => $r['ResponseDate'] ?? $r['responseDate'] ?? null,
-            'raw_response'          => $r,
+            'success'              => (bool)$approved,
+            'transaction_id'       => $get(['TransactionId','TransactionID','transactionId','transaction_id','id']),
+            'authorization_number' => $auth,
+            'response_code'        => $code ?: 'UNKNOWN',
+            'response_description' => $desc ?: '',
+            'result'               => $result ?: null,
+
+            'bin_id'               => $get(['BinId','BINID','binId','bin_id']),
+            'processor_id'         => $get(['ProcessorId','processorId','processor_id']),
+
+            // Tracking (muchos devuelven sólo uno)
+            'tracking'             => $get(['Tracking','tracking','ClientTracking','clientTracking']),
+            'system_tracking'      => $get(['SystemTracking','systemTracking','system_tracking']),
+
+            // Fechas (agrega locales si tu gateway las usa)
+            'request_date'         => $get(['RequestDate','requestDate','RequestLocalDate']),
+            'response_date'        => $get(['ResponseDate','responseDate','ResponseLocalDate']),
+
+            'raw_response'         => $flat,
         ];
     }
-
    
 
     private function simulateResponse(array $data)
