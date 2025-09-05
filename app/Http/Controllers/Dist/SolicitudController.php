@@ -320,22 +320,86 @@ class SolicitudController extends Controller
             $prefillTitularNF  = $payload['nf']          ?? null;
             $prefillAfinidadId = $payload['afinidad_id'] ?? null;
         }
+        
+        $Afinidad = null;
+        if ($prefillAfinidadId) {
+            $Afinidad = Afinidad::where('estatus', 'Activo')
+                ->where('id', $prefillAfinidadId)
+                ->select('id','descripcion')
+                ->first();
+        }
 
-        // (Opcional) lista para mostrar nombre de la afinidad elegida
-        $afinidad = Afinidad::where('estatus', 'Activo')
-            ->where('id', $prefillAfinidadId)
-            ->select('id','descripcion')
-            ->first();
+
+        $Sujeto = (object)[
+            'primer_nombre'    => $Usuario->primer_nombre ?? '',
+            'segundo_nombre'   => $Usuario->segundo_nombre ?? '',
+            'primer_apellido'  => $Usuario->primer_apellido ?? '',
+            'segundo_apellido' => $Usuario->segundo_apellido ?? '',
+            'email'            => $Usuario->email ?? '',
+            // En tu UI este campo dice "Pasaporte", pero si quieres mostrar Ruex al seleccionar, lo cambiamos abajo.
+            'documento'        => $Usuario->documento_numero ?? '',
+            'pais_nacionalidad'=> '',
+            'pais_nacimiento'  => '',
+            'tipo_carnet'      => '',
+            'num_carnet'       => '',
+        ];
+
+        $tc = function ($v) {
+            $v = $v ?? '';
+            $v = mb_strtolower($v, 'UTF-8');
+            return mb_convert_case($v, MB_CASE_TITLE, 'UTF-8');
+        };
+
+        if ($prefillTitularNF) {
+            $sim = DB::connection('simpanama')
+                ->table('dbo.SIM_FI_GENERALES AS SFG')
+                ->leftJoin('SIM_GE_PAIS AS SGP', 'SGP.COD_PAIS', '=', 'SFG.COD_NACION_ACTUAL') // nacionalidad
+                ->select([
+                    'SFG.NUM_REG_FILIACION',
+                    'SFG.NOM_PRIMER_APELL',
+                    'SFG.NOM_SEGUND_APELL',
+                    'SFG.NOM_PRIMER_NOMB',
+                    'SFG.NOM_SEGUND_NOMB',
+                    'SFG.IND_SEXO',
+                    'SFG.FEC_NACIM',
+                    'SGP.NOM_NACIONALIDAD',
+                ])
+                ->where('SFG.NUM_REG_FILIACION', $prefillTitularNF)
+                ->first();
+
+            if ($sim) {
+                $Sujeto = (object)[
+                    'primer_nombre'    => $tc($sim->NOM_PRIMER_NOMB),
+                    'segundo_nombre'   => $tc($sim->NOM_SEGUND_NOMB),
+                    'primer_apellido'  => $tc($sim->NOM_PRIMER_APELL),
+                    'segundo_apellido' => $tc($sim->NOM_SEGUND_APELL),
+                    // email no existe en SIM; dejamos el del usuario logueado o vacío
+                    'email'            => $Usuario->email ?? '',
+                    // Mostramos el Ruex seleccionado aquí (si tu UI realmente quiere Ruex en ese campo)
+                    'documento'        => (string)$prefillTitularNF,
+                    'pais_nacionalidad'=> $sim->NOM_NACIONALIDAD ?? '',
+                    'pais_nacimiento'  => '', // si luego tienes el código de país de nacimiento, aquí lo mapeas
+                    'tipo_carnet'      => '',
+                    'num_carnet'       => '',
+                ];
+            } else {
+                // Si no existe en SIM, puedes notificar y seguir con datos del usuario
+                session()->flash('errors', 'No se encontraron datos en SIM para el Ruex seleccionado.');
+            }
+        }
+
+
 
 
         return view('dist.solicitud.nuevo', compact(
             'Usuario',
+            'Sujeto',
             'provincia',
             'distrito',
             'corregimiento',
             'prefillTitularNF',
             'prefillAfinidadId',
-            'afinidad'
+            'Afinidad'
         ));
     }
         
@@ -485,6 +549,9 @@ class SolicitudController extends Controller
         $user = Auth::user();
         $r    = $this->request; // atajo local
 
+        $afinidad = null; 
+
+
         // 0) Determinar titular según tipo de usuario
         if ($user->tipo_usuario === 'solicitante') {
             $titularNF = trim((string)$user->documento_numero);
@@ -503,6 +570,8 @@ class SolicitudController extends Controller
                 ], 422);
             }
         }
+
+        //return $titularNF;
 
         // 1) Validación de inputs
         $validated = $r->validate([
@@ -547,6 +616,37 @@ class SolicitudController extends Controller
 
         // 2) Regla: nadie puede tener otra solicitud activa (≠ Rechazada/Cancelada)
         //    Usamos tu CommonHelper (asegúrate de que el método sea PUBLIC).
+
+        if(!empty($this->request->input('afinidad'))){
+
+            $titularNF = $this->request->input('pasaporte');
+            $afinidadTipo = $this->request->input('afinidad');
+
+            $Idafinidad = DB::table('afinidad')
+                ->where('afinidad.descripcion', '=', $afinidadTipo)
+                ->select('afinidad.id')
+                ->first();
+
+            $afinidad = $Idafinidad->id;
+
+        }else{
+            $afinidad = '1';
+        }
+
+        $primerNombre           = $this->request->input('primerNombre');
+        $segundoNombre          = $this->request->input('segundoNombre');
+        $primerApellido         = $this->request->input('primerApellido');
+        $segundoApellido        = $this->request->input('segundoApellido');
+        $correo                 = $this->request->input('correo');
+        $pais_nacionalidad_id   = $this->request->input('pais_nacionalidad_id');
+        $paisNacionalidad       = $this->request->input('paisNacionalidad');
+        $pais_nacimiento_id     = $this->request->input('pais_nacimiento_id');
+        $paisNacimiento         = $this->request->input('paisNacimiento');
+        $tipoCarnet             = $this->request->input('tipoCarnet');
+        $numCarnet              = $this->request->input('numCarnet');
+
+        //return  $afinidad;
+
         if ($this->common->algunaPersonaTieneSolicitudActiva([$titularNF])) {
             return response()->json([
                 'ok'      => false,
@@ -555,7 +655,7 @@ class SolicitudController extends Controller
         }
 
         // 3) CREAR Solicitud + Estado inicial + Persona TITULAR + Archivos
-        return DB::transaction(function () use ($validated, $titularNF) {
+        return DB::transaction(function () use ($validated, $titularNF , $afinidad) {
 
             // 3.1 Solicitud
             $solicitud = SolicitudCambioResidencia::create([
@@ -593,7 +693,7 @@ class SolicitudController extends Controller
             // 3.3 Persona TITULAR
             $titular = $solicitud->personas()->create([
                 'es_titular'    => 1,
-                'parentesco'    => 'titular',
+                'afinidad_id'    => $afinidad,
                 'num_filiacion' => $titularNF,
             ]);
 
@@ -1005,10 +1105,10 @@ class SolicitudController extends Controller
                 ]);
             }
 
-            $tieneActiva = DB::table('solicitudes_cambio_personas as p')
-                ->join('solicitudes_cambio_residencia as s', 's.id', '=', 'p.solicitud_id')
+            $tieneActiva = DB::table('solicitudes_cambio_residencia as s')
+                ->leftjoin('solicitudes_cambio_personas as p', 's.id', '=', 'p.solicitud_id')
                 ->where('p.num_filiacion', $nf)
-                ->where('p.es_titular', 1)
+                // ->where('p.es_titular', 1)
                 ->whereNotIn('s.estatus', ['Rechazada','Cancelada'])
                 ->exists();
 
@@ -1034,8 +1134,8 @@ class SolicitudController extends Controller
 
         $nf = trim((string)$this->request->input('num_filiacion'));
 
-        $tieneActiva = DB::table('solicitudes_cambio_personas as p')
-            ->join('solicitudes_cambio_residencia as s', 's.id', '=', 'p.solicitud_id')
+        $tieneActiva = DB::table('solicitudes_cambio_residencia as s')
+            ->leftjoin('solicitudes_cambio_personas as p', 's.id', '=', 'p.solicitud_id')
             ->where('p.num_filiacion', $nf)
             ->whereNotIn('s.estatus', ['Rechazada','Cancelada'])
             ->exists();
