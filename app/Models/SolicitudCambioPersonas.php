@@ -14,7 +14,7 @@ class SolicitudCambioPersonas extends Model
     protected $fillable = [
         'solicitud_id',
         'es_titular',
-        'parentesco',
+        'afinidad_id',
         'num_filiacion',
         'documento_tipo',
         'documento_numero',

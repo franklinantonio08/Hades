@@ -79,37 +79,37 @@
                                     <div class="col-md-3 mb-3">
                                         <label for="primerNombre" class="form-label fw-bold text-primary">Primer Nombre</label>
                                         <div id="div_nombre" ></div>
-                                        <input type="text" class="form-control" id="primerNombre" name="primerNombre" placeholder="Ingrese su primer nombre" readonly value="{{ $Usuario->primer_nombre }}">
+                                        <input type="text" class="form-control" id="primerNombre" name="primerNombre" placeholder="Ingrese su primer nombre" readonly value="{{ $Sujeto->primer_nombre }}">
                                     </div>
 
                                     <div class="col-md-3 mb-3">
                                         <label for="segundoNombre" class="form-label fw-bold text-primary">Segundo Nombre</label>
                                         <div id="div_nombre" ></div>
-                                        <input type="text" class="form-control" id="segundoNombre" name="segundoNombre" placeholder="Ingrese su segundo nombre" readonly value="{{ $Usuario->segundo_nombre }}">
+                                        <input type="text" class="form-control" id="segundoNombre" name="segundoNombre" placeholder="Ingrese su segundo nombre" readonly value="{{ $Sujeto->segundo_nombre }}">
                                     </div>
 
                                     <div class="col-md-3 mb-3">
                                         <label for="primerApellido" class="form-label fw-bold text-primary">Primer Apellido</label>
                                         <div id="div_apellido" ></div>
-                                        <input type="text" class="form-control" id="primerApellido" name="primerApellido" placeholder="Ingrese su primer apellido" readonly value="{{ $Usuario->primer_apellido }}">
+                                        <input type="text" class="form-control" id="primerApellido" name="primerApellido" placeholder="Ingrese su primer apellido" readonly value="{{ $Sujeto->primer_apellido }}">
                                     </div>
 
                                     <div class="col-md-3 mb-3">
                                         <label for="segundoApellido" class="form-label fw-bold text-primary">Segundo Apellido</label>
                                         <div id="div_apellido" ></div>
-                                        <input type="text" class="form-control" id="segundoApellido" name="segundoApellido" placeholder="Ingrese su segundo apellido" readonly value="{{ $Usuario->segundo_apellido }}">
+                                        <input type="text" class="form-control" id="segundoApellido" name="segundoApellido" placeholder="Ingrese su segundo apellido" readonly value="{{ $Sujeto->segundo_apellido }}">
                                     </div>                
 
                                     <div class="col-md-6 mb-3">
                                         <label for="correo" class="form-label fw-bold text-primary">Correo Electrónico</label>
                                         <div id="div_correo" ></div>
-                                        <input type="email" class="form-control" id="correo" name="correo" placeholder="Ingrese su correo electrónico" readonly value="{{ $Usuario->email }}">
+                                        <input type="email" class="form-control" id="correo" name="correo" placeholder="Ingrese su correo electrónico" readonly value="{{ $Sujeto->email }}">
                                     </div>
 
                                     <div class="col-md-6 mb-3">
                                         <label for="pasaporte" class="form-label fw-bold text-primary">Pasaporte</label>
                                         <div id="div_pasaporte" ></div>
-                                        <input type="text" class="form-control" id="pasaporte" name="pasaporte" placeholder="Ingrese su pasaporte" readonly value="{{ $Usuario->documento_numero }}">
+                                        <input type="text" class="form-control" id="pasaporte" name="pasaporte" placeholder="Ingrese su pasaporte" readonly value="{{ $Sujeto->documento }}">
                                     </div>
                                     
                                     <div class="col-md-6 mb-3">
@@ -165,21 +165,16 @@
                             </div>   
                             
                             
-                            @if(!empty($afiliacion->foto_url))
+                            @if(!empty($Afinidad->id))
                             <hr class="mb-4">
-                            <h5 class="form-label fw-bold text-primary" style="background-color:#f0f0f0;padding:5px;">Inversionista Calificado</h5>
+                            <h5 class="form-label fw-bold text-primary" style="background-color:#f0f0f0;padding:5px;">Afinidad Familiar</h5>
 
-                                <div class="col-md-4">
-                                    <label class="form-label fw-bold text-primary d-block">¿Eres Inversionista Calificado?</label>
-                                    <div class="btn-group w-100" role="group" aria-label="Tipo de vivienda">
-                                        <input type="radio" class="btn-check" name="inversionista" id="inversionista_si" value="Si" >
-                                        <label class="btn btn-outline-primary" for="inversionista_si">Si</label>
-
-                                        <input type="radio" class="btn-check" name="inversionista" id="inversionista_no" value="No" checked>
-                                        <label class="btn btn-outline-primary" for="inversionista_no">No</label>
-
-                                    </div>
+                                <div class="col-md-6 mb-3">
+                                        <label for="afinidad" class="form-label fw-bold text-primary">Usted Declaro que es el:</label>
+                                        <div id="div_afinidad" ></div>
+                                        <input type="text" class="form-control" id="afinidad" name="afinidad" placeholder="Ingrese su numero de carnet" readonly value="{{ $Afinidad->descripcion }}">
                                 </div>
+
                             @endif
                             
                             <hr class="mb-4">
