@@ -14,16 +14,20 @@ class SolicitudCambioPersonas extends Model
     protected $fillable = [
         'solicitud_id',
         'es_titular',
+        'familiaId',
         'afinidad_id',
-        'num_filiacion',
-        'documento_tipo',
-        'documento_numero',
+        'num_filiacion',   
         'primer_nombre',
         'segundo_nombre',
         'primer_apellido',
         'segundo_apellido',
         'fecha_nacimiento',
         'genero',
+        'documento_tipo',
+        'correo',
+        'nacionalidadId',
+        'paisId',
+        'documento_numero',
     ];
 
     public function solicitud()

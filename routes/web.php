@@ -110,6 +110,7 @@ Route::middleware('guest')->group(function () {
             Route::post('/buscaCorregimiento', [CorregimientoController::class, 'BuscaCorregimiento'])->name('BuscaCorregimiento');
             Route::post('/buscafamiliar', [SolicitudController::class, 'BuscaFamiliar']) ->name('BuscaFamiliar'); 
 
+             Route::get('/pago/{Id}', [SolicitudController::class, 'Pago']) ->name('Pago'); 
 
         });
 
