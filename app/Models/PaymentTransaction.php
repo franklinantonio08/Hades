@@ -12,13 +12,20 @@ class PaymentTransaction extends Model
     protected $fillable = [
         'user_id', 'token_id', 'amount', 'currency',
         'reference', 'status', 'request_data',
-        'response_data', 'gateway_transaction_id'
+        'response_data', 'gateway_transaction_id',
+
+        'ruex','email','account_number',
+        'request_date','response_date',
+        'response_code','authorization_number','bin_id','processor_id',
+        'result','tracking','system_tracking',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'request_data' => 'array',
         'response_data' => 'array',
+        'request_date'  => 'datetime',
+        'response_date' => 'datetime',
     ];
 
     public function user()
@@ -35,6 +42,11 @@ class PaymentTransaction extends Model
     {
         return $this->belongsTo(\App\Models\PaymentToken::class, 'token_id', 'id')
                     ->withDefault(); // para que $transaction->token no sea null
+    }
+
+    public function emailLogs()
+    {
+        return $this->hasMany(PaymentEmailLog::class, 'payment_transaction_id');
     }
         
 }
