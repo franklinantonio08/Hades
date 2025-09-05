@@ -85,7 +85,7 @@
                                 </li>
 
 
-                                <li class="nav-group">
+                                {{-- <li class="nav-group">
                                         <a class="nav-link nav-group-toggle" href="#">
                                                    <svg class="nav-icon" style="color: #4fc501;">
                                                         <use xlink:href="{{ asset('vendors/@coreui/icons/svg/free.svg#cil-cash') }}"></use>
@@ -105,12 +105,12 @@
                                                 </li>
 
 
-                                                {{-- <li class="nav-item"><a class="nav-link" href="/dist/solicitud/nuevo"><span class="nav-icon"></span> Crear Solicitud</a></li> 
+                                                <li class="nav-item"><a class="nav-link" href="/dist/solicitud/nuevo"><span class="nav-icon"></span> Crear Solicitud</a></li> 
                                                 <li class="nav-item"><a class="nav-link" href="/dist/missolicitudes/{{ Auth::id() }}"><span class="nav-icon"></span> Mis Solicitudes</a></li> 
-                                                <li class="nav-item"><a class="nav-link" href="/dist/solicitud"><span class="nav-icon"></span> Solicitud</a></li>  --}}
+                                                <li class="nav-item"><a class="nav-link" href="/dist/solicitud"><span class="nav-icon"></span> Solicitud</a></li> 
                                         
                                         </ul>
-                                </li>
+                                </li> --}}
         
 
                                 <li class="nav-group modern-nav-group">

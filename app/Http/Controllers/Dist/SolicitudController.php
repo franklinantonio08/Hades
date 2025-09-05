@@ -79,6 +79,7 @@ class SolicitudController extends Controller
         });
 
         $query = DB::table('solicitudes_cambio_residencia')
+        ->leftjoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
         ->leftjoin('users', 'users.id', '=', 'solicitudes_cambio_residencia.usuario_id')
         ->leftjoin('provincia', 'provincia.id', '=', 'solicitudes_cambio_residencia.provincia_id')
         ->leftjoin('distrito', 'distrito.id', '=', 'solicitudes_cambio_residencia.distrito_id')
@@ -86,10 +87,10 @@ class SolicitudController extends Controller
         ->where('solicitudes_cambio_residencia.usuario_id', Auth::id())
         ->select(
                 'solicitudes_cambio_residencia.*',
-                'users.documento_numero as filiacion',
+                'solicitudes_cambio_personas.num_filiacion as filiacion',
                 // DB::raw("CONCAT(SUBSTRING(unidad_solicitante.descripcion, 1, 20), '...') as unidad"),
                 // DB::raw("CONCAT(SUBSTRING(motivo_operativo.descripcion, 1, 20), '...') as motivo"),  
-                    DB::raw("CONCAT(users.primer_nombre, ' ', users.primer_apellido) AS nombre_completo"),
+                    DB::raw("CONCAT(solicitudes_cambio_personas.primer_nombre, ' ', users.primer_apellido) AS nombre_completo"),
                 // DB::raw("CONCAT(aprobado.name, ' ', aprobado.lastName) AS aprob"),
                 // 'pais.pais as pais',              
                 // 'nacionalidad.nacionalidad as nacionalidad',
@@ -143,7 +144,7 @@ class SolicitudController extends Controller
                 if ($value->estatus == 'Por corregir') {
                     $detalle .= '
                         <li>
-                            <a class="dropdown-item text-warning" href="/dist/multas/editar/'.$value->id.'">
+                            <a class="dropdown-item text-warning" href="/dist/solicitud/editar/'.$value->id.'">
                                 <i class="bi bi-pencil me-2 text-warning"></i> Editar
                             </a>
                         </li>';
@@ -153,7 +154,7 @@ class SolicitudController extends Controller
                 if ($value->estatus == 'Aprobada - con pago') {
                     $detalle .= '
                         <li>
-                            <a class="dropdown-item text-success" href="/payment/tokenize/">
+                            <a class="dropdown-item text-success" href="/dist/solicitud/pago/'.$value->id.'">
                                 <i class="bi bi-currency-dollar me-2 text-success"></i> Por Pagar
                             </a>
                         </li>';
@@ -629,8 +630,15 @@ class SolicitudController extends Controller
 
             $afinidad = $Idafinidad->id;
 
+            $titularF = '0';
+
+
+
         }else{
             $afinidad = '1';
+
+            $titularF = '0';
+
         }
 
         $primerNombre           = $this->request->input('primerNombre');
@@ -655,7 +663,7 @@ class SolicitudController extends Controller
         }
 
         // 3) CREAR Solicitud + Estado inicial + Persona TITULAR + Archivos
-        return DB::transaction(function () use ($validated, $titularNF , $afinidad) {
+        return DB::transaction(function () use ($validated, $titularNF, $titularF,  $afinidad , $primerNombre, $segundoNombre, $primerApellido, $segundoApellido, $correo, $pais_nacionalidad_id, $pais_nacimiento_id, $tipoCarnet, $numCarnet) {
 
             // 3.1 Solicitud
             $solicitud = SolicitudCambioResidencia::create([
@@ -690,11 +698,40 @@ class SolicitudController extends Controller
                 'created_at' => now(),
             ]);
 
+            $familiaId = null;
+            if ((int)$afinidad !== 1) {
+                $familia = \App\Models\Familia::create([
+                    'codigo'    => 'FAM-' . now()->format('Ymd-His') . '-' . Str::upper(Str::random(4)),
+                    'infoextra' => null,                 // o lo que quieras guardar
+                    'usuarioId' => auth()->id(),        // FK a users si aplica
+                ]);
+                $familiaId = $familia->id;
+            }
+
+
             // 3.3 Persona TITULAR
             $titular = $solicitud->personas()->create([
-                'es_titular'    => 1,
-                'afinidad_id'    => $afinidad,
+                'es_titular'    => $titularF,
+                'afinidad_id'   => $afinidad,
                 'num_filiacion' => $titularNF,
+                'familiaId'        => $familiaId,
+
+                // Mapeo de tus variables a columnas
+                'primer_nombre'    => $primerNombre ?: null,
+                'segundo_nombre'   => $segundoNombre ?: null,
+                'primer_apellido'  => $primerApellido ?: null,
+                'segundo_apellido' => $segundoApellido ?: null,
+                'correo'           => $correo ?: null,
+
+                // FKs (usa los IDs numéricos)
+                'nacionalidadId'   => $pais_nacionalidad_id ?: null,
+                'paisId'           => $pais_nacimiento_id ?: null,
+
+                // Documento
+                'documento_tipo'   => $tipoCarnet ?: null,
+                'documento_numero' => $numCarnet ?: null,
+                // Campos no provistos quedan NULL (genero, fecha_nacimiento, familiaId)
+
             ]);
 
             // 3.4 Helper para subir archivos (con persona_id opcional)
@@ -1272,6 +1309,39 @@ class SolicitudController extends Controller
         return response()->json(['ok' => true, 'redirect' => $redirect]);
     }
 
+
+    public function Pago($solicitudId){
+
+
+        $solicitud = DB::table('solicitudes_cambio_residencia')
+            ->leftjoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
+            ->leftjoin('users', 'users.id', '=', 'solicitudes_cambio_residencia.usuario_id')
+            ->where('solicitudes_cambio_residencia.id', $solicitudId)
+            ->where('solicitudes_cambio_residencia.usuario_id', Auth::id())
+            ->select(
+                    'solicitudes_cambio_residencia.*',
+                    'solicitudes_cambio_personas.correo as email',
+                    'solicitudes_cambio_personas.num_filiacion as filiacion',
+                    DB::raw("CONCAT(solicitudes_cambio_personas.primer_nombre, ' ', users.primer_apellido) AS nombre_completo")   
+
+                )
+                ->first();
+
+        $Usuario = User::find(Auth::id());
+
+        if(empty($Usuario)){
+            return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0001");
+        }
+        
+       
+
+        return view('dist.solicitud.pago', compact(
+            'Usuario',
+            'solicitud'
+            
+        ));
+
+    }
 
 
 }
