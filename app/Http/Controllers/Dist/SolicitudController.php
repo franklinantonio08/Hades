@@ -49,18 +49,30 @@ class SolicitudController extends Controller
 
     public function Index(){
 
-        $afinidad = Afinidad::where('estatus', 'Activo')
-            ->select('id', 'descripcion')
-            ->get();
+        $Usuario = User::find(Auth::id());
+        $esAbogado = strcasecmp(trim((string)$Usuario->tipo_usuario), 'abogado') === 0;
+
+        $afinidad = Afinidad::query()
+                ->where('estatus', 'Activo')
+                ->when($esAbogado, fn($q) => $q->where('id', 1)) // <= filtro solo para abogado
+                ->select('id', 'descripcion')
+                ->orderByRaw("CASE WHEN id = 1 THEN 0 ELSE 1 END, descripcion") // deja 1 primero
+                ->get();
 
         if ($afinidad->isEmpty()) {
             return back()->withErrors("ERROR ESTATUS OPERATIVO ESTA VACIO CODE-0002");
         }
 
-        view()->share('afinidad', $afinidad);
-        
-        return view('dist.solicitud.index');
+        // (opcional) si quieres asegurar que abogado tenga id=1 disponible:
+        if ($esAbogado && !$afinidad->contains('id', 1)) {
+            return back()->withErrors("No está disponible la afinidad requerida (id=1) para abogado.");
+        }
 
+        $tipo_usuario = $esAbogado ? 'abogado' : 'solicitante';
+        $afinidad_preseleccionada = old('afinidadId') ?? ($esAbogado ? 1 : '');
+
+        return view('dist.solicitud.index', compact('afinidad', 'tipo_usuario', 'afinidad_preseleccionada'));
+        
     }
 
     public function PostIndex(){
@@ -286,6 +298,17 @@ class SolicitudController extends Controller
     public function Nuevo(){
 
         $Usuario = User::find(Auth::id());
+
+
+        if($Usuario->tipo_usuario === 'abogado' ){
+            
+            $tipo_usuario = 'abogado';
+
+        }else {
+
+           $tipo_usuario = 'solicitante';
+
+        }
 
         if(empty($Usuario)){
             return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0001");
@@ -562,14 +585,14 @@ class SolicitudController extends Controller
                     'message' => 'Debes registrar tu N° de filiación (Ruex) en tu perfil antes de iniciar la solicitud.'
                 ], 422);
             }
-        } else { // abogado
-            $titularNF = trim((string)$r->input('titular_num_filiacion'));
-            if ($titularNF === '') {
-                return response()->json([
-                    'ok'      => false,
-                    'message' => 'Debes seleccionar el titular (N° de filiación).'
-                ], 422);
-            }
+        // } else { // abogado
+        //     $titularNF = trim((string)$r->input('titular_num_filiacion'));
+        //     if ($titularNF === '') {
+        //         return response()->json([
+        //             'ok'      => false,
+        //             'message' => 'Debes seleccionar el titular (N° de filiación).'
+        //         ], 422);
+        //     }
         }
 
         //return $titularNF;
@@ -632,14 +655,14 @@ class SolicitudController extends Controller
 
             $titularF = '0';
 
-
-
         }else{
-            $afinidad = '1';
+            $afinidad = $this->request->input('afinidad');
 
-            $titularF = '0';
+            $titularF = '1';
 
         }
+
+        //return $titularNF;
 
         $primerNombre           = $this->request->input('primerNombre');
         $segundoNombre          = $this->request->input('segundoNombre');
@@ -661,6 +684,8 @@ class SolicitudController extends Controller
                 'message' => 'La persona titular ya tiene una solicitud activa.'
             ], 409);
         }
+
+        //return $afinidad;
 
         // 3) CREAR Solicitud + Estado inicial + Persona TITULAR + Archivos
         return DB::transaction(function () use ($validated, $titularNF, $titularF,  $afinidad , $primerNombre, $segundoNombre, $primerApellido, $segundoApellido, $correo, $pais_nacionalidad_id, $pais_nacimiento_id, $tipoCarnet, $numCarnet) {
@@ -707,7 +732,7 @@ class SolicitudController extends Controller
                 ]);
                 $familiaId = $familia->id;
             }
-
+ //return $titularNF;
 
             // 3.3 Persona TITULAR
             $titular = $solicitud->personas()->create([
@@ -1127,6 +1152,95 @@ class SolicitudController extends Controller
 
     public function ValidarSolicitud(){
 
+            $user = Auth::user();
+            $tipo = trim(strtolower((string) $user->tipo_usuario)); // 'solicitante' | 'abogado'
+
+            // ABOGADO: solo representado
+            if ($tipo === 'abogado') {
+                return response()->json([
+                    'ok' => true,
+                    'tipo_usuario' => 'abogado',
+                    'tieneActiva' => null,
+                    'ui' => [
+                        'title' => 'Trámite para representado',
+                        'body'  => 'Usted es abogado. ¿Desea tramitar una solicitud para su representado? Recuerde: el representado no debe tener otra solicitud activa.',
+                        'buttons' => [
+                            'representado' => ['label' => 'Sí, tramitar para un representado', 'enabled' => true],
+                            'cancel'       => ['label' => 'Cancelar'],
+                        ],
+                        'notes' => 'Se validará que el representado no tenga solicitudes activas.'
+                    ],
+                ]);
+            }
+
+            // SOLICITANTE: identifica por Ruex y/o Documento
+            //$ruex = trim((string) ($user->num_filiacion ?? ''));   // usa el campo correcto si existe
+            $doc  = trim((string) ($user->documento_numero ?? ''));
+
+            if ( $doc === '') {
+                return response()->json([
+                    'ok' => false,
+                    'tieneActiva' => null,
+                    'error' => 'SIN_IDENTIFICADOR',
+                    'message' => 'Debes registrar tu N° de filiación (Ruex) o documento en tu perfil antes de iniciar la solicitud.'
+                ]);
+            }
+
+            // ACTIVA = cualquier estatus distinto de Rechazada/Cancelada
+            $tieneActiva = DB::table('solicitudes_cambio_residencia as s')
+                ->join('solicitudes_cambio_personas as p', 's.id', '=', 'p.solicitud_id')
+                ->where('p.es_titular', 1)
+                ->whereNotIn('s.estatus', ['Rechazada', 'Cancelada'])
+                ->where(function ($w) use ( $doc) {
+                    //if ($ruex !== '') $w->orWhere(DB::raw('TRIM(p.num_filiacion)'), '=', $ruex);
+                    if ($doc  !== '') $w->orWhere(DB::raw('TRIM(p.num_filiacion)'), '=', $doc);
+                })
+                ->exists();
+
+            // Base del payload
+            $payload = [
+                'ok'           => true,
+                'tipo_usuario' => 'solicitante',
+                'tieneActiva'  => $tieneActiva,
+                'ui'           => [
+                    'title'   => 'Tipo de trámite',
+                    'body'    => 'Elige cómo deseas continuar con la solicitud.',
+                    'buttons' => [],
+                    'notes'   => null,
+                ],
+            ];
+
+            if ($tieneActiva) {
+                // ¡OJO! NO enviar 'mi'
+                $payload['ui'] = [
+                    'title' => 'Solicitud activa',
+                    'body'  => 'Ya tienes una solicitud activa como titular. ¿Deseas tramitar una solicitud para un familiar?',
+                    'buttons' => [
+                        'familiar' => ['label' => 'Sí, tramitar para un familiar', 'enabled' => true],
+                        'cancel'   => ['label' => 'No, cerrar'],
+                    ],
+                    'notes' => null,
+                ];
+            } else {
+                $payload['ui'] = [
+                    'title' => 'Tipo de trámite',
+                    'body'  => 'No tienes solicitudes activas. ¿Cómo deseas proceder?',
+                    'buttons' => [
+                        'mi'       => ['label' => 'Tramitar para mí', 'enabled' => true],
+                        'familiar' => ['label' => 'Tramitar para un familiar', 'enabled' => true],
+                        'cancel'   => ['label' => 'Cancelar'],
+                    ],
+                    'notes' => 'Podrás continuar registrando los datos del titular correspondiente.',
+                ];
+            }
+
+            return response()->json($payload);
+
+    }
+
+
+    /*public function ValidarSolicitud(){
+
         $user = Auth::user();
 
         // Si es solicitante, debe tener Ruex y no estar activo como TITULAR
@@ -1153,6 +1267,9 @@ class SolicitudController extends Controller
                 'ok' => true,
                 'tieneActiva' => $tieneActiva
             ]);
+        }else {
+
+            
         }
 
         // Abogado: no bloqueamos aquí; se valida al elegir titular en el modal
@@ -1161,7 +1278,7 @@ class SolicitudController extends Controller
             'tieneActiva' => false
         ]);
 
-    }
+    }*/
 
     public function validarFiliacionActiva() {
 

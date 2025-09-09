@@ -40,15 +40,32 @@
                             <div class="invalid-feedback">El Ruex debe contener solo números.</div>
                         </div>
 
+                        @php
+                        $esAbogado = isset($tipo_usuario) && $tipo_usuario === 'abogado';
+                        @endphp
+
                         <div class="col-md-6">
-                            <label class="form-label text-primary fw-bold">Afinidad</label>
-                            <select class="form-select shadow-sm" id="afinidadId" name="afinidadId">
-                                <option value="">Todos</option>
-                                @foreach ($afinidad as $key => $value)
-                                    <option value="{{ $value->id }}">{{ $value->descripcion }}</option>
-                                @endforeach
-                            </select>
+                        <label class="form-label text-primary fw-bold">Afinidad</label>
+
+                        <select class="form-select shadow-sm" id="afinidadId" name="afinidadId" {{ $esAbogado ? 'disabled' : '' }}>
+                            @unless($esAbogado)
+                            <option value="">Todos</option>
+                            @endunless
+
+                            @foreach ($afinidad as $value)
+                            <option value="{{ $value->id }}"
+                                {{ (string)$afinidad_preseleccionada === (string)$value->id ? 'selected' : '' }}>
+                                {{ $value->descripcion }}
+                            </option>
+                            @endforeach
+                        </select>
+
+                        @if($esAbogado)
+                            {{-- Si está disabled, enviamos un hidden para que el valor viaje en el submit --}}
+                            <input type="hidden" name="afinidadId" value="1">
+                        @endif
                         </div>
+
 
                         <div class="col-md-6">
                             <label for="genero" class="form-label text-primary fw-bold">Género</label>
