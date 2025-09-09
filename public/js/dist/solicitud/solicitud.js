@@ -433,6 +433,108 @@ class Distsolicitud {
     }
 
     validaSolicitud() {
+       
+        fetch(BASEURL + "/validar-solicitud", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": token },
+            body: JSON.stringify({})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.ok) {
+            if (data.error === 'SIN_RUEX' || data.error === 'SIN_IDENTIFICADOR') {
+                alert(data.message || 'Debes registrar tu Ruex/documento.');
+            }
+            return;
+            }
+
+            const ui = data.ui || {};
+            const tipo = (data.tipo_usuario || '').toString().trim().toLowerCase(); // <- normalizado
+            const tieneActiva = !!data.tieneActiva;
+
+            const modalEl = document.getElementById('modalElegirTipoTramite');
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static', keyboard: false });
+
+            // textos
+            document.getElementById('tipoTramiteTitle').textContent = ui.title || 'Tipo de trámite';
+            document.getElementById('tipoTramiteBody').textContent  = ui.body  || 'Elige cómo continuar.';
+            const notesEl = document.getElementById('tipoTramiteNotes');
+            if (notesEl) {
+            if (ui.notes) { notesEl.textContent = ui.notes; notesEl.classList.remove('d-none'); }
+            else { notesEl.classList.add('d-none'); }
+            }
+
+            // helper para botones
+            const setBtn = (btn, cfg) => {
+            if (!btn) return;
+            if (!cfg) { btn.classList.add('d-none'); return; } // si no viene del back => oculto
+            btn.classList.remove('d-none');
+            const span = btn.querySelector('span');
+            if (span && cfg.label) span.textContent = cfg.label;
+            btn.disabled = !(cfg.enabled ?? false);
+            };
+
+            const btnMi  = document.getElementById('btnParaMi');
+            const btnFam = document.getElementById('btnParaFamiliar');
+            const btnRep = document.getElementById('btnParaRepresentado');
+            const btnCan = document.getElementById('btnCancelar');
+
+            setBtn(btnMi,  ui.buttons?.mi);
+            setBtn(btnFam, ui.buttons?.familiar);
+            setBtn(btnRep, ui.buttons?.representado);
+            if (btnCan && ui.buttons?.cancel?.label) btnCan.textContent = ui.buttons.cancel.label;
+
+            // Cinturón adicional (por si acaso):
+if (tipo === 'abogado') {
+  btnMi?.remove();
+  btnFam?.remove();
+}
+if (tipo === 'solicitante' && tieneActiva) {
+  btnMi?.remove(); // <- quítalo del DOM, no solo d-none
+}
+
+            // evitar listeners duplicados
+            const bindOnce = (el, fn) => {
+            if (!el || el.classList.contains('d-none')) return;
+            const clone = el.cloneNode(true);
+            el.replaceWith(clone);
+            clone.addEventListener('click', fn, { once: true });
+            };
+
+            const abrirModalRegistro = (tipoTramite, titulo) => {
+            const modalRegistroEl = document.getElementById('modalRegistro');
+            if (!modalRegistroEl) return;
+            document.getElementById('tramite_tipo')?.setAttribute('value', tipoTramite);
+            const tituloEl = document.getElementById('modalRegistroTitulo');
+            if (tituloEl) tituloEl.textContent = titulo;
+
+            const modalRegistro = bootstrap.Modal.getOrCreateInstance(modalRegistroEl, { backdrop:'static', keyboard:false });
+            modalRegistro.show();
+            setTimeout(() => document.getElementById('nombre')?.focus(), 200);
+            };
+
+            bindOnce(document.getElementById('btnParaMi'), () => {
+            modal.hide();
+            window.location.href = BASEURL + "/nuevo";
+            });
+
+            bindOnce(document.getElementById('btnParaFamiliar'), () => {
+            modal.hide();
+            abrirModalRegistro('familiar', 'Tramitar para un familiar');
+            });
+
+            bindOnce(document.getElementById('btnParaRepresentado'), () => {
+            modal.hide();
+            abrirModalRegistro('representado', 'Tramitar para un representado');
+            });
+
+            modal.show();
+        })
+        .catch(console.error);
+
+    }
+
+    /*validaSolicitud() {
 
         fetch(BASEURL + "/validar-solicitud", {
             method: "POST",
@@ -485,7 +587,7 @@ class Distsolicitud {
             console.error("Error:", err);
         });
 
-    }
+    }*/
 
     getBadgeEstatus(estatus) {
         const badgeClass = this.estatusColors[estatus] || this.estatusColors['default'];
@@ -1060,6 +1162,10 @@ class Distsolicitud {
                         "Se ha enviado correctamente la información."
                     );
                     objMessagebasicModal.init();
+
+                    $('#messageBasicModal').on('hidden.bs.modal', function () {
+                        window.location.href = '/dist/solicitud'; // 🔄 redirige al inicio
+                    });
                 },
                 error: function (xhr) {
                     console.error(xhr);
