@@ -102,7 +102,7 @@ class SolicitudController extends Controller
                 'solicitudes_cambio_personas.num_filiacion as filiacion',
                 // DB::raw("CONCAT(SUBSTRING(unidad_solicitante.descripcion, 1, 20), '...') as unidad"),
                 // DB::raw("CONCAT(SUBSTRING(motivo_operativo.descripcion, 1, 20), '...') as motivo"),  
-                    DB::raw("CONCAT(solicitudes_cambio_personas.primer_nombre, ' ', users.primer_apellido) AS nombre_completo"),
+                    DB::raw("CONCAT(solicitudes_cambio_personas.primer_nombre, ' ', solicitudes_cambio_personas.primer_apellido) AS nombre_completo"),
                 // DB::raw("CONCAT(aprobado.name, ' ', aprobado.lastName) AS aprob"),
                 // 'pais.pais as pais',              
                 // 'nacionalidad.nacionalidad as nacionalidad',
