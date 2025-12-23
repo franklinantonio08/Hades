@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisteredUserController;
 
 use App\Http\Controllers\Dist\{
     DashboardController,
@@ -31,7 +32,8 @@ use App\Http\Controllers\Admin\{
     RIDAfinidadController,
     RIDMigrantesController,
     RIDPuestocontrolController,
-    RIDEstaciontemporalController
+    RIDEstaciontemporalController,
+    
  
  
 };
@@ -58,7 +60,7 @@ use App\Http\Controllers\Admin\{
 
 Route::middleware('guest')->group(function () {
 
-    // Route::get('/', [AuthenticatedSessionController::class, 'create'])->name('login');
+     Route::get('/', [AuthenticatedSessionController::class, 'create'])->name('login');
 
     Route::post('/registro/consulta-filiacion', [RegisteredUserController::class, 'buscarFiliacion'])->name('registro.consultaFiliacion');
 
