@@ -351,7 +351,7 @@
                                 {{-- 2) RECIBO DE SERVICIO --}}
                                 <div id="grupoRecibo">
                                     <div class="col-12 mb-2">
-                                        <label class="form-label fw-bold text-primary d-block"> Recibo de servicio</label>
+                                        <label class="form-label fw-bold text-primary d-block"> Recibo de servicio (notariado)</label>
                                         <div class="btn-group flex-wrap w-100 gap-2" role="group" aria-label="Tipo de recibo">
                                         <input type="radio" class="btn-check" name="recibo_tipo" id="recibo_mio" value="propio" checked>
                                         <label class="btn btn-outline-primary" for="recibo_mio">A mi nombre</label>
@@ -369,11 +369,11 @@
                                     </div>
 
                                     {{-- Campos adicionales solo si es de tercero --}}
-                                    <div class="col-md-6 mb-4 d-none" id="recibo_notariado_group">
+                                    {{-- <div class="col-md-6 mb-4 d-none" id="recibo_notariado_group">
                                         <label for="recibo_notariado_archivo" class="form-label fw-bold text-primary">Comprobante notariado del recibo</label>
                                         <input class="form-control" type="file" id="recibo_notariado_archivo" name="recibo_notariado_archivo" accept=".pdf,.jpg,.jpeg,.png">
                                         <div class="form-text">Obligatorio si el recibo está a nombre de otra persona.</div>
-                                    </div>
+                                    </div> --}}
 
                                     <div class="col-md-6 mb-4 d-none" id="cedula_titular_group">
                                         <label for="recibo_cedula_titular" class="form-label fw-bold text-primary">Cédula del titular del recibo (frente y reverso)</label>
@@ -384,7 +384,7 @@
 
                                 {{-- 3) CARNET MIGRATORIO --}}
                                 <div class="col-12 mt-2">
-                                    <label class="form-label fw-bold text-primary d-block"> Imagen del carnet migratorio</label>
+                                    <label class="form-label fw-bold text-primary d-block"> Imagen del carnet migratorio ó cédula</label>
                                 </div>
 
                                 <div class="col-md-6 mb-4">

@@ -147,7 +147,7 @@
           <select id="documento_tipo" name="documento_tipo" class="form-select">
             <option value="" disabled {{ old('documento_tipo') ? '' : 'selected' }}>Selecciona...</option>
             <option value="Ruex" {{ old('documento_tipo')==='Ruex' ? 'selected':'' }}>N° Filiación</option>
-            {{-- <option value="Pasaporte" {{ old('documento_tipo')==='Pasaporte' ? 'selected':'' }}>Pasaporte</option> --}}
+            <option value="Pasaporte" {{ old('documento_tipo')==='Pasaporte' ? 'selected':'' }}>Pasaporte</option>
           </select>
           @error('documento_tipo') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
         </div>

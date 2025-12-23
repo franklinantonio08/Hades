@@ -34,11 +34,11 @@
         <div class="mb-4">
           <h6 class="text-primary fw-bold">2) Recibo de servicio (adjunte <u>uno</u>)</h6>
           <ul class="mb-2 ps-3">
-            <li>Recibo de <strong>luz</strong>, <strong>agua</strong>, <strong>teléfono</strong> o <strong>internet</strong>.</li>
+            <li>Recibo de <strong>luz</strong>, <strong>agua</strong>, <strong>teléfono</strong> o <strong>internet</strong><em> notariado</em>.</li>
           </ul>
-          <p class="mb-2">
+          {{-- <p class="mb-2">
             <strong>No requiere notaría</strong> si el recibo está a su nombre.
-          </p>
+          </p> --}}
           <div class="alert alert-warning mb-0" role="alert">
             Si el recibo está a nombre de otra persona, deberá <u>notariarlo</u> y adjuntar además la <strong>cédula</strong> de la persona titular del recibo.
           </div>
