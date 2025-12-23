@@ -20,7 +20,10 @@ use App\Http\Controllers\Dist\{
 
     PermisosController,
     UsuariosController,
-    PaymentController
+    PaymentController,
+    CitasconsularController,
+    VisasController,
+    FiliacionController,
 };
 
 use App\Http\Controllers\Admin\{
@@ -124,6 +127,21 @@ Route::middleware('guest')->group(function () {
             Route::get('error',   [PaymentController::class, 'paymentError'])->name('error');  // nueva
 
             
+        });
+
+        Route::prefix('dist/citas_consular')->name('citas_consular.')->group(function () {
+            Route::get('/', [CitasconsularController::class, 'Index'])->name('Index');
+            Route::post('/', [CitasconsularController::class, 'PostIndex'])->name('PostIndex');
+            Route::get('/nuevo', [CitasconsularController::class, 'Nuevo'])->name('Nuevo');
+            Route::post('/nuevo', [CitasconsularController::class, 'PostNuevo'])->name('PostNuevo');
+            Route::post('/nuevo/buscaServicios', [ServiciosconsularesController::class, 'BuscaServiciosconsulares'])->name('BuscaServiciosconsulares');
+            Route::post('/nuevo/buscaConsulados', [CitasconsularController::class, 'buscaConsulados'])->name('buscaConsulados');
+            Route::get('/editar/{Id}', [CitasconsularController::class, 'Editar'])->name('Editar');
+            Route::post('/editar/{Id}', [CitasconsularController::class, 'PostEditar'])->name('PostEditar');
+            Route::get('/mostrar/{Id}', [CitasconsularController::class, 'Mostrar'])->name('Mostrar');
+            Route::post('/desactivar', [CitasconsularController::class, 'Desactivar'])->name('Desactivar');
+            Route::get('/generar-pdf', [CitasconsularController::class, 'generarPDF'])->name('generarPDF');
+            Route::get('/mostrar-pdf/{Id}', [CitasconsularController::class, 'mostrarPDF'])->name('mostrarPDF');
         });
             
 
