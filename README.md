@@ -1,100 +1,154 @@
-<?php
 
-public function postNuevo(){
-//    return $this->request->all();
-    $departamentoExiste = Departamento::where('nombre', $this->request->nombre)
-    //->where('distribuidorId', Auth::user()->distribuidorId)
-    ->first();
-    if(!empty($departamentoExiste)){
-        return redirect('dist/departamento/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0001");
-    }
-    DB::beginTransaction();
-    try { 	
-        $departamento = new Departamento;
-        $departamento->nombre         = trim($this->request->nombre);
-        if(isset($this->request->comentario)){
-            $departamento->infoextra       = trim($this->request->comentario); 
-        }
-        $departamento->estatus          = 'Activo';
-        $departamento->created_at       = date('Y-m-d H:i:s');
-        $departamento->usuarioId        = Auth::user()->id;
-        $departamento->organizacionId = 1;
-        $result = $departamento->save();
+/* Elimina la carpeta del Proyecto Hades */ 
+rm -rf /var/www/html/Hades
 
-        $departamentoId = $departamento->id;
+/* Baja del Git el proyecto Completo */
+git clone https://github.com/franklinantonio08/Hades.git
 
-        if(empty($departamentoId)){
-            DB::rollBack();
-            return redirect('dist/departamento/nuevo')->withErrors("ERROR AL GUARDAR EL CONTRATO NO SE GENERO UN # DE CONTRATO CORRECTO CODE-0196");
-        }
-        
-        $departamentoCode = str_pad($departamentoId,5, "0",STR_PAD_LEFT);
-        //return $departamentoCode;
-        $departamentoUpdate = Departamento::find($departamentoId);
-        $departamentoUpdate->codigo = $departamentoCode;
-        $result = $departamentoUpdate->save();	
+/* Genera el token en el git y agregado desde el ghp hasta el @ */
+git clone https://franklinantonio08:_8nz05H49msbjy256ndtO9zLT2ACNTX4JB7C0@github.com/franklinantonio08/Hades.git
 
-    } catch(\Illuminate\Database\QueryException $ex){ 
-        DB::rollBack();
-        return redirect('dist/departamento/nuevo')->withErrors('ERROR AL GUARDAR STORE CEBECECO CODE-0002'.$ex);
-    }
-    
-    if($result != 1){
-        DB::rollBack();
-        return redirect('dist/departamento/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0003");
-    }
-    DB::commit();
+/* set el remote para hacerle pull al git*/
+<!-- git remote set-url origin https://franklinantonio08:_8nz05H49msbjy256ndtO9zLT2ACNTX4JB7C0@github.com/franklinantonio08/Hades.git -->
 
-    return redirect('dist/departamento')->with('alertSuccess', 'STORE CEBECECO HA SIDO INGRESADA');
-}
+/*Esto de hace  para poner el global del github*/
+<!-- composer config --global --auth github-oauth.github.com _PAB6eOTESNdOalmFKfLGxO1lWU9NC42LCSoe -->
+
+/* Entramos al directorio del proyecto*/
+cd Hades
+
+/* Actualizamos el Composer */
+composer update 
+
+/* copia el example.env a .env */ 
+mv .env.example .env
+chmod 600 .env
+chown apache:apache .env  
+
+/* Crea Carpetas Publicas*/
+mkdir -p /var/www/html/Hades/storage/app/public/export_temp
+mkdir -p /var/www/html/Hades/storage/app/public/infractores
+mkdir -p /var/www/html/Hades/storage/app/public/movimientos
+mkdir -p /var/www/html/Hades/storage/app/public/multas
+mkdir -p /var/www/html/Hades/storage/app/public/citas
+mkdir -p /var/www/html/Hades/storage/app/public/idoneidades
+mkdir -p /var/www/html/Hades/storage/app/public/solicitudes_cambio
 
 
+/* Permisos al storage*/
 
 
+sudo chown -R apache:apache /var/www/html/Hades/storage/
+sudo chown -R apache:apache /var/www/html/Hades/bootstrap/cache
 
-curl -vk -X POST https://acrux.migracion.gob.pa/api/login \  -H "Content-Type: application/json" \  -d "{\"username\":\"INVALID\", \"password\":\"INVALID\"}"
+sudo chmod -R 775 /var/www/html/Hades/storage
+sudo chmod -R 775 /var/www/html/Hades/bootstrap/cache
 
+sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/Hades/storage(/.*)?"
+sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/Hades/bootstrap/cache(/.*)?"
 
-curl -vk -X POST "https://acrux.migracion.gob.pa/api/login" \  -H "Content-Type: application/json" \  -d "{\"username\":\"frrodriguez\", \"password\":\"Migracion.2024\"}"
+sudo restorecon -Rv /var/www/html/Hades/storage
+sudo restorecon -Rv /var/www/html/Hades/bootstrap/cache
 
+/* para entrar a la BD */
+mysql -u apolo -p
 
+/* entra a la db */
+use atlas;
 
-ldapwhoami -x -H ldap://migracion.gob.pa:389 \ -D "frrodriguez@migracion.gob.pa" \ -w "Migracion.2024" \  -v
+/* eliminar si es necesario */
+DROP DATABASE atlas;
 
+/* ejecuta scrits guardados en carpeta database */
+source /var/www/html/Hades/database/atlas_ofi_f.sql;
+source /var/www/html/Hades/database/actualizaciones.sql;
 
+/* entra a la db */
+use atlas;
 
+/* valida tablas  */
+show tables; 
 
-ldapsearch -H "ldap://migracion.gob.pa:389" \ -D "SNM-LDPA-DS@migracion.gob.pa" \ -W \ -b "DC=migracion,DC=gob,DC=pa" \ "(samAccountName=frrodriguez)" \ cn mail sAMAccountName userPrincipalName
-
-
-
-ldapsearch -x \ -H "ldap://SNMDC03.migracion.gob.pa:389" \ -D "SNM-LDPA-DS@migracion.gob.pa" \ -W \ -b "DC=migracion,DC=gob,DC=pa" \ "(samAccountName=frrodriguez)" \ cn mail sAMAccountName userPrincipalName
-
-
-ldapsearch -x \ -H "ldap://<IP_DEL_CONTROLADOR>:389" \ -D "SNM-LDPA-DS@migracion.gob.pa" \ -W \ -b "DC=migracion,DC=gob,DC=pa" \ "(samAccountName=frrodriguez)" \ cn mail sAMAccountName userPrincipalName
-
-
-estamos intentando mantener los marcos de los paños fijos en las ventanas grandes 
-y cambiar los las ventanas tipo miami abatible hacia fuera como me lo comento iracir 
-las puertas de baño se cotizo los dos paños 
-los de la media pared y el abatible 
-si solo quieres uno el precio puede bajar 
-la cotizacion es en base a lo que nos suministro iracir 
-si necesitas las fotos yo te las puedo enviar 
-
-48
-67
-74
-75
-86
-87
+/* salida de bd  */
+exit;
 
 
+sudo chmod -R 775 /var/www/html/Hades/storage/app/public
+sudo chown -R apache:apache /var/www/html/Hades/storage/app/public
 
 
-carta de responbilidad 
-notariadad 
+php artisan storage:link
 
-copia de la escritura 
-recibo de luz notaria 
-copia de la cedula 
+/* http - https*/
+sudo nano /etc/httpd/conf.d/hades.conf
+sudo nano /etc/httpd/conf.d/ssl.conf
+
+/* copiar y pegar */
+<VirtualHost *:80>
+
+    ServerAdmin sirio.migracion.gob.pa
+    DocumentRoot "/var/www/html/Hades/public"
+
+    <Directory "/var/www/html/Hades/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog "/var/log/httpd/hades-error.log"
+    CustomLog "/var/log/httpd/hades-access.log" combined
+</VirtualHost>
+/* FIN */
+
+/* borra cache */
+php artisan optimize:clear 
+
+/* caché para producción */
+php artisan config:cache 
+php artisan route:cache 
+php artisan view:cache 
+php artisan event:cache
+
+/* Eliminina el log si esta muy pesado*/
+echo "" > storage/logs/laravel.log
+
+
+/* si se hacer algun cambio en el proyecto */
+cd Hades
+
+git pull
+
+/* MYSQL */
+
+sudo systemctl status mysqld
+
+sudo systemctl start mysqld
+
+sudo systemctl restart mysqld
+
+sudo systemctl stop mysqld
+
+sudo systemctl enable mysqld
+
+
+/* APACHE */
+
+sudo systemctl status httpd
+
+sudo systemctl start httpd
+
+sudo systemctl restart httpd
+
+sudo systemctl stop httpd
+
+sudo systemctl enable httpd
+
+/etc/httpd/conf.d/ssl.conf
+
+/* instalar ldap*/
+
+sudo dnf install -y php-ldap
+
+/* Ejecuta proyecto */
+php -S 172.20.10.81:8080 -t public
+
+npm run build

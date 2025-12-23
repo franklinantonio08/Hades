@@ -24,6 +24,11 @@ use App\Http\Controllers\Dist\{
     CitasconsularController,
     VisasController,
     FiliacionController,
+    UsuariosController,
+    PaymentController,
+    CitasconsularController,
+    VisasController,
+    FiliacionController,
 };
 
 use App\Http\Controllers\Admin\{
@@ -31,6 +36,7 @@ use App\Http\Controllers\Admin\{
     RIDMigrantesController,
     RIDPuestocontrolController,
     RIDEstaciontemporalController
+ 
  
 };
 
@@ -98,6 +104,13 @@ Route::middleware('guest')->group(function () {
             Route::post('/validar-filiacion-activa', [SolicitudController::class, 'validarFiliacionActiva']) ->name('validarFiliacionActiva'); 
 
             
+
+            Route::post('/seleccion-familiar', [SolicitudController::class, 'SeleccionFamiliar'])->name('SeleccionFamiliar');
+
+            Route::post('/validar-solicitud', [SolicitudController::class, 'ValidarSolicitud']) ->name('ValidarSolicitud'); 
+            Route::post('/validar-filiacion-activa', [SolicitudController::class, 'validarFiliacionActiva']) ->name('validarFiliacionActiva'); 
+
+            
             
             Route::get('/instruciones', [SolicitudController::class, 'instruciones']) ->name('instruciones'); 
 
@@ -145,142 +158,160 @@ Route::middleware('guest')->group(function () {
         });
             
 
-        // Departamento
-        Route::get('dist/departamento', [DepartamentoController::class, 'Index']) ->name('Index');  
-        Route::post('dist/departamento', [DepartamentoController::class, 'PostIndex']) ->name('PostIndex'); 
-        Route::get('dist/departamento/nuevo', [DepartamentoController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('dist/departamento/nuevo', [DepartamentoController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('dist/departamento/editar/{Id}', [DepartamentoController::class, 'Editar']) ->name('Editar');
-        Route::post('dist/departamento/editar/{Id}', [DepartamentoController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('dist/departamento/mostrar/{Id}', [DepartamentoController::class, 'Mostrar']) ->name('Mostrar');
-        Route::post('dist/departamento/desactivar', [DepartamentoController::class, 'Desactivar']) ->name('Desactivar');
+        Route::prefix('dist/citas_consular')->name('citas_consular.')->group(function () {
+            Route::get('/', [DepartamentoController::class, 'Index']) ->name('Index');  
+            Route::post('/', [DepartamentoController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [DepartamentoController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [DepartamentoController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [DepartamentoController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [DepartamentoController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [DepartamentoController::class, 'Mostrar']) ->name('Mostrar');
+            Route::post('/desactivar', [DepartamentoController::class, 'Desactivar']) ->name('Desactivar');
+        });
+               
     
-        // Tipo de Atencion
-        Route::get('dist/tipoatencion', [TipoatencionController::class, 'Index']) ->name('Index');  
-        Route::post('dist/tipoatencion', [TipoatencionController::class, 'PostIndex']) ->name('PostIndex'); 
-        Route::get('dist/tipoatencion/nuevo', [TipoatencionController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('dist/tipoatencion/nuevo', [TipoatencionController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('dist/tipoatencion/editar/{Id}', [TipoatencionController::class, 'Editar']) ->name('Editar');
-        Route::post('dist/tipoatencion/editar/{Id}', [TipoatencionController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('dist/tipoatencion/mostrar/{Id}', [TipoatencionController::class, 'Mostrar']) ->name('Mostrar');
-        Route::post('dist/tipoatencion/desactivar', [TipoatencionController::class, 'Desactivar']) ->name('Desactivar');
+        Route::prefix('dist/tipoatencion')->name('tipoatencion.')->group(function () {
+            Route::get('/', [TipoatencionController::class, 'Index']) ->name('Index');  
+            Route::post('/', [TipoatencionController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [TipoatencionController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [TipoatencionController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [TipoatencionController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [TipoatencionController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [TipoatencionController::class, 'Mostrar']) ->name('Mostrar');
+            Route::post('/desactivar', [TipoatencionController::class, 'Desactivar']) ->name('Desactivar');
+        });
 
-        // Motivo
-        Route::get('dist/motivo', [MotivoController::class, 'Index']) ->name('Index');  
-        Route::post('dist/motivo', [MotivoController::class, 'PostIndex']) ->name('PostIndex'); 
-        Route::get('dist/motivo/nuevo', [MotivoController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('dist/motivo/nuevo', [MotivoController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('dist/motivo/editar/{Id}', [MotivoController::class, 'Editar']) ->name('Editar');
-        Route::post('dist/motivo/editar/{Id}', [MotivoController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('dist/motivo/mostrar/{Id}', [MotivoController::class, 'Mostrar']) ->name('Mostrar');
-        Route::post('dist/motivo/desactivar', [MotivoController::class, 'Desactivar']) ->name('Desactivar');
+        Route::prefix('dist/motivo')->name('motivo.')->group(function () {
+            Route::get('/', [MotivoController::class, 'Index']) ->name('Index');  
+            Route::post('/', [MotivoController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [MotivoController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [MotivoController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [MotivoController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [MotivoController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [MotivoController::class, 'Mostrar']) ->name('Mostrar');
+            Route::post('/desactivar', [MotivoController::class, 'Desactivar']) ->name('Desactivar');
+        });
 
-        // SubMotivo
-        Route::get('dist/submotivo', [SubmotivoController::class, 'Index']) ->name('Index');  
-        Route::post('dist/submotivo', [SubmotivoController::class, 'PostIndex']) ->name('PostIndex'); 
-        Route::get('dist/submotivo/nuevo', [SubmotivoController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('dist/submotivo/nuevo', [SubmotivoController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('dist/submotivo/editar/{Id}', [SubmotivoController::class, 'Editar']) ->name('Editar');
-        Route::post('dist/submotivo/editar/{Id}', [SubmotivoController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('dist/submotivo/mostrar/{Id}', [SubmotivoController::class, 'Mostrar']) ->name('Mostrar');
-        Route::post('dist/submotivo/desactivar', [SubmotivoController::class, 'Desactivar']) ->name('Desactivar');
+        Route::prefix('dist/submotivo')->name('submotivo.')->group(function () {
+            Route::get('/', [SubmotivoController::class, 'Index']) ->name('Index');  
+            Route::post('/', [SubmotivoController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [SubmotivoController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [SubmotivoController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [SubmotivoController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [SubmotivoController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [SubmotivoController::class, 'Mostrar']) ->name('Mostrar');
+            Route::post('/desactivar', [SubmotivoController::class, 'Desactivar']) ->name('Desactivar');
+        });
 
-         //posiciones
-         Route::get('dist/posiciones', [PosicionesController::class, 'Index']) ->name('Index'); 
-         Route::post('dist/posiciones', [PosicionesController::class, 'PostIndex']) ->name('PostIndex'); 
-         Route::get('dist/posiciones/nuevo', [PosicionesController::class, 'Nuevo']) ->name('Nuevo'); 
-         Route::post('dist/posiciones/nuevo', [PosicionesController::class, 'PostNuevo']) ->name('PostNuevo'); 
-         Route::get('dist/posiciones/editar/{Id}', [PosicionesController::class, 'Editar']) ->name('Editar');
-         Route::post('dist/posiciones/editar/{Id}', [PosicionesController::class, 'PostEditar']) ->name('PostEditar'); 
-         Route::get('dist/posiciones/mostrar/{Id}', [PosicionesController::class, 'Mostrar']) ->name('Mostrar');
-         Route::post('dist/posiciones/desactivar', [PosicionesController::class, 'Desactivar']) ->name('Desactivar');
+        Route::prefix('dist/posiciones')->name('posiciones.')->group(function () {
+            Route::get('/', [PosicionesController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [PosicionesController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [PosicionesController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [PosicionesController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [PosicionesController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [PosicionesController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [PosicionesController::class, 'Mostrar']) ->name('Mostrar');
+            Route::post('/desactivar', [PosicionesController::class, 'Desactivar']) ->name('Desactivar');
+        });
 
-        //Colaboradores
-        Route::get('dist/colaboradores', [ColaboradoresController::class, 'Index']) ->name('Index'); 
-        Route::post('dist/colaboradores', [ColaboradoresController::class, 'PostIndex']) ->name('PostIndex'); 
-        Route::get('dist/colaboradores/nuevo', [ColaboradoresController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('dist/colaboradores/nuevo', [ColaboradoresController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('dist/colaboradores/editar/{Id}', [ColaboradoresController::class, 'Editar']) ->name('Editar');
-        Route::post('dist/colaboradores/editar/{Id}', [ColaboradoresController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('dist/colaboradores/mostrar/{Id}', [ColaboradoresController::class, 'Mostrar']) ->name('Mostrar');
-        Route::post('dist/colaboradores/desactivar', [ColaboradoresController::class, 'Desactivar']) ->name('Desactivar');
+        Route::prefix('dist/colaboradores')->name('colaboradores.')->group(function () {
+            Route::get('/', [ColaboradoresController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [ColaboradoresController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [ColaboradoresController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [ColaboradoresController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [ColaboradoresController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [ColaboradoresController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [ColaboradoresController::class, 'Mostrar']) ->name('Mostrar');
+            Route::post('/desactivar', [ColaboradoresController::class, 'Desactivar']) ->name('Desactivar');
 
-        Route::post('dist/colaboradores/nuevo/buscadistrito', [ColaboradoresController::class, 'postBuscadistrito']) ->name('postBuscadistrito');
-        Route::post('dist/colaboradores/nuevo/buscaposiciones', [ColaboradoresController::class, 'postBuscaposiciones']) ->name('postBuscaposiciones');
+            Route::post('/nuevo/buscadistrito', [ColaboradoresController::class, 'postBuscadistrito']) ->name('postBuscadistrito');
+            Route::post('/nuevo/buscaposiciones', [ColaboradoresController::class, 'postBuscaposiciones']) ->name('postBuscaposiciones');
+        });
 
 
 
-        //PAIS
-        Route::get('dist/pais', [PaisController::class, 'Index']) ->name('Index'); 
-        Route::post('dist/pais', [PaisController::class, 'PostIndex']) ->name('PostIndex'); 
+        Route::prefix('dist/pais')->name('pais.')->group(function () {
+            Route::get('/', [PaisController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [PaisController::class, 'PostIndex']) ->name('PostIndex'); 
+        });
         /*Route::get('dist/organizacion/importar', [OrganizacionController::class, 'Importar']) ->name('Importar'); 
         Route::post('dist/organizacion/importar', [OrganizacionController::class, 'PostImportar']) ->name('PostImportar'); 
         */
 
-        // PROVINCIA
-        Route::get('dist/provincia', [ProvinciaController::class, 'Index']) ->name('Index'); 
-        Route::post('dist/provincia', [ProvinciaController::class, 'PostIndex']) ->name('PostIndex'); 
+        Route::prefix('dist/provincia')->name('provincia.')->group(function () {
+            Route::get('/', [ProvinciaController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [ProvinciaController::class, 'PostIndex']) ->name('PostIndex'); 
+        });
         
-        //DISTRITO
-        Route::get('dist/distrito', [DistritoController::class, 'Index']) ->name('Index'); 
-        Route::post('dist/distrito', [DistritoController::class, 'PostIndex']) ->name('PostIndex'); 
+        Route::prefix('dist/distrito')->name('distrito.')->group(function () {
+            Route::get('/', [DistritoController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [DistritoController::class, 'PostIndex']) ->name('PostIndex'); 
+        });
         
-        //CORREGIMIENTO
-        Route::get('dist/corregimiento', [CorregimientoController::class, 'Index']) ->name('Index'); 
-        Route::post('dist/corregimiento', [CorregimientoController::class, 'PostIndex']) ->name('PostIndex'); 
+        Route::prefix('dist/corregimiento')->name('corregimiento.')->group(function () {
+            Route::get('/', [CorregimientoController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [CorregimientoController::class, 'PostIndex']) ->name('PostIndex'); 
+        });
 
 
 
-        //CORREGIMIENTO
-        Route::get('dist/corregimiento', [CorregimientoController::class, 'Index']) ->name('Index'); 
-        Route::post('dist/corregimiento', [CorregimientoController::class, 'PostIndex']) ->name('PostIndex'); 
+        Route::prefix('dist/corregimiento')->name('corregimiento.')->group(function () {
+            Route::get('/', [CorregimientoController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [CorregimientoController::class, 'PostIndex']) ->name('PostIndex'); 
+        });
 
-        //PERMISOS
-        Route::get('dist/permisos', [PermisosController::class, 'Index']) ->name('Index'); 
-        Route::post('dist/permisos', [PermisosController::class, 'PostIndex']) ->name('PostIndex'); 
+        Route::prefix('dist/permisos')->name('permisos.')->group(function () {
+            Route::get('/', [PermisosController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [PermisosController::class, 'PostIndex']) ->name('PostIndex'); 
+        });
 
-        //USUARIOS
-        Route::get('dist/usuarios', [UsuariosController::class, 'Index']) ->name('Index'); 
-        Route::post('dist/usuarios', [UsuariosController::class, 'PostIndex']) ->name('PostIndex'); 
+        Route::prefix('dist/usuarios')->name('usuarios.')->group(function () {
+            Route::get('/', [UsuariosController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [UsuariosController::class, 'PostIndex']) ->name('PostIndex'); 
+        });
 
 
-        //RID MIGRANTES
-        Route::get('admin/RIDmigrantes', [RIDMigrantesController::class, 'Index']) ->name('Index'); 
-        Route::post('admin/RIDmigrantes', [RIDMigrantesController::class, 'PostIndex']) ->name('PostIndex'); 
-        Route::get('admin/RIDmigrantes/nuevo', [RIDMigrantesController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('admin/RIDmigrantes/nuevo', [RIDMigrantesController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('admin/RIDmigrantes/editar/{Id}', [RIDMigrantesController::class, 'Editar']) ->name('Editar');
-        Route::post('admin/RIDmigrantes/editar/{Id}', [RIDMigrantesController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('admin/RIDmigrantes/mostrar/{Id}', [RIDMigrantesController::class, 'Mostrar']) ->name('Mostrar');
-        Route::post('admin/RIDmigrantes/migranteinformacion', [RIDMigrantesController::class, 'Informacion']) ->name('Informacion'); 
-        Route::get('admin/RIDmigrantes/migrantereporte/{Id}', [RIDMigrantesController::class, 'Reporte']) ->name('Reporte'); 
+        Route::prefix('dist/RIDmigrantes')->name('RIDmigrantes.')->group(function () {
+            Route::get('/', [RIDMigrantesController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [RIDMigrantesController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [RIDMigrantesController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [RIDMigrantesController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [RIDMigrantesController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [RIDMigrantesController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [RIDMigrantesController::class, 'Mostrar']) ->name('Mostrar');
+            Route::post('/migranteinformacion', [RIDMigrantesController::class, 'Informacion']) ->name('Informacion'); 
+            Route::get('/migrantereporte/{Id}', [RIDMigrantesController::class, 'Reporte']) ->name('Reporte'); 
+        });
 
-        //RID PUESTO DE CONTROL
-        Route::get('admin/RIDpuestocontrol', [RIDPuestocontrolController::class, 'Index']) ->name('Index'); 
-        Route::post('admin/RIDpuestocontrol', [RIDPuestocontrolController::class, 'PostIndex']) ->name('PostIndex'); 
-        Route::get('admin/RIDpuestocontrol/nuevo', [RIDPuestocontrolController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('admin/RIDpuestocontrol/nuevo', [RIDPuestocontrolController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('admin/RIDpuestocontrol/editar/{Id}', [RIDPuestocontrolController::class, 'Editar']) ->name('Editar');
-        Route::post('admin/RIDpuestocontrol/editar/{Id}', [RIDPuestocontrolController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('admin/RIDpuestocontrol/mostrar/{Id}', [RIDPuestocontrolController::class, 'Mostrar']) ->name('Mostrar');
+        Route::prefix('dist/RIDpuestocontrol')->name('RIDpuestocontrol.')->group(function () {
+            Route::get('/', [RIDPuestocontrolController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [RIDPuestocontrolController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [RIDPuestocontrolController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [RIDPuestocontrolController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [RIDPuestocontrolController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [RIDPuestocontrolController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [RIDPuestocontrolController::class, 'Mostrar']) ->name('Mostrar');
+        });
 
-        //RID PUESTO DE CONTROL
-        Route::get('admin/RIDestaciontemporal', [RIDEstaciontemporalController::class, 'Index']) ->name('Index'); 
-        Route::post('admin/RIDestaciontemporal', [RIDEstaciontemporalController::class, 'PostIndex']) ->name('PostIndex'); 
-        Route::get('admin/RIDestaciontemporal/nuevo', [RIDEstaciontemporalController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('admin/RIDestaciontemporal/nuevo', [RIDEstaciontemporalController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('admin/RIDestaciontemporal/editar/{Id}', [RIDEstaciontemporalController::class, 'Editar']) ->name('Editar');
-        Route::post('admin/RIDestaciontemporal/editar/{Id}', [RIDEstaciontemporalController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('admin/RIDestaciontemporal/mostrar/{Id}', [RIDEstaciontemporalController::class, 'Mostrar']) ->name('Mostrar');
+        Route::prefix('dist/RIDestaciontemporal')->name('RIDestaciontemporal.')->group(function () {
+            Route::get('/', [RIDEstaciontemporalController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [RIDEstaciontemporalController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [RIDEstaciontemporalController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [RIDEstaciontemporalController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [RIDEstaciontemporalController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [RIDEstaciontemporalController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [RIDEstaciontemporalController::class, 'Mostrar']) ->name('Mostrar');
+        });
 
-        //RID AFINIDAD
-        Route::get('admin/RIDafinidad', [RIDAfinidadController::class, 'Index']) ->name('Index'); 
-        Route::post('admin/RIDafinidad', [RIDAfinidadController::class, 'PostIndex']) ->name('PostIndex'); 
-        Route::get('admin/RIDafinidad/nuevo', [RIDAfinidadController::class, 'Nuevo']) ->name('Nuevo'); 
-        Route::post('admin/RIDafinidad/nuevo', [RIDAfinidadController::class, 'PostNuevo']) ->name('PostNuevo'); 
-        Route::get('admin/RIDafinidad/editar/{Id}', [RIDAfinidadController::class, 'Editar']) ->name('Editar');
-        Route::post('admin/RIDafinidad/editar/{Id}', [RIDAfinidadController::class, 'PostEditar']) ->name('PostEditar'); 
-        Route::get('admin/RIDafinidad/mostrar/{Id}', [RIDAfinidadController::class, 'Mostrar']) ->name('Mostrar');
+        Route::prefix('dist/RIDafinidad')->name('RIDafinidad.')->group(function () {
+            Route::get('/', [RIDAfinidadController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [RIDAfinidadController::class, 'PostIndex']) ->name('PostIndex'); 
+            Route::get('/nuevo', [RIDAfinidadController::class, 'Nuevo']) ->name('Nuevo'); 
+            Route::post('/nuevo', [RIDAfinidadController::class, 'PostNuevo']) ->name('PostNuevo'); 
+            Route::get('/editar/{Id}', [RIDAfinidadController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [RIDAfinidadController::class, 'PostEditar']) ->name('PostEditar'); 
+            Route::get('/mostrar/{Id}', [RIDAfinidadController::class, 'Mostrar']) ->name('Mostrar');
+        });
 
         //Pagos
        // Route::get('/tokenize', [PaymentController::class, 'showTokenizationForm'])->name('tokenize');
