@@ -145,7 +145,7 @@ Route::middleware('guest')->group(function () {
             Route::post('/', [CitasconsularController::class, 'PostIndex'])->name('PostIndex');
             Route::get('/nuevo', [CitasconsularController::class, 'Nuevo'])->name('Nuevo');
             Route::post('/nuevo', [CitasconsularController::class, 'PostNuevo'])->name('PostNuevo');
-            Route::post('/nuevo/buscaServicios', [ServiciosconsularesController::class, 'BuscaServiciosconsulares'])->name('BuscaServiciosconsulares');
+            // Route::post('/nuevo/buscaServicios', [ServiciosconsularesController::class, 'BuscaServiciosconsulares'])->name('BuscaServiciosconsulares');
             Route::post('/nuevo/buscaConsulados', [CitasconsularController::class, 'buscaConsulados'])->name('buscaConsulados');
             Route::get('/editar/{Id}', [CitasconsularController::class, 'Editar'])->name('Editar');
             Route::post('/editar/{Id}', [CitasconsularController::class, 'PostEditar'])->name('PostEditar');
