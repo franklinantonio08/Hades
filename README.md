@@ -151,4 +151,4 @@ sudo dnf install -y php-ldap
 /* Ejecuta proyecto */
 php -S 172.20.10.81:8080 -t public
 
-npm run build
+npm run build 1
