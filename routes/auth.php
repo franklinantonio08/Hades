@@ -17,8 +17,8 @@ Route::middleware('guest')->group(function () {
     Route::get('tipo-acceso', [RegisteredUserController::class, 'tipoAcceso'])->name('tipoAcceso');
     Route::get('prestador-servicio', [RegisteredUserController::class, 'prestadorServicio'])->name('prestadorServicio');
     Route::get('informacion-personal', [RegisteredUserController::class, 'informacionPersonal'])->name('informacionPersonal');
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::get('/', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/', [AuthenticatedSessionController::class, 'store']);
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
