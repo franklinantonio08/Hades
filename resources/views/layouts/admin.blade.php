@@ -8,8 +8,8 @@
 
 
     <!-- Option 1: CoreUI for Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.2.0/dist/css/coreui.min.css" rel="stylesheet" integrity="sha384-UkVD+zxJKGsZP3s/JuRzapi4dQrDDuEf/kHphzg8P3v8wuQ6m9RLjTkPGeFcglQU" crossorigin="anonymous">
-
+    {{-- <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui@4.2.0/dist/css/coreui.min.css" rel="stylesheet" integrity="sha384-UkVD+zxJKGsZP3s/JuRzapi4dQrDDuEf/kHphzg8P3v8wuQ6m9RLjTkPGeFcglQU" crossorigin="anonymous"> --}}
+    <link href="{{ asset('plugins/jquery/coreui.min.css') }}" rel="stylesheet" >
     <!-- Option 2: CoreUI PRO for Bootstrap CSS -->
     <!-- <link href="https://cdn.jsdelivr.net/npm/@coreui/coreui-pro@4.3.4/dist/css/coreui.min.css" rel="stylesheet" integrity="sha384-B25jn3HrWNnbfszQBjQT5iHKf8BuG+Og9Al4zXNJgLl6orefC7UQYjD/Uxo1jMis" crossorigin="anonymous"> -->
 
@@ -47,13 +47,17 @@
 
     {{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css" /> --}}
     {{-- <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css" rel="stylesheet"> --}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    {{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link href="https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css"> --}}
+    
+    <link rel="stylesheet" href="{{ asset('plugins/jquery/bootstrap.min.css') }}" >    
+    <link href="{{ asset('plugins/jquery/dataTables.bootstrap5.min.css') }} " rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('plugins/bootstrap-icons/css/bootstrap-icons.min.css') }}">
 
     <!-- CSS only -->
 
-    <script>
+    {{-- <script>
       (function(w, d, s, l, i) {
         w[l] = w[l] || [];
         w[l].push({
@@ -68,7 +72,7 @@
           'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
         f.parentNode.insertBefore(j, f);
       })(window, document, 'script', 'dataLayer', 'GTM-KX4JH47');
-    </script>
+    </script> --}}
     <link href="{{ asset('vendors/@coreui/chartjs/css/coreui-chartjs.css') }}" rel="stylesheet">
 
     @yield('css')
@@ -151,7 +155,8 @@
 
         {{-- <script src="{{ asset('js/jquery.min.js') }}"></script> --}}
 
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        {{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
+         <script src="{{ asset('plugins/jquery/jquery-3.6.0.min.js') }}"></script>
 
         <script src="{{ asset('vendors/chart.js/js/chart.min.js') }}"></script> 
         <script src="{{ asset('vendors/@coreui/chartjs/js/coreui-chartjs.js') }}"></script>
@@ -161,12 +166,16 @@
         {{-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>   --}}
 
   
-        <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+        {{-- <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script> --}}
         
         {{-- <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script> --}}
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        {{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> --}}
 
-        <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script> 
+        {{-- <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>  --}}
+
+         <script src="{{ asset('plugins/jquery/bootstrap.bundle.min.js') }}"></script>
+        <script src="{{ asset('plugins/jquery/jquery.dataTables.min.js') }}"></script>        
+        <script src="{{ asset('plugins/jquery/dataTables.bootstrap4.min.js') }}"></script>
 
         <!-- <script src="{{ asset('plugins/datatables/dataTables.buttons.min.js') }}"></script> 
         <script src="{{ asset('plugins/datatables/buttons.colVis.min.js') }}"></script>-->

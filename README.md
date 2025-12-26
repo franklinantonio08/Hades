@@ -156,3 +156,11 @@ php -S 172.20.10.81:8080 -t public
 
 tail -f /var/log/httpd/error_log
 tail -f /var/log/httpd/access_log
+
+
+/* Validar permisos */
+ls -l /var/www/html/Apolo/public/.htaccess 
+
+
+
+systemctl restart php-fpm | systemctl restart httpd
