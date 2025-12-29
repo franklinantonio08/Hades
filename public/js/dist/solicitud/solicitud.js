@@ -5,6 +5,16 @@ class Distsolicitud {
         this.stream = null;
         this.capturas = [];
 
+        this.desde = '2025-01-01';
+        this.hasta = moment().subtract(0, 'days').format('YYY-MM-DD');
+
+        var date = new Date();
+        var year1 = new Date();
+        var year1 = year1.getFullYear() + 1;
+        var field = year1.toString()+ '-' + (date.getMonth() + 1).toString().padStart(2, 0) + '-' + date.getDate().toString().padStart(2, 0);
+
+        this.hasta = field;
+
         this.instrucciones = [
             { id: 'frente',    texto: 'Mira al frente',       icon: 'indicador-frente' },
             { id: 'izquierda', texto: 'Mira a la izquierda',  icon: 'indicador-izquierda' },
@@ -211,7 +221,7 @@ class Distsolicitud {
             resetResultados();
         });
 
-        
+
     
         this.acciones();
 
@@ -261,6 +271,10 @@ class Distsolicitud {
                 return false;
             }
             event.stopPropagation();
+        });
+
+        $("#estadoFiltro").on("change", function () {
+            _this.solicitud();
         });
 
         $('#tv_casa').on('change', function() { 
@@ -343,6 +357,60 @@ class Distsolicitud {
             console.log('Por Aqui vamos');
             _this.selecionarFamiliar();
         });
+
+
+        $('#reportrange span').html(this.desde + ' - ' + this.hasta);
+
+        $('#reportrange').daterangepicker({
+                format: 'DD-MM-YYYY',
+                startDate: '01/01/2016',
+                endDate: moment(),
+                minDate: '01/01/2016',
+                maxDate: moment().add(3, 'year').endOf('month'),
+                showDropdowns: true,
+                showWeekNumbers: true,
+                timePicker: false,
+                timePickerIncrement: 1,
+                timePicker12Hour: true,
+                ranges: {
+                    'Hoy': [moment(), moment()],
+                    'Ayer': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                    'Últimos 7 días': [moment().subtract(6, 'days'), moment()],
+                    'Próximos 7 días': [moment().add(1, 'days'), moment().add(7, 'days')],
+                    'Últimos 30 días': [moment().subtract(29, 'days'), moment()],
+                    'Próximos 30 días': [moment().add(1, 'days'), moment().add(30, 'days')],
+                    'Mes pasado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                    'Mes actual': [moment().startOf('month'), moment().endOf('month')],
+                    'Año Actual': [moment().startOf('year'), moment().endOf('year')]
+                },
+                opens: 'right',
+                drops: 'down',
+                buttonClasses: ['btn', 'btn-sm'],
+                applyClass: 'btn-success',
+                cancelClass: 'btn-default',
+                separator: ' to ',
+                locale: {
+                    applyLabel: 'Enviar',
+                    cancelLabel: 'Cancelar',
+                    fromLabel: 'Desde',
+                    toLabel: 'Hasta',
+                    customRangeLabel: 'Personalizar',
+                    daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+                    monthNames: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Augosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    firstDay: 1
+                }
+            }, function (start, end, label) {
+                // console.log(start.format('DD-MM-YYYY'), end.format('DD-MM-YYYY'));
+                
+                _this.desde = start.format('YYYY-MM-DD');
+                _this.hasta = end.format('YYYY-MM-DD');
+
+                _this.solicitud();
+                
+                $('#reportrange span').html(start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'));
+                $('#reporte_fecha_titulo span').html(' Desde ' + start.format('YYYY-MM-DD') + ' - Hasta ' + end.format('YYYY-MM-DD'));
+                
+            });
 
     
     }
@@ -1102,7 +1170,7 @@ class Distsolicitud {
             [gNotariado, gCedula].forEach(hide);
             [iNotariado, iCedula].forEach(inp => {
                 req(inp, false);
-                if (inp?.type === 'file') inp.value = ''; // limpiar archivo si no aplica
+                // if (inp?.type === 'file') inp.value = ''; // limpiar archivo si no aplica
             });
 
             // 2) Mostrar según selección
@@ -1151,7 +1219,10 @@ class Distsolicitud {
                 // 2) Quitar required y deshabilitar TODOS los campos del bloque
                 [iReciboFile, iNotariado, iCedulaTitular].forEach(inp => {
                 req(inp, false);
-                clearFile(inp);
+                // clearFile(inp);
+                if (isHotel) {
+                    clearFile(inp);
+                }
                 dis(inp, true);
                 });
                 [iReciboMio, iReciboTercero].forEach(inp => dis(inp, true));
@@ -1251,7 +1322,13 @@ class Distsolicitud {
             };
 
             const requireField = (selector, message) => {
+
                 const $el = $(selector);
+
+                // if (!$el.length) return true;
+                if ($el.is(':disabled')) return true;
+                if ($el.closest('.d-none').length) return true;
+
                 attachLiveValidation(selector);
                 if (!$el.length) return true;
 
@@ -1326,12 +1403,13 @@ class Distsolicitud {
 
             // === Recibo de servicio (si NO es reserva de hotel) ===
             const isReservaHotel = document.getElementById("dom_reservahotel")?.checked === true;
+
             if (!isReservaHotel) {
-                flag(!requireField("#recibo_archivo", "Debe adjuntar el recibo de servicio."));
+                    flag(!requireField("#recibo_archivo", "Debe adjuntar el recibo de servicio."));
                 const isTercero = document.getElementById("recibo_tercero")?.checked === true;
                 if (isTercero) {
-                flag(!requireField("#recibo_notariado_archivo", "Debe adjuntar el comprobante notariado del recibo de tercero."));
-                flag(!requireField("#recibo_cedula_titular", "Debe adjuntar la cédula del titular del recibo (frente y reverso)."));
+                    flag(!requireField("#recibo_notariado_archivo", "Debe adjuntar el comprobante notariado del recibo de tercero."));
+                    flag(!requireField("#recibo_cedula_titular", "Debe adjuntar la cédula del titular del recibo (frente y reverso)."));
                 }
             }
 
@@ -1423,7 +1501,8 @@ class Distsolicitud {
             //var BASEURL = window.location.origin; 
 
             console.log(BASEURL);
-
+            
+            let estadoFiltro = $('#estadoFiltro').val();
             const _this = this
 
             const table = $('#solicitud').DataTable( {
@@ -1457,6 +1536,9 @@ class Distsolicitud {
                         d.currentPage = info.page + 1;
                         d.searchInput = search;
                         d._token=token;
+                        d.desde = _this.desde;
+                        d.hasta = _this.hasta;
+                        d.estadoFiltro = estadoFiltro;
                     }
                 },
                 "columns": [

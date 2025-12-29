@@ -93,6 +93,9 @@ class SolicitudController extends Controller
             return $currentPage;
         });
 
+        $desde = date('Y-m-d', strtotime($request['desde'])) . ' 00:00:00';
+        $hasta = date('Y-m-d', strtotime($request['hasta'])) . ' 23:59:59';
+
         $query = DB::table('solicitudes_cambio_residencia')
         ->leftjoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
         ->leftjoin('users', 'users.id', '=', 'solicitudes_cambio_residencia.usuario_id')
@@ -100,6 +103,7 @@ class SolicitudController extends Controller
         ->leftjoin('distrito', 'distrito.id', '=', 'solicitudes_cambio_residencia.distrito_id')
         ->leftjoin('corregimiento', 'corregimiento.id', '=', 'solicitudes_cambio_residencia.corregimiento_id')
         ->where('solicitudes_cambio_residencia.usuario_id', Auth::id())
+        ->whereBetween('solicitudes_cambio_residencia.created_at', [$desde, $hasta])
         ->select(
                 'solicitudes_cambio_residencia.*',
                 'solicitudes_cambio_personas.num_filiacion as filiacion',
@@ -130,6 +134,10 @@ class SolicitudController extends Controller
                     $query->orWhere('users.primer_apellido', 'like', '%'.trim($request['searchInput']).'%');
                 }
                 );		
+        }
+
+        if (!empty($request['estadoFiltro'])) {
+            $query->where('solicitudes_cambio_residencia.estatus', $request['estadoFiltro']);
         }
             
         $solicitud = $query->paginate($length); 

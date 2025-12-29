@@ -19,13 +19,13 @@
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label for="nombre" class="form-label text-primary fw-bold">Nombres</label>
+                            <label for="nombre" class="form-label text-primary fw-bold">Primer Nombre</label>
                             <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ej.: Carlos Alberto" maxlength="100">
                             <div class="invalid-feedback">Ingresa un nombre válido.</div>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="apellido" class="form-label text-primary fw-bold">Apellidos</label>
+                            <label for="apellido" class="form-label text-primary fw-bold">Primer Apellido</label>
                             <input type="text" class="form-control" id="apellido" name="apellido" placeholder="Ej.: Pérez Gómez" maxlength="100">
                             <div class="invalid-feedback">Ingresa un apellido válido.</div>
                         </div>
@@ -67,20 +67,19 @@
                         </div>
 
 
-                        <div class="col-md-6">
+                        {{-- <div class="col-md-6">
                             <label for="genero" class="form-label text-primary fw-bold">Género</label>
                             <select class="form-select" id="genero" name="genero">
                                 <option value="" selected>Todos</option>
                                 <option value="Masculino">Masculino</option>
                                 <option value="Femenino">Femenino</option>
                             </select>
-                        </div>
+                        </div> --}}
 
-                        <div class="col-md-6">
+                        {{-- <div class="col-md-6">
                             <label for="fecha_nacimiento" class="form-label text-primary fw-bold">Fecha de Nacimiento</label>
                             <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" max="{{ date('Y-m-d') }}">
-                            {{-- <div class="form-text">Opcional.</div> --}}
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
 
