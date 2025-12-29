@@ -264,8 +264,17 @@ Route::middleware('guest')->group(function () {
         });
 
         Route::prefix('dist/usuarios')->name('usuarios.')->group(function () {
-            Route::get('/', [UsuariosController::class, 'Index']) ->name('Index'); 
-            Route::post('/', [UsuariosController::class, 'PostIndex']) ->name('PostIndex'); 
+            // Route::get('/', [UsuariosController::class, 'Index']) ->name('Index'); 
+            // Route::post('/', [UsuariosController::class, 'PostIndex']) ->name('PostIndex'); 
+             Route::get('/editar/{Id}', [UsuariosController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [UsuariosController::class, 'PostEditar']) ->name('PostEditar'); 
+        });
+
+        Route::prefix('dist/filiacion')->name('filiacion.')->group(function () {
+            // Route::get('/', [UsuariosController::class, 'Index']) ->name('Index'); 
+            // Route::post('/', [UsuariosController::class, 'PostIndex']) ->name('PostIndex'); 
+             Route::get('/editar/{Id}', [UsuariosController::class, 'Editar']) ->name('Editar');
+            Route::post('/editar/{Id}', [UsuariosController::class, 'PostEditar']) ->name('PostEditar'); 
         });
 
 

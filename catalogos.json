@@ -1,0 +1,25 @@
+{
+    "colores_ojos": [
+        "Negro",
+        "Café",
+        "Avellana",
+        "Verde",
+        "Azul",
+        "Gris",
+        "Otro"
+    ],
+    "colores_piel": [
+        "Muy clara",
+        "Clara",
+        "Trigueña",
+        "Morena",
+        "Oscura"
+    ],
+    "estados_civiles": [
+        "Soltero",
+        "Casado",
+        "Unión libre",
+        "Divorciado",
+        "Viudo"
+    ]
+}

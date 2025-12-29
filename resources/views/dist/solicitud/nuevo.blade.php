@@ -73,8 +73,10 @@
 
                             <div class="col-md-8">
                                 <div class="row">
+
+                                     <input type="text" class="form-control" id="tipo" name="tipo" hidden readonly value="{{ $Usuario->tipo_usuario }}">
                         
-                                    <input type="text" id="" name="afiliacion" hidden readonly value="">
+                                    <input type="text" id="afiliacion" name="afiliacion" hidden readonly value="{{ $Sujeto->filiacion }}">
                                    
                                     <div class="col-md-3 mb-3">
                                         <label for="primerNombre" class="form-label fw-bold text-primary">Primer Nombre</label>
@@ -100,6 +102,18 @@
                                         <input type="text" class="form-control" id="segundoApellido" name="segundoApellido" placeholder="Ingrese su segundo apellido" readonly value="{{ $Sujeto->segundo_apellido }}">
                                     </div>                
 
+                                   <div class="col-md-6 mb-3">
+                                        <label for="filiacion" class="form-label fw-bold text-primary">Filiación</label>
+                                        <div id="div_pasaporte" ></div>
+                                        <input type="text" class="form-control" id="filiacion" name="filiacion" placeholder="Ingrese su filiacion" readonly value="{{ $Sujeto->filiacion }}">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="pasaporte" class="form-label fw-bold text-primary">Pasaporte</label>
+                                        <div id="div_pasaporte" ></div>
+                                        <input type="text" class="form-control" id="pasaporte" name="pasaporte" placeholder="Ingrese su pasaporte" readonly value="{{ $Sujeto->pasaporte }}">
+                                    </div>
+
                                     <div class="col-md-6 mb-3">
                                         <label for="correo" class="form-label fw-bold text-primary">Correo Electrónico</label>
                                         <div id="div_correo" ></div>
@@ -107,36 +121,36 @@
                                     </div>
 
                                     <div class="col-md-6 mb-3">
-                                        <label for="pasaporte" class="form-label fw-bold text-primary">Pasaporte</label>
+                                        <label for="telefono" class="form-label fw-bold text-primary">Teléfono</label>
                                         <div id="div_pasaporte" ></div>
-                                        <input type="text" class="form-control" id="pasaporte" name="pasaporte" placeholder="Ingrese su pasaporte" readonly value="{{ $Sujeto->documento }}">
+                                        <input type="text" class="form-control" id="telefono" name="telefono" placeholder="Ingrese su telefono" readonly value="{{ $Sujeto->telefono }}">
                                     </div>
                                     
                                     <div class="col-md-6 mb-3">
                                         <label for="paisNacionalidad" class="form-label fw-bold text-primary">Nacionalidad</label>
                                         <div id="div_paisNacionalidad"></div>
                                         <input type="hidden" name="pais_nacionalidad_id" value="">
-                                        <input type="text" class="form-control" id="paisNacionalidad" name="paisNacionalidad" readonly value="">
+                                        <input type="text" class="form-control" id="paisNacionalidad" name="paisNacionalidad" readonly value="{{ $Sujeto->pais_nacionalidad }}">
                                     </div>
                                 
                                     <div class="col-md-6 mb-3">
                                         <label for="paisNacimiento" class="form-label fw-bold text-primary">País de Nacimiento</label>
                                         <div id="div_paisNacimiento"></div>
                                         <input type="hidden" name="pais_nacimiento_id" value="">
-                                        <input type="text" class="form-control" id="paisNacimiento" name="paisNacimiento" readonly value="">
+                                        <input type="text" class="form-control" id="paisNacimiento" name="paisNacimiento" readonly value="{{ $Sujeto->pais_nacimiento }}">
                                     </div>
 
-                                     <div class="col-md-6 mb-3">
+                                     {{-- <div class="col-md-6 mb-3">
                                         <label for="tipoCarnet" class="form-label fw-bold text-primary">Tipo de Carnet</label>
                                         <div id="div_tipoCarnet" ></div>
-                                        <input type="text" class="form-control" id="tipoCarnet" name="tipoCarnet" placeholder="Ingrese su tipo de carnet" readonly value="">
+                                        <input type="text" class="form-control" id="tipoCarnet" name="tipoCarnet" placeholder="Ingrese su tipo de carnet" readonly value="{{ $Sujeto->email }}">
                                     </div>
 
                                     <div class="col-md-6 mb-3">
                                         <label for="numCarnet" class="form-label fw-bold text-primary">Numero de Carnet</label>
                                         <div id="div_numCarnet" ></div>
-                                        <input type="text" class="form-control" id="numCarnet" name="numCarnet" placeholder="Ingrese su numero de carnet" readonly value="">
-                                    </div>
+                                        <input type="text" class="form-control" id="numCarnet" name="numCarnet" placeholder="Ingrese su numero de carnet" readonly value="{{ $Sujeto->email }}">
+                                    </div> --}}
 
                                 </div>
                             </div>
@@ -344,9 +358,11 @@
 
                                 <div class="col-md-6 mb-4">
                                     <label for="domicilio_archivo" class="form-label fw-bold text-primary">Adjuntar documento de domicilio</label>
-                                    <input class="form-control" type="file" id="domicilio_archivo" name="domicilio_archivo" accept=".pdf,.jpg,.jpeg,.png" required>
+                                    <input class="form-control file-input" type="file" id="domicilio_archivo" name="domicilio_archivo" accept=".pdf,.jpg,.jpeg,.png" data-max-size="2097152" required>
                                     <div class="form-text">Formatos permitidos: PDF, JPG o PNG. Documento vigente y legible.</div>
                                 </div>
+
+                                <div class="file-preview mt-2" data-for="domicilio_archivo"></div>
 
                                 {{-- 2) RECIBO DE SERVICIO --}}
                                 <div id="grupoRecibo">
@@ -364,9 +380,11 @@
 
                                     <div class="col-md-6 mb-4">
                                         <label for="recibo_archivo" class="form-label fw-bold text-primary">Adjuntar recibo</label>
-                                        <input class="form-control" type="file" id="recibo_archivo" name="recibo_archivo" accept=".pdf,.jpg,.jpeg,.png" required>
+                                        <input class="form-control file-input" type="file" id="recibo_archivo" name="recibo_archivo" accept=".pdf,.jpg,.jpeg,.png" data-max-size="2097152" required>
                                         <div class="form-text">No requiere notaría si está a su nombre.</div>
                                     </div>
+
+                                    <div class="file-preview mt-2" data-for="recibo_archivo"></div>
 
                                     {{-- Campos adicionales solo si es de tercero --}}
                                     {{-- <div class="col-md-6 mb-4 d-none" id="recibo_notariado_group">
@@ -377,9 +395,12 @@
 
                                     <div class="col-md-6 mb-4 d-none" id="cedula_titular_group">
                                         <label for="recibo_cedula_titular" class="form-label fw-bold text-primary">Cédula del titular del recibo (frente y reverso)</label>
-                                        <input class="form-control" type="file" id="recibo_cedula_titular" name="recibo_cedula_titular[]" accept=".pdf,.jpg,.jpeg,.png" multiple>
+                                        <input class="form-control file-input" type="file" id="recibo_cedula_titular" name="recibo_cedula_titular[]" accept=".pdf,.jpg,.jpeg,.png"  data-max-size="2097152" multiple>
                                         <div class="form-text">Cargue ambos lados (puede adjuntar 2 archivos o un PDF).</div>
                                     </div>
+
+                                    <div class="file-preview mt-2" data-for="recibo_cedula_titular"></div>
+
                                 </div>
 
                                 {{-- 3) CARNET MIGRATORIO --}}
@@ -389,13 +410,29 @@
 
                                 <div class="col-md-6 mb-4">
                                     <label for="carnet_frente" class="form-label fw-bold text-primary">Anverso</label>
-                                    <input class="form-control" type="file" id="carnet_frente" name="carnet_frente" accept=".jpg,.jpeg,.png,.pdf" required>
+                                    <input class="form-control file-input" type="file" id="carnet_frente" name="carnet_frente" accept=".jpg,.jpeg,.png,.pdf" data-max-size="2097152" required>
                                 </div>
+
+                                <div class="file-preview mt-2" data-for="carnet_frente"></div>
 
                                 <div class="col-md-6 mb-4">
                                     <label for="carnet_reverso" class="form-label fw-bold text-primary">Reverso</label>
-                                    <input class="form-control" type="file" id="carnet_reverso" name="carnet_reverso" accept=".jpg,.jpeg,.png,.pdf" required>
+                                    <input class="form-control file-input" type="file" id="carnet_reverso" name="carnet_reverso" accept=".jpg,.jpeg,.png,.pdf" data-max-size="2097152" required>
                                 </div>
+
+                                <div class="file-preview mt-2" data-for="carnet_reverso"></div>
+
+                                {{-- PODER (SOLO ABOGADO) --}}
+                                <div class="col-md-6 mb-4 d-none" id="grupoPoder">
+                                    <label for="poder_archivo" class="form-label fw-bold text-primary">
+                                        Poder (notariado obligatorio para abogados)
+                                    </label>
+                                    <input class="form-control" type="file" id="poder_archivo" name="poder_archivo" accept=".pdf,.jpg,.jpeg,.png">
+                                    <div class="form-text"> Adjunte poder notariado vigente (PDF, JPG o PNG).</div>
+                                </div>
+
+                                <div class="file-preview mt-2" data-for="poder_archivo"></div>
+
 
                             </div>
 
@@ -446,6 +483,33 @@
         border-color: #dc3545 !important;
         color: #dc3545 !important;
     } 
+    .file-preview-item {
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+        background: #f8f9fa;
+    }
+
+    .file-preview-item img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+    }
+
+    .file-preview-name {
+        flex-grow: 1;
+        font-size: 0.875rem;
+    }
+
+    .file-preview-remove {
+        cursor: pointer;
+    }
 </style>
 
 {{-- @include('dist.solicitud.monto') --}}

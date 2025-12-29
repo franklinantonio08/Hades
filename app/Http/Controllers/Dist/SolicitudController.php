@@ -28,6 +28,9 @@ use App\Models\MultasTipo;
 use App\Models\SolicitudCambioArchivos;
 use App\Models\SolicitudCambioEstados;
 use App\Models\SolicitudCambioResidencia;
+use App\Models\SolicitudCambioPersonas;
+
+
 
 use App\Models\Afinidad;
 
@@ -297,10 +300,19 @@ class SolicitudController extends Controller
 
     public function Nuevo(){
 
+        // $request = $this->request->all();
+
+        // return $request;
+
         $Usuario = User::find(Auth::id());
 
+        // $Usuario = DB::table('users') 
+        //     ->leftjoin('paises', 'paises.id', '=', 'paises.solicitud_id') 
+        //     ->where('users.id', Auth::id()) 
+        //     ->whereNotIn('solicitudes_cambio_residencia.estatus', ['Rechazada', 'Cancelada']) 
+        //     ->first(); 
 
-        if($Usuario->tipo_usuario === 'abogado' ){
+         if($Usuario->tipo_usuario === 'abogado' ){
             
             $tipo_usuario = 'abogado';
 
@@ -347,21 +359,63 @@ class SolicitudController extends Controller
         
         $Afinidad = null;
         if ($prefillAfinidadId) {
+            
             $Afinidad = Afinidad::where('estatus', 'Activo')
                 ->where('id', $prefillAfinidadId)
                 ->select('id','descripcion')
                 ->first();
         }
 
+        //  return $prefillTitularNF;
 
+        // if (!empty($prefillTitularNF)) {
+
+        //     $existeSolicitudActiva = DB::table('solicitudes_cambio_residencia as scr')
+        //         ->join(
+        //             'solicitudes_cambio_personas as scp',
+        //             'scr.id',
+        //             '=',
+        //             'scp.solicitud_id'
+        //         )
+        //         ->where('scp.num_filiacion', $prefillAfinidadId)
+        //         ->whereNotIn('scr.estatus', ['Rechazada', 'Cancelada'])
+        //         ->exists();
+
+        //     if ($existeSolicitudActiva) {
+        //         return redirect()
+        //             ->route('dist.solicitud.nuevo')
+        //             ->withErrors([
+        //                 'solicitud' => 'ERROR: Ya tienes una solicitud de cambio de residencia activa. Código: 0002'
+        //             ]);
+
+        //             // return redirect('dist/solicitud/nuevo')->withErrors("ERROR Ya tienes una solicitud de cambio de residencia activa CODE-0002");
+        //     }
+        // }
+
+        if (!empty($prefillTitularNF)) { 
+
+            $solicitudCambioResidencia = DB::table('solicitudes_cambio_residencia') 
+            ->leftjoin('solicitudes_cambio_personas', 'solicitudes_cambio_residencia.id', '=', 'solicitudes_cambio_personas.solicitud_id') 
+            ->where('solicitudes_cambio_personas.num_filiacion', $prefillTitularNF) 
+            ->whereNotIn('solicitudes_cambio_residencia.estatus', ['Rechazada', 'Cancelada']) 
+            ->first(); 
+
+            if(!empty($solicitudCambioResidencia)){ 
+
+                return redirect('dist/solicitud')->withErrors("ERROR YA TIENES UNA SOLICITUD ACTIVA CODE-0002"); 
+            } 
+        }
+
+  
         $Sujeto = (object)[
             'primer_nombre'    => $Usuario->primer_nombre ?? '',
             'segundo_nombre'   => $Usuario->segundo_nombre ?? '',
             'primer_apellido'  => $Usuario->primer_apellido ?? '',
             'segundo_apellido' => $Usuario->segundo_apellido ?? '',
+            'filiacion'        => $Usuario->documento_numero ?? '',
+            'pasaporte'        => $Usuario->pasaporte ?? '',            
             'email'            => $Usuario->email ?? '',
-            // En tu UI este campo dice "Pasaporte", pero si quieres mostrar Ruex al seleccionar, lo cambiamos abajo.
-            'documento'        => $Usuario->documento_numero ?? '',
+            'telefono'         => $Usuario->telefono ?? '',   
             'pais_nacionalidad'=> '',
             'pais_nacimiento'  => '',
             'tipo_carnet'      => '',
@@ -378,8 +432,11 @@ class SolicitudController extends Controller
             $sim = DB::connection('simpanama')
                 ->table('dbo.SIM_FI_GENERALES AS SFG')
                 ->leftJoin('SIM_GE_PAIS AS SGP', 'SGP.COD_PAIS', '=', 'SFG.COD_NACION_ACTUAL') // nacionalidad
+                ->leftJoin('SIM_GE_PAIS AS SGPN', 'SGPN.COD_PAIS', '=', 'SFG.COD_PAIS_NACIM') // nacionalidad
+
                 ->select([
                     'SFG.NUM_REG_FILIACION',
+                    'SFG.NUM_PASAPORTE',
                     'SFG.NOM_PRIMER_APELL',
                     'SFG.NOM_SEGUND_APELL',
                     'SFG.NOM_PRIMER_NOMB',
@@ -387,6 +444,7 @@ class SolicitudController extends Controller
                     'SFG.IND_SEXO',
                     'SFG.FEC_NACIM',
                     'SGP.NOM_NACIONALIDAD',
+                    'SGPN.NOM_PAIS',
                 ])
                 ->where('SFG.NUM_REG_FILIACION', $prefillTitularNF)
                 ->first();
@@ -397,12 +455,14 @@ class SolicitudController extends Controller
                     'segundo_nombre'   => $tc($sim->NOM_SEGUND_NOMB),
                     'primer_apellido'  => $tc($sim->NOM_PRIMER_APELL),
                     'segundo_apellido' => $tc($sim->NOM_SEGUND_APELL),
-                    // email no existe en SIM; dejamos el del usuario logueado o vacío
+                    'filiacion'        => (string)$prefillTitularNF,
+                    'pasaporte'        => $tc($sim->NUM_PASAPORTE) ?? '',
                     'email'            => $Usuario->email ?? '',
+                    'telefono'        => $Usuario->telefono ?? '',  
                     // Mostramos el Ruex seleccionado aquí (si tu UI realmente quiere Ruex en ese campo)
-                    'documento'        => (string)$prefillTitularNF,
-                    'pais_nacionalidad'=> $sim->NOM_NACIONALIDAD ?? '',
-                    'pais_nacimiento'  => '', // si luego tienes el código de país de nacimiento, aquí lo mapeas
+                 
+                    'pais_nacionalidad'=>  mb_convert_case(strtolower($sim->NOM_NACIONALIDAD), MB_CASE_TITLE, "UTF-8") ?? '',
+                    'pais_nacimiento'  => mb_convert_case(strtolower($sim->NOM_PAIS), MB_CASE_TITLE, "UTF-8") ?? '', // si luego tienes el código de país de nacimiento, aquí lo mapeas
                     'tipo_carnet'      => '',
                     'num_carnet'       => '',
                 ];
@@ -575,6 +635,8 @@ class SolicitudController extends Controller
 
         $afinidad = null; 
 
+        //return $this->request->all();
+
 
         // 0) Determinar titular según tipo de usuario
         if ($user->tipo_usuario === 'solicitante') {
@@ -641,10 +703,14 @@ class SolicitudController extends Controller
         // 2) Regla: nadie puede tener otra solicitud activa (≠ Rechazada/Cancelada)
         //    Usamos tu CommonHelper (asegúrate de que el método sea PUBLIC).
 
+        $pasaporte = $this->request->input('pasaporte');
+
+        
         if(!empty($this->request->input('afinidad'))){
 
-            $titularNF = $this->request->input('pasaporte');
+            $titularNF = $this->request->input('filiacion');
             $afinidadTipo = $this->request->input('afinidad');
+            
 
             $Idafinidad = DB::table('afinidad')
                 ->where('afinidad.descripcion', '=', $afinidadTipo)
@@ -688,7 +754,7 @@ class SolicitudController extends Controller
         //return $afinidad;
 
         // 3) CREAR Solicitud + Estado inicial + Persona TITULAR + Archivos
-        return DB::transaction(function () use ($validated, $titularNF, $titularF,  $afinidad , $primerNombre, $segundoNombre, $primerApellido, $segundoApellido, $correo, $pais_nacionalidad_id, $pais_nacimiento_id, $tipoCarnet, $numCarnet) {
+        return DB::transaction(function () use ($validated, $titularNF, $titularF,  $afinidad, $pasaporte, $primerNombre, $segundoNombre, $primerApellido, $segundoApellido, $correo, $pais_nacionalidad_id, $pais_nacimiento_id, $tipoCarnet, $numCarnet) {
 
             // 3.1 Solicitud
             $solicitud = SolicitudCambioResidencia::create([
@@ -739,6 +805,7 @@ class SolicitudController extends Controller
                 'es_titular'    => $titularF,
                 'afinidad_id'   => $afinidad,
                 'num_filiacion' => $titularNF,
+                'pasaporte'     => $pasaporte ?: null,
                 'familiaId'        => $familiaId,
 
                 // Mapeo de tus variables a columnas
@@ -760,43 +827,54 @@ class SolicitudController extends Controller
             ]);
 
             // 3.4 Helper para subir archivos (con persona_id opcional)
-            $store = function ($uploadedFile, string $tipo, ?int $personaId = null) use ($solicitud) {
-                $path = $uploadedFile->store("solicitudes_cambio/{$solicitud->id}", 'public');
+            $store = function ($uploadedFile, string $tipo, string $numFiliacion, ?int $personaId = null) use ($solicitud) {
+
+                $extension = $uploadedFile->getClientOriginalExtension();
+
+                $folder = "solicitudes_cambio/{$numFiliacion}";
+
+                $filename = "{$tipo}.{$extension}";
+
+                $path = $uploadedFile->storeAs($folder, $filename, 'public');
+
+                // $path = $uploadedFile->store("solicitudes_cambio/{$solicitud->id}", 'public');                
+
                 $solicitud->archivos()->create([
                     'persona_id'      => $personaId,
                     'tipo'            => $tipo,
                     'ruta'            => $path,
-                    'nombre_original' => $uploadedFile->getClientOriginalName(),
+                    'nombre_original' => $filename, // opcional $uploadedFile->getClientOriginalName(),
                     'mime'            => $uploadedFile->getMimeType(),
                     'tamano'          => $uploadedFile->getSize(),
                     'usuario_id'      => auth()->id(),
                     'estatus'         => 'Activo',
                 ]);
+
             };
 
             // 3.5 Archivos: Domicilio (general)
-            $store($this->request->file('domicilio_archivo'), 'domicilio', null);
+            $store($this->request->file('domicilio_archivo'), 'domicilio',   $titularNF, null);
 
             // 3.6 Archivos: Recibo (generales) si NO es hotel
             if ($validated['domicilio_opcion'] !== 'reserva_hotel') {
                 if ($this->request->hasFile('recibo_archivo')) {
-                    $store($this->request->file('recibo_archivo'), 'recibo', null);
+                    $store($this->request->file('recibo_archivo'), 'recibo',   $titularNF, null);
                 }
                 if ($this->request->input('recibo_tipo') === 'tercero') {
                     if ($this->request->hasFile('recibo_notariado_archivo')) {
-                        $store($this->request->file('recibo_notariado_archivo'), 'recibo_notariado', null);
+                        $store($this->request->file('recibo_notariado_archivo'), 'recibo_notariado',   $titularNF, null);
                     }
                     if ($this->request->hasFile('recibo_cedula_titular')) {
                         foreach ($this->request->file('recibo_cedula_titular') as $ced) {
-                            $store($ced, 'cedula_titular', null);
+                            $store($ced, 'cedula_titular',   $titularNF, null);
                         }
                     }
                 }
             }
 
             // 3.7 Archivos: Carnet (del TITULAR) → personales con persona_id
-            $store($this->request->file('carnet_frente'),  'carnet_frente',  $titular->id);
-            $store($this->request->file('carnet_reverso'), 'carnet_reverso', $titular->id);
+            $store($this->request->file('carnet_frente'),  'carnet_frente',    $titularNF, $titular->id);
+            $store($this->request->file('carnet_reverso'), 'carnet_reverso',   $titularNF, $titular->id);
 
             // 3.8 Archivos: Selfies (opcionales del TITULAR) → personales con persona_id
             if ($this->request->hasFile('selfies')) {
@@ -807,7 +885,7 @@ class SolicitudController extends Controller
                         : (str_contains($name, 'arriba')    ? 'selfie_arriba'
                         : (str_contains($name, 'abajo')     ? 'selfie_abajo'
                         : 'selfie_frente')));
-                    $store($file, $tipo, $titular->id);
+                    $store($file, $tipo,   $titularNF, $titular->id);
                 }
             }
 
@@ -856,7 +934,7 @@ class SolicitudController extends Controller
         }
 
         view()->share('solicitud', $solicitud);
-        return \View::make('dist/solicitud/editar');
+        return \View::make('dist.solicitud.editar');
     }
         
     public function PostEditar(){

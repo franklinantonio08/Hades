@@ -38,14 +38,16 @@
                                                 <i class="bi bi-file-person nav-icon text-danger me-2"></i>
                                                 <span class="nav-text">Visas</span>
                                         </a>
-                                </li>
+                                </li>--}}
 
+                                @if(Auth::check() && Auth::user()->tipo_usuario === 'solicitante')
                                 <li class="nav-item">
-                                        <a class="nav-link d-flex align-items-center" href="/dist/filiacion">
+                                        <a class="nav-link d-flex align-items-center" href="{{ route('filiacion.Editar', Auth::user()->id) }}">
                                                 <i class="bi bi-people-fill nav-icon text-primary me-2"></i>
                                                 <span class="nav-text">Filiación</span>
                                         </a>
-                                </li> --}}
+                                </li>
+                                @endif
 
                                 <li class="nav-item">
                                         <a class="nav-link d-flex align-items-center" href="/dist/solicitud">
@@ -80,12 +82,12 @@
 
                         <ul class="nav-group-items ms-4">
 
-                                <li class="nav-item">
-                                        <a class="nav-link d-flex align-items-center" href="/dist/perfil">
+                                {{-- <li class="nav-item">
+                                        <a class="nav-link d-flex align-items-center" href="/dist/usuarios/editar">
                                                 <i class="bi bi-person-circle nav-icon text-danger me-2"></i>
                                                 <span class="nav-text">Perfil</span>
                                         </a>
-                                </li>
+                                </li> --}}
 
                                 <li class="nav-item">
                                         <form method="POST" action="{{ route('logout') }}" class="w-100">

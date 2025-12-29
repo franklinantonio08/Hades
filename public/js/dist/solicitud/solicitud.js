@@ -57,6 +57,37 @@ class Distsolicitud {
         return alias[c] || this.STEPS.find(s => norm(s) === c) || 'Recibida';
     }
 
+    showTopMessageModal(title, message) {
+        const m = new MessagebasicModal(title, message);
+        m.init();
+
+        // Espera a que el modal exista en el DOM
+        setTimeout(() => {
+            // Ajusta IDs si tu MessagebasicModal usa otro id
+            const msgEl = document.getElementById('messageBasicModal');
+            if (!msgEl) return;
+
+            // Busca el modal que YA está abierto (Bootstrap 5)
+            const openModal = document.querySelector('.modal.show:not(#messageBasicModal)');
+            if (!openModal) return;
+
+            // Bootstrap usa z-index ~1055 modal y 1050 backdrop
+            const baseZ = Number(getComputedStyle(openModal).zIndex) || 1055;
+            const newZ = baseZ + 20;
+
+            msgEl.style.zIndex = String(newZ);
+
+            // Backdrop del MessagebasicModal suele ser el último
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            const lastBackdrop = backdrops[backdrops.length - 1];
+            if (lastBackdrop) lastBackdrop.style.zIndex = String(newZ - 5);
+
+            // Asegura foco arriba
+            msgEl.focus?.();
+        }, 10);
+    }
+
+
     getFlowForStatus(oficial) {
         // Muestra SOLO la rama relevante
         switch (oficial) {
@@ -134,10 +165,31 @@ class Distsolicitud {
             </div>`;
     }
 
+    esSolicitante() {
+        return ($('#tipo').val() || '').toLowerCase() === 'solicitante';
+    }
+
+    esAbogado() {
+        return ($('#tipo').val() || '').toLowerCase() === 'abogado';
+    }
+
+    
 
 
+    actualizarTextoBoton() {
+        const btn = document.getElementById('guardarForm');
+        if (!btn) return;
+
+        if (this.esAbogado()) {
+            btn.textContent = 'Guardar';
+        } else {
+            btn.textContent = 'Siguiente';
+        }
+    }
 
     init(){
+
+        this.initFilePreviews();
         
         if($('#editarregistro').length) {
             this.cambia_motivo();
@@ -147,6 +199,8 @@ class Distsolicitud {
             
             this.validatesolicitud();
             this.toggleViviendaFields();
+            this.togglePoderAbogado();
+            this.actualizarTextoBoton();
         }
 
         if($('#solicitud').length) {
@@ -157,12 +211,24 @@ class Distsolicitud {
             resetResultados();
         });
 
+        
     
         this.acciones();
 
+        // const $modal = $('#tomarFotoModal');
+        // $modal.on('shown.bs.modal', () => this.iniciarCamara());
+        // $modal.on('hidden.bs.modal', () => this.detenerCamara());
+
         const $modal = $('#tomarFotoModal');
-        $modal.on('shown.bs.modal', () => this.iniciarCamara());
-        $modal.on('hidden.bs.modal', () => this.detenerCamara());
+
+        // Limpia handlers previos
+        $modal.off('shown.bs.modal.distsolicitud hidden.bs.modal.distsolicitud');
+
+        if (this.esSolicitante()) {
+            $modal.on('shown.bs.modal.distsolicitud', () => this.iniciarCamara());
+            $modal.on('hidden.bs.modal.distsolicitud', () => this.detenerCamara());
+        }
+
 
         // Botones del modal
         $(document)
@@ -281,6 +347,81 @@ class Distsolicitud {
     
     }
 
+    initFilePreviews() {
+
+       const _this = this;
+
+        const MAX_MB = 2;
+
+        $(document).on('change', '.file-input', function () {
+
+            const input = this;
+            const files = Array.from(input.files || []);
+            const maxSize = Number(input.dataset.maxSize || (MAX_MB * 1024 * 1024));
+            const previewBox = document.querySelector(`.file-preview[data-for="${input.id}"]`);
+
+            if (!previewBox) return;
+            previewBox.innerHTML = '';
+
+            for (let i = 0; i < files.length; i++) {
+
+                const file = files[i];
+
+                // 🔴 Validación tamaño
+                if (file.size > maxSize) {
+
+                    // alert(`El archivo "${file.name}" supera el límite de 2 MB.`);
+                    input.value = '';
+                    previewBox.innerHTML = '';
+
+                    _this.showTopMessageModal(
+                        'Error de carga',
+                        `El archivo seleccionado pesa ${(file.size / 1024 / 1024).toFixed(2)} MB.
+                        El tamaño máximo permitido es 2 MB.`
+                    );
+                    
+                    return;
+                    // return;
+                }
+
+                const item = document.createElement('div');
+                item.className = 'file-preview-item';
+
+                // Preview imagen / pdf
+                let preview;
+                if (file.type.startsWith('image/')) {
+                    preview = document.createElement('img');
+                    preview.src = URL.createObjectURL(file);
+                } else {
+                    preview = document.createElement('i');
+                    preview.className = 'bi bi-file-earmark-pdf fs-1 text-danger';
+                }
+
+                const info = document.createElement('div');
+                info.className = 'file-preview-name';
+                info.innerHTML = `
+                    <strong>${file.name}</strong><br>
+                    <small class="text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                `;
+
+                const remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'btn btn-sm btn-outline-danger file-preview-remove';
+                remove.innerHTML = '<i class="bi bi-trash"></i>';
+                remove.onclick = () => {
+                    input.value = '';
+                    previewBox.innerHTML = '';
+                };
+
+                item.appendChild(preview);
+                item.appendChild(info);
+                item.appendChild(remove);
+
+                previewBox.appendChild(item);
+            }
+        });
+    }
+
     resetResultados() {
         $('#tablaResultados tbody').empty();
         $('#DivResultado_busqueda').addClass('d-none');
@@ -298,7 +439,13 @@ class Distsolicitud {
         console.log(afinidadId);
 
         if (!afinidadId) {
-            alert('Selecciona una afinidad antes de continuar.');
+            // alert('Selecciona una afinidad antes de continuar.');
+
+            this.showTopMessageModal(
+                'Afinidad requerida',
+                'Debe seleccionar una afinidad antes de continuar.'
+            );
+            // m.init();
             return;
         }
 
@@ -318,11 +465,22 @@ class Distsolicitud {
             // /dist/solicitud/nuevo?sel=UUID (token efímero)
             window.location.href = res.redirect;
             } else {
-            alert(res?.msg || 'No fue posible seleccionar a la persona.');
+            // alert(res?.msg || 'No fue posible seleccionar a la persona.');
+
+                this.showTopMessageModal(
+                        'No se pudo continuar',
+                        res?.msg || 'No fue posible seleccionar a la persona.'
+                    );
+                // m.init();
             }
         })
         .fail(function () {
-            alert('Error al seleccionar a la persona.');
+            // alert('Error al seleccionar a la persona.');
+            this.showTopMessageModal(
+                'Error',
+                'Ocurrió un error al seleccionar a la persona.'
+            );
+            // m.init();
         })
         .always(function () {
             $('#buscarSpinner').addClass('d-none');
@@ -433,6 +591,8 @@ class Distsolicitud {
     }
 
     validaSolicitud() {
+
+        const _this = this;
        
         fetch(BASEURL + "/validar-solicitud", {
             method: "POST",
@@ -443,7 +603,13 @@ class Distsolicitud {
         .then(data => {
             if (!data.ok) {
             if (data.error === 'SIN_RUEX' || data.error === 'SIN_IDENTIFICADOR') {
-                alert(data.message || 'Debes registrar tu Ruex/documento.');
+                // alert(data.message || 'Debes registrar tu Ruex/documento.');
+
+                _this.showTopMessageModal(
+                    'Información incompleta',
+                    data.message || 'Debes registrar tu RUEX o documento antes de continuar.'
+                );
+                // m.init();
             }
             return;
             }
@@ -485,13 +651,13 @@ class Distsolicitud {
             if (btnCan && ui.buttons?.cancel?.label) btnCan.textContent = ui.buttons.cancel.label;
 
             // Cinturón adicional (por si acaso):
-if (tipo === 'abogado') {
-  btnMi?.remove();
-  btnFam?.remove();
-}
-if (tipo === 'solicitante' && tieneActiva) {
-  btnMi?.remove(); // <- quítalo del DOM, no solo d-none
-}
+            if (tipo === 'abogado') {
+                btnMi?.remove();
+                btnFam?.remove();
+            }
+            if (tipo === 'solicitante' && tieneActiva) {
+                btnMi?.remove(); // <- quítalo del DOM, no solo d-none
+            }
 
             // evitar listeners duplicados
             const bindOnce = (el, fn) => {
@@ -623,7 +789,14 @@ if (tipo === 'solicitante' && tieneActiva) {
         const isSecure = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
         if (!isSecure) {
             console.error('getUserMedia requiere HTTPS o localhost.');
-            alert('Para usar la cámara, abre esta página en HTTPS o desde localhost.');
+            // alert('Para usar la cámara, abre esta página en HTTPS o desde localhost.');
+
+            _this.showTopMessageModal(
+                'Cámara no disponible',
+                'Para usar la cámara, esta página debe abrirse en HTTPS o desde localhost.'
+            );
+            // m.init();
+
             return;
         }
 
@@ -639,7 +812,15 @@ if (tipo === 'solicitante' && tieneActiva) {
             await video.play();
         } catch (err) {
             console.error(err);
-            alert('No se pudo acceder a la cámara: ' + (err && err.message ? err.message : err));
+            
+            // alert('No se pudo acceder a la cámara: ' + (err && err.message ? err.message : err));
+
+            _this.showTopMessageModal(
+                'Error de cámara',
+                'No se pudo acceder a la cámara.<br>' +
+                `<small class="text-muted">${err?.message || err}</small>`
+            );
+            
         }
     }
 
@@ -998,6 +1179,26 @@ if (tipo === 'solicitante' && tieneActiva) {
             }
         }
 
+        togglePoderAbogado() {
+
+            const isAbogado = this.esAbogado();
+
+            const grupo = document.getElementById('grupoPoder');
+            const input = document.getElementById('poder_archivo');
+
+            if (!grupo || !input) return;
+
+            if (isAbogado) {
+                grupo.classList.remove('d-none');
+                input.setAttribute('required', 'required');
+            } else {
+                grupo.classList.add('d-none');
+                input.removeAttribute('required');
+                input.value = ''; // limpia si no aplica
+            }
+        }
+
+
         preSubmitCheck() {
 
             const _this = this
@@ -1008,6 +1209,8 @@ if (tipo === 'solicitante' && tieneActiva) {
             this.toggleViviendaFields();
             this.toggleReciboFields();
             this.toggleDocsByDomicilio();
+
+
 
             // --- helpers visuales ---
             const clearErrors = () => {
@@ -1084,6 +1287,13 @@ if (tipo === 'solicitante' && tieneActiva) {
             let hasErrors = false;
             const flag = (bad) => { if (bad) hasErrors = true; };
 
+            if (this.esAbogado()) {
+                flag(!requireField(
+                    "#poder_archivo",
+                    "Debe adjuntar el poder notariado para continuar."
+                ));
+            }
+
             // === Ubicación ===
             flag(!requireField("#provincia", "Debe seleccionar la provincia."));
             flag(!requireField("#distrito", "Debe seleccionar el distrito."));
@@ -1135,7 +1345,14 @@ if (tipo === 'solicitante' && tieneActiva) {
                 return;
             }
 
-            $("#tomarFotoModal").modal("show");          
+            // $("#tomarFotoModal").modal("show"); 
+            if (this.esSolicitante()) {
+                $("#tomarFotoModal").modal("show");
+            } else {
+                // abogado u otro tipo → NO selfie
+                this.enviarFormulario();
+            }
+         
 
             // _this.enviarFormulario();             
 
@@ -1148,6 +1365,8 @@ if (tipo === 'solicitante' && tieneActiva) {
             const $form = $("#nuevoregistro");
             const formData = new FormData($form[0]);
 
+             const _this = this;
+
             $.ajax({
                 url: $form.attr("action"),   // apunta a /dist/solicitud/nuevo
                 type: "POST",
@@ -1157,11 +1376,11 @@ if (tipo === 'solicitante' && tieneActiva) {
                 success: function (resp) {
                     console.log("Respuesta servidor:", resp);
 
-                    const objMessagebasicModal = new MessagebasicModal(
+                    _this.showTopMessageModal(
                         "Solicitud",
                         "Se ha enviado correctamente la información."
                     );
-                    objMessagebasicModal.init();
+                    // objMessagebasicModal.init();
 
                     $('#messageBasicModal').on('hidden.bs.modal', function () {
                         window.location.href = '/dist/solicitud'; // 🔄 redirige al inicio
@@ -1169,11 +1388,11 @@ if (tipo === 'solicitante' && tieneActiva) {
                 },
                 error: function (xhr) {
                     console.error(xhr);
-                    const objMessagebasicModal = new MessagebasicModal(
+                    _this.showTopMessageModal(
                         "Error",
                         "Hubo un problema al enviar la solicitud."
                     );
-                    objMessagebasicModal.init();
+                    // objMessagebasicModal.init();
                 }
             });
         
@@ -1389,7 +1608,14 @@ if (tipo === 'solicitante' && tieneActiva) {
                     },
 
                     error: function (xhr) {
-                        alert("Error al cargar los datos. Intente nuevamente.");
+                        // alert("Error al cargar los datos. Intente nuevamente.");
+
+                        this.showTopMessageModal(
+                            'Error',
+                            'Error al cargar los datos. Intente nuevamente.'
+                        );
+                        // m.init();
+
                         console.error(xhr);
                     },
                 });
