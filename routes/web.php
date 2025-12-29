@@ -335,4 +335,18 @@ Route::middleware('guest')->group(function () {
 //     return view('dashboard');
 // })->middleware(['auth'])->name('dashboard');
 
+    Route::fallback(function (Request $request) {
+
+        // Si el usuario NO está autenticado → login
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        // Usuario autenticado pero ruta inválida
+        return response()->view('errors.permiso_denegado', [
+                'mensaje' => 'No tiene permisos para acceder a este recurso o la ruta no existe.'
+            ], 403);
+
+    });
+
 require __DIR__.'/auth.php';
