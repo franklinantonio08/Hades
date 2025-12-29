@@ -1393,7 +1393,7 @@ class SolicitudController extends Controller
             'nombre'           => ['required', 'string', 'max:100'],
             'apellido'         => ['required', 'string', 'max:100'],
             'genero'           => ['required', 'in:Masculino,Femenino'],
-            'fecha_nacimiento' => ['required', 'date'],
+            'fecha_nacimiento' => ['required', 'date_format:Y-m-d'],
             'ruex'             => ['nullable', 'regex:/^[0-9]{1,15}$/'],
         ]);
 
