@@ -183,7 +183,16 @@ class Distsolicitud {
         return ($('#tipo').val() || '').toLowerCase() === 'abogado';
     }
 
-    
+    toggleBuscarBtn() {
+
+        const ok =
+            $('#nombre').val()?.trim() &&
+            $('#apellido').val()?.trim() &&
+            $('#genero').val() &&
+            $('#fecha_nacimiento').val();
+
+        $('#btnBuscar').prop('disabled', !ok);
+    }
 
 
     actualizarTextoBoton() {
@@ -196,6 +205,41 @@ class Distsolicitud {
             btn.textContent = 'Siguiente';
         }
     }
+
+    initFechaNacimiento() {
+
+        const $input = $('#fecha_nacimiento');
+        if (!$input.length) return;
+
+        $input.daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            autoUpdateInput: false,
+            maxDate: moment(), // no permite fechas futuras
+            locale: {
+                format: 'YYYY-MM-DD',
+                applyLabel: 'Aplicar',
+                cancelLabel: 'Cancelar',
+                daysOfWeek: ['Do','Lu','Ma','Mi','Ju','Vi','Sa'],
+                monthNames: [
+                    'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+                ],
+                firstDay: 1
+            }
+        });
+
+        // cuando selecciona
+        $input.on('apply.daterangepicker', function (ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD')).trigger('change');
+        });
+
+        // cuando cancela
+        $input.on('cancel.daterangepicker', function () {
+            $(this).val('').trigger('change');
+        });
+    }
+
 
     init(){
 
@@ -221,6 +265,7 @@ class Distsolicitud {
             resetResultados();
         });
 
+        this.initFechaNacimiento();
 
     
         this.acciones();
@@ -251,7 +296,14 @@ class Distsolicitud {
 
         $(document)
           .off('click', '#btnFinalizar')
-          .on('click', '#btnFinalizar', () => this.finalizarSelfieYEnviar());          
+          .on('click', '#btnFinalizar', () => this.finalizarSelfieYEnviar());   
+          
+        $('#nombre, #apellido, #genero, #fecha_nacimiento').off('input.distsolicitud change.distsolicitud').on('input.distsolicitud change.distsolicitud', () => {
+            this.toggleBuscarBtn();
+        });
+
+        // estado inicial
+        this.toggleBuscarBtn();
 
     }
 
@@ -348,6 +400,7 @@ class Distsolicitud {
             $('#nombre, #apellido, #ruex, #fecha_nacimiento').val('');
             $('#genero, #afinidadId').val('');
             _this.resetResultados();
+            _this.toggleBuscarBtn();
         });
 
         $(document).off('click', '.seleccionar-familiar').on('click', '.seleccionar-familiar', function () {  
@@ -491,11 +544,21 @@ class Distsolicitud {
     }
 
     resetResultados() {
+
         $('#tablaResultados tbody').empty();
+
         $('#DivResultado_busqueda').addClass('d-none');
-        $('#modalRegistroDesc')
-            .removeClass('text-danger')
-            .text('Completa uno o más criterios y presiona Buscar.');
+
+        // $('#modalRegistroDesc')
+        //     .removeClass('text-danger')
+        //     .text('Completa uno o más criterios y presiona Buscar.');
+
+        if (!res.ok) {
+            $('#modalRegistroDesc')
+                .addClass('text-danger')
+                .text(res.msg || 'Debe completar todos los campos para buscar.');
+            return;
+        }
     }
 
     selecionarFamiliar(){
@@ -570,11 +633,15 @@ class Distsolicitud {
             afinidadId: $('#afinidadId').val() // cuando lo uses
         };
 
-        if (!payload.nombre && !payload.apellido && !payload.ruex && !payload.genero && !payload.fecha_nacimiento) {
-            $('#modalRegistroDesc').addClass('text-danger').text('Indica al menos un criterio de búsqueda.');
-            setTimeout(() => {
-            $('#modalRegistroDesc').removeClass('text-danger').text('Completa uno o más criterios y presiona Buscar.');
-            }, 2500);
+        if (
+            !payload.nombre ||
+            !payload.apellido ||
+            !payload.genero ||
+            !payload.fecha_nacimiento
+        ) {
+            $('#modalRegistroDesc')
+                .addClass('text-danger')
+                .text('Debe completar nombre, apellido, género y fecha de nacimiento para buscar.');
             return;
         }
 

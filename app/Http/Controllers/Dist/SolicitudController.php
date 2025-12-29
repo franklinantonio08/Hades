@@ -1389,28 +1389,71 @@ class SolicitudController extends Controller
 
     public function BuscaFamiliar(){
 
-         $data = $this->request->validate([
-        'nombre'           => ['nullable', 'string', 'max:100'],
-        'apellido'         => ['nullable', 'string', 'max:100'],
-        'ruex'             => ['nullable', 'regex:/^[0-9]{1,15}$/'],
-        'genero'           => ['nullable', 'in:Masculino,Femenino'],
-        'fecha_nacimiento' => ['nullable', 'date'],
+        $data = $this->request->validate([
+            'nombre'           => ['required', 'string', 'max:100'],
+            'apellido'         => ['required', 'string', 'max:100'],
+            'genero'           => ['required', 'in:Masculino,Femenino'],
+            'fecha_nacimiento' => ['required', 'date'],
+            'ruex'             => ['nullable', 'regex:/^[0-9]{1,15}$/'],
         ]);
 
         if (
-            empty($data['nombre']) &&
-            empty($data['apellido']) &&
-            empty($data['ruex']) &&
-            empty($data['genero']) &&
+            empty($data['nombre']) ||
+            empty($data['apellido']) ||
+            empty($data['genero']) ||
             empty($data['fecha_nacimiento'])
         ) {
             return response()->json([
-                'ok'   => true,
-                'data' => [],
-                'msg'  => 'Debe indicar al menos un criterio de búsqueda.',
-                'empty'=> true
+                'ok'  => false,
+                'msg' => 'Debe completar todos los campos: nombre, apellido, género y fecha de nacimiento.'
             ]);
         }
+
+
+
+        // $q = DB::connection('simpanama')
+        //     ->table('dbo.SIM_FI_GENERALES AS SFG')
+        //     ->leftJoin('SIM_GE_PAIS AS SGP', 'SGP.COD_PAIS', '=', 'SFG.COD_NACION_ACTUAL')
+        //     ->select([
+        //         'SFG.NUM_REG_FILIACION',
+        //         'SFG.NOM_PRIMER_APELL',
+        //         'SFG.NOM_SEGUND_APELL',
+        //         'SFG.NOM_PRIMER_NOMB',
+        //         'SFG.NOM_SEGUND_NOMB',
+        //         'SFG.IND_SEXO',
+        //         'SFG.FEC_NACIM',
+        //         'SGP.NOM_NACIONALIDAD',
+        //     ]);
+
+
+        // if (!empty($data['ruex'])) {
+        //     $q->where('NUM_REG_FILIACION', (int) $data['ruex']);
+        // }
+
+        // if (!empty($data['nombre'])) {
+        //     $nombre = trim($data['nombre']);
+        //     $q->where(function ($w) use ($nombre) {
+        //         $w->where('NOM_PRIMER_NOMB', 'like', "%{$nombre}%")
+        //         ->orWhere('NOM_SEGUND_NOMB', 'like', "%{$nombre}%");
+        //     });
+        // }
+
+        // if (!empty($data['apellido'])) {
+        //     $apellido = trim($data['apellido']);
+        //     $q->where(function ($w) use ($apellido) {
+        //         $w->where('NOM_PRIMER_APELL', 'like', "%{$apellido}%")
+        //         ->orWhere('NOM_SEGUND_APELL', 'like', "%{$apellido}%");
+        //     });
+        // }
+
+        // if (!empty($data['genero'])) {
+        //     $g = $data['genero'] === 'Masculino' ? ['M', 'Masculino'] : ['F', 'Femenino'];
+        //     $q->whereIn('IND_SEXO', $g);
+        // }
+
+        // if (!empty($data['fecha_nacimiento'])) {
+        //     $q->whereDate('FEC_NACIM', $data['fecha_nacimiento']);
+        // }
 
         $q = DB::connection('simpanama')
             ->table('dbo.SIM_FI_GENERALES AS SFG')
@@ -1426,35 +1469,24 @@ class SolicitudController extends Controller
                 'SGP.NOM_NACIONALIDAD',
             ]);
 
+        // 🔎 Nombre
+        $q->where(function ($n) use ($data) {
+            $n->where('NOM_PRIMER_NOMB', 'like', "%{$data['nombre']}%")
+            ->orWhere('NOM_SEGUND_NOMB', 'like', "%{$data['nombre']}%");
+        });
 
-        if (!empty($data['ruex'])) {
-            $q->where('NUM_REG_FILIACION', (int) $data['ruex']);
-        }
+        // 🔎 Apellido
+        $q->where(function ($a) use ($data) {
+            $a->where('NOM_PRIMER_APELL', 'like', "%{$data['apellido']}%")
+            ->orWhere('NOM_SEGUND_APELL', 'like', "%{$data['apellido']}%");
+        });
 
-        if (!empty($data['nombre'])) {
-            $nombre = trim($data['nombre']);
-            $q->where(function ($w) use ($nombre) {
-                $w->where('NOM_PRIMER_NOMB', 'like', "%{$nombre}%")
-                ->orWhere('NOM_SEGUND_NOMB', 'like', "%{$nombre}%");
-            });
-        }
+        // 🔎 Género
+        $g = $data['genero'] === 'Masculino' ? ['M', 'Masculino'] : ['F', 'Femenino'];
+        $q->whereIn('IND_SEXO', $g);
 
-        if (!empty($data['apellido'])) {
-            $apellido = trim($data['apellido']);
-            $q->where(function ($w) use ($apellido) {
-                $w->where('NOM_PRIMER_APELL', 'like', "%{$apellido}%")
-                ->orWhere('NOM_SEGUND_APELL', 'like', "%{$apellido}%");
-            });
-        }
-
-        if (!empty($data['genero'])) {
-            $g = $data['genero'] === 'Masculino' ? ['M', 'Masculino'] : ['F', 'Femenino'];
-            $q->whereIn('IND_SEXO', $g);
-        }
-
-        if (!empty($data['fecha_nacimiento'])) {
-            $q->whereDate('FEC_NACIM', $data['fecha_nacimiento']);
-        }
+        // 🔎 Fecha de nacimiento
+        $q->whereDate('FEC_NACIM', $data['fecha_nacimiento']);
 
         $result = $q->limit(100)->get();
 

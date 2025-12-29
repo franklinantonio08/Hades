@@ -67,19 +67,40 @@
                         </div>
 
 
-                        {{-- <div class="col-md-6">
+                        <div class="col-md-6">
                             <label for="genero" class="form-label text-primary fw-bold">Género</label>
                             <select class="form-select" id="genero" name="genero">
                                 <option value="" selected>Todos</option>
                                 <option value="Masculino">Masculino</option>
                                 <option value="Femenino">Femenino</option>
                             </select>
-                        </div> --}}
+                        </div>
 
                         {{-- <div class="col-md-6">
                             <label for="fecha_nacimiento" class="form-label text-primary fw-bold">Fecha de Nacimiento</label>
-                            <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" max="{{ date('Y-m-d') }}">
-                        </div> --}}
+                            <input type="date" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" max="{{ date('Y-m-d') }}"> --}}
+                            {{-- <div class="form-text">Opcional.</div> --}}
+                        {{-- </div> --}}
+
+                        <div class="col-md-6">
+                            <label for="fecha_nacimiento" class="form-label text-primary fw-bold">
+                                Fecha de Nacimiento
+                            </label>
+
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="fecha_nacimiento"
+                                name="fecha_nacimiento"
+                                placeholder="YYYY-MM-DD"
+                                autocomplete="off"
+                                readonly
+                            >
+
+                            <div class="form-text">
+                                Selecciona la fecha desde el calendario.
+                            </div>
+                        </div>
                     </div>
                 </div>
 

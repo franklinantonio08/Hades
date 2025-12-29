@@ -4,11 +4,11 @@
         <!-- BRAND -->
         <div class="sidebar-brand d-flex align-items-center justify-content-between px-3 py-2">
                 <svg class="sidebar-brand-full" width="180" viewBox="0 0 500 120">
-                        <use xlink:href="{{ asset('brand/apollo_symbols_refined.svg#full') }}"></use>
+                        <use xlink:href="{{ asset('brand/hades.svg#full') }}"></use>
                 </svg>
 
                 <svg class="sidebar-brand-narrow" width="46" viewBox="0 0 100 100">
-                        <use xlink:href="{{ asset('brand/apollo_symbols_refined.svg#signet') }}"></use>
+                        <use xlink:href="{{ asset('brand/hades.svg#signet') }}"></use>
                 </svg>
 
                 <button class="sidebar-toggler ms-auto" type="button" data-coreui-toggle="unfoldable"></button>
