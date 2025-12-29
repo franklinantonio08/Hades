@@ -1327,12 +1327,16 @@ class Distsolicitud {
             if (!grupo || !input) return;
 
             if (isAbogado) {
+                // 🔓 SOLO ABOGADO
                 grupo.classList.remove('d-none');
+                input.removeAttribute('disabled');      // 🔑 si está disabled NO se envía
                 input.setAttribute('required', 'required');
             } else {
+                // 🔒 CUALQUIER OTRO PERFIL
                 grupo.classList.add('d-none');
                 input.removeAttribute('required');
-                input.value = ''; // limpia si no aplica
+                input.value = '';
+                input.setAttribute('disabled', 'disabled'); // 🔑 garantiza que no viaje
             }
         }
 
@@ -1347,6 +1351,7 @@ class Distsolicitud {
             this.toggleViviendaFields();
             this.toggleReciboFields();
             this.toggleDocsByDomicilio();
+            this.togglePoderAbogado();
 
 
 
