@@ -1365,7 +1365,19 @@ class Distsolicitud {
             const $form = $("#nuevoregistro");
             const formData = new FormData($form[0]);
 
-             const _this = this;
+            const _this = this;
+
+            if (this.capturas && this.capturas.length) {
+                this.capturas.forEach((cap, index) => {
+
+                    // Nombre importante para que Laravel detecte dirección
+                    // selfie_frente.jpg, selfie_izquierda.jpg, etc.
+                    const filename = `selfie_${cap.nombre}.jpg`;
+
+                    // 🔑 CLAVE: selfies[] (array)
+                    formData.append('selfies[]', cap.blob, filename);
+                });
+            }
 
             $.ajax({
                 url: $form.attr("action"),   // apunta a /dist/solicitud/nuevo

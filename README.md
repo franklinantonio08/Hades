@@ -175,3 +175,5 @@ sudo -u apache php artisan config:cache
 sudo -u apache php artisan route:cache
 sudo -u apache php artisan view:cache
 sudo -u apache php artisan event:cache
+
+sudo -u apache php artisan storage:link

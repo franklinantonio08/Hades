@@ -692,7 +692,7 @@ class SolicitudController extends Controller
             'carnet_reverso'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
 
             // Selfies (opcionales, si tu JS las manda como selfies[])
-            'selfies'           => 'nullable|array',
+            'selfies'           => 'nullable',
             'selfies.*'         => 'file|mimes:jpg,jpeg,png|max:4096',
 
             // Otros
