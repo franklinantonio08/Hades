@@ -171,6 +171,22 @@ sudo -u apache git pull origin main
 
 sudo -u apache php artisan optimize:clear
 
+
+sudo -u apache php artisan config:clear && \
+sudo -u apache php artisan route:clear && \
+sudo -u apache php artisan view:clear && \
+sudo -u apache php artisan event:clear && \
+sudo -u apache php artisan config:cache && \
+sudo -u apache php artisan route:cache && \
+sudo -u apache php artisan view:cache && \
+sudo -u apache php artisan event:cache
+
+
+sudo -u apache php artisan config:clear
+sudo -u apache php artisan route:clear
+sudo -u apache php artisan view:clear
+sudo -u apache php artisan event:clear
+
 sudo -u apache php artisan config:cache
 sudo -u apache php artisan route:cache
 sudo -u apache php artisan view:cache

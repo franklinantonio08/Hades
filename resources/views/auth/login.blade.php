@@ -85,6 +85,13 @@
       <a href="{{ route('register') }}">Crear cuenta</a>
     @endif
   </div>
+
+    <div class="small-link">
+    @if (Route::has('register'))
+      <span class="text-muted">valida tu informacion de filiación</span>
+      <a href="{{ route('register') }}">Consulta</a>
+    @endif
+  </div>
 @endsection
 
 @push('scripts')

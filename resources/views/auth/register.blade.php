@@ -147,7 +147,7 @@
           <select id="documento_tipo" name="documento_tipo" class="form-select">
             <option value="" disabled {{ old('documento_tipo') ? '' : 'selected' }}>Selecciona...</option>
             <option value="Ruex" {{ old('documento_tipo')==='Ruex' ? 'selected':'' }}>N° Filiación</option>
-            <option value="Pasaporte" {{ old('documento_tipo')==='Pasaporte' ? 'selected':'' }}>Pasaporte</option>
+            {{-- <option value="Pasaporte" {{ old('documento_tipo')==='Pasaporte' ? 'selected':'' }}>Pasaporte</option> --}}
           </select>
           @error('documento_tipo') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
         </div>
@@ -236,6 +236,28 @@
       </div>
     </div>
 
+        {{-- Términos y condiciones --}}
+    <div class="form-check mt-3">
+      <input class="form-check-input @error('acepta_terminos') is-invalid @enderror"
+            type="checkbox"
+            name="acepta_terminos"
+            id="acepta_terminos"
+            value="1"
+            {{ old('acepta_terminos') ? 'checked' : '' }}>
+
+      <label class="form-check-label small" for="acepta_terminos">
+        Declaro que he leído y acepto la
+        <a href="#" data-bs-toggle="modal" data-bs-target="#terminosRUEXModal">
+          Declaración y Términos del RUEX
+        </a>
+      </label>
+
+      @error('acepta_terminos')
+        <div class="invalid-feedback d-block">{{ $message }}</div>
+      @enderror
+    </div>
+
+
     <button class="btn btn-primary w-100 mt-3" id="btnRegister">
       <span class="btn-label"><i class="bi bi-person-plus me-2"></i> Crear cuenta</span>
       <span class="btn-spinner spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
@@ -247,5 +269,8 @@
     </div>
   </form>
 @endsection
+
+@include('auth.terminos-ruex')
+
 
 

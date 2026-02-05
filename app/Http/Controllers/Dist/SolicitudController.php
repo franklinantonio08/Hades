@@ -35,6 +35,8 @@ use App\Models\SolicitudCambioPersonas;
 use App\Models\Afinidad;
 
 use App\Helpers\CommonHelper;
+use App\Services\NeoPaymentTokenService;
+
 
 use DB;
 use Excel;
@@ -130,8 +132,10 @@ class SolicitudController extends Controller
         if(isset($request['searchInput']) && trim($request['searchInput']) != ""){
             $query->where(
                 function ($query) use ($request) {
-                    $query->orWhere('users.primer_nombre', 'like', '%'.trim($request['searchInput']).'%');
-                    $query->orWhere('users.primer_apellido', 'like', '%'.trim($request['searchInput']).'%');
+                    $query->orWhere('solicitudes_cambio_personas.primer_nombre', 'like', '%'.trim($request['searchInput']).'%');
+                    $query->orWhere('solicitudes_cambio_personas.segundo_nombre', 'like', '%'.trim($request['searchInput']).'%');
+                    $query->orWhere('solicitudes_cambio_personas.pasaporte', 'like', '%'.trim($request['searchInput']).'%');
+                    $query->orWhere('solicitudes_cambio_personas.num_filiacion', 'like', '%'.trim($request['searchInput']).'%');
                 }
                 );		
         }
@@ -1557,7 +1561,11 @@ class SolicitudController extends Controller
                     'solicitudes_cambio_residencia.*',
                     'solicitudes_cambio_personas.correo as email',
                     'solicitudes_cambio_personas.num_filiacion as filiacion',
-                    DB::raw("CONCAT(solicitudes_cambio_personas.primer_nombre, ' ', users.primer_apellido) AS nombre_completo")   
+                    'solicitudes_cambio_personas.primer_nombre',
+                    'solicitudes_cambio_personas.primer_apellido',
+                    'solicitudes_cambio_personas.telefono',                    
+                    DB::raw('UPPER(solicitudes_cambio_personas.pasaporte) as pasaporte'),
+                    DB::raw("CONCAT(solicitudes_cambio_personas.primer_nombre, ' ', solicitudes_cambio_personas.primer_apellido) AS nombre_completo")   
 
                 )
                 ->first();
@@ -1568,12 +1576,12 @@ class SolicitudController extends Controller
             return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0001");
         }
         
-       
+        //$paymentConfig = NeoPaymentTokenService::publicConfig();
 
         return view('dist.solicitud.pago', compact(
             'Usuario',
-            'solicitud'
-            
+            'solicitud',
+           // 'paymentConfig'
         ));
 
     }

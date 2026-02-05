@@ -7,7 +7,7 @@
                 <!-- Título en una fila separada -->
                 <div class="row mb-3">
                     <div class="col-sm-12">
-                        <h4 class="card-title fw-semibold">Listado de Solicitudes de Cambio de Residencia</h4>
+                        <h4 class="card-title fw-semibold">Listado de Afiliaciones</h4>
                     </div>
                 </div>
 
@@ -252,7 +252,7 @@
     <script src="{{ asset('js/comun/messagebasicModal.js') }}"></script>
 
 
-     <script src="{{ asset('js/dist/solicitud/solicitud.js') }}"></script>
+     <script src="{{ asset('js/dist/filiacion/filiacion.js') }}"></script>
 
     <!-- Plugins -->
     <script src="{{ asset('plugins/moment/moment.js') }}"></script>

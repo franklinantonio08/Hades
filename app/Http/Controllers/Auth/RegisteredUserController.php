@@ -83,7 +83,7 @@ class RegisteredUserController extends Controller
             ],
             
             'genero'           => ['exclude_unless:tipo_usuario,solicitante','required','in:M,F'],
-            'fecha_nacimiento' => ['exclude_unless:tipo_usuario,solicitante','required','date','before:today'],
+            'fecha_nacimiento' => ['exclude_unless:tipo_usuario,solicitante','required','date_format:Y-m-d','before:today'],
 
             // ------ Abogado ------
             'abogado_id'       => [
@@ -108,10 +108,17 @@ class RegisteredUserController extends Controller
 
             // Password
             'password'         => ['required','confirmed', Rules\Password::defaults()],
+            'acepta_terminos' => ['required', 'accepted'],
         ];
 
 
         $data = $request->validate($rules);
+
+        $messages = [
+            'acepta_terminos.accepted' => 'Debe aceptar la Declaración y Términos del RUEX para continuar.',
+        ];
+
+        $data = $request->validate($rules, $messages);
 
         // (Opcional) Verificación fuerte contra SIM cuando es solicitante:
         if ($data['tipo_usuario'] === 'solicitante') {

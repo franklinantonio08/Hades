@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Dist\{
     DashboardController,
     SolicitudController,
+    NeoPaymentController,
     DepartamentoController,
     TipoatencionController,
     PosicionesController,
@@ -24,7 +25,7 @@ use App\Http\Controllers\Dist\{
     PaymentController,
     CitasconsularController,
     VisasController,
-    FiliacionController,
+    AfiliacionController
 
 };
 
@@ -85,6 +86,14 @@ Route::middleware('guest')->group(function () {
         Route::get('dist/dashboard', [DashboardController::class, 'Index']) ->name('Index');  
         Route::get('dist/dashboard/listado', [DashboardController::class, 'PostIndex']) ->name('PostIndex');  
 
+
+        Route::prefix('dist/filiacion')->name('filiacion.')->group(function () {
+
+            Route::get('/', [AfiliacionController::class, 'Index']) ->name('Index'); 
+            Route::post('/', [AfiliacionController::class, 'PostIndex']) ->name('PostIndex');
+
+        });
+
         // solicitud
         Route::prefix('dist/solicitud')->name('solicitud.')->group(function () {
 
@@ -124,21 +133,46 @@ Route::middleware('guest')->group(function () {
             Route::post('/buscaCorregimiento', [CorregimientoController::class, 'BuscaCorregimiento'])->name('BuscaCorregimiento');
             Route::post('/buscafamiliar', [SolicitudController::class, 'BuscaFamiliar']) ->name('BuscaFamiliar'); 
 
-             Route::get('/pago/{Id}', [SolicitudController::class, 'Pago']) ->name('Pago'); 
+            Route::get('/pago/{Id}', [SolicitudController::class, 'Pago']) ->name('Pago'); 
+
+            /* Pasarela de Pago NeoPayment*/
+            // Route::post('/payment/process', [NeoPaymentController::class, 'process'])->name('payment.process');
+            // Route::get('/payment/success', [NeoPaymentController::class, 'success'])->name('payment.success');            
+            // Route::get('/payment/error', [NeoPaymentController::class, 'error'])->name('payment.error');
+
+            
+            // Route::get('/payment/test-token', function () { 
+            //     return response()->json(['token' => \App\Services\NeoPaymentTokenService::getToken()]);
+            // });
+
+
 
         });
 
         Route::prefix('payment')->name('payment.')->group(function () {
-            Route::get('/tokenize', [PaymentController::class, 'showTokenizationForm'])->name('tokenize');
-            Route::post('/widget-callback', [PaymentController::class, 'handleWidgetCallback'])->name('handleWidgetCallback');
-            Route::post('/process', [PaymentController::class, 'processPayment'])->name('process');
-            Route::get('/success', [PaymentController::class, 'paymentSuccess'])->name('success');
-            Route::get('/minimal', [PaymentController::class, 'showTokenizationFormMinimal']);
-            Route::get('/status', [PaymentController::class, 'checkServiceStatus'])->name('status');
-            Route::get('error',   [PaymentController::class, 'paymentError'])->name('error');  // nueva
+
+                Route::post('/process', [NeoPaymentController::class, 'process'])->name('process');
+                Route::get('/success', [NeoPaymentController::class, 'success'])->name('success');            
+                Route::get('/error', [NeoPaymentController::class, 'error'])->name('error');
+
+                Route::post('/webhook', [NeoPaymentController::class, 'webhook'])->name('webhook');
+
+        });
+
+        // Route::post('/payment/webhook', [NeoPaymentController::class, 'webhook'])->name('payment.webhook');
+
+
+        // Route::prefix('payment')->name('payment.')->group(function () {
+        //     Route::get('/tokenize', [PaymentController::class, 'showTokenizationForm'])->name('tokenize');
+        //     Route::post('/widget-callback', [PaymentController::class, 'handleWidgetCallback'])->name('handleWidgetCallback');
+        //     Route::post('/process', [PaymentController::class, 'processPayment'])->name('process');
+        //     Route::get('/success', [PaymentController::class, 'paymentSuccess'])->name('success');
+        //     Route::get('/minimal', [PaymentController::class, 'showTokenizationFormMinimal']);
+        //     Route::get('/status', [PaymentController::class, 'checkServiceStatus'])->name('status');
+        //     Route::get('error',   [PaymentController::class, 'paymentError'])->name('error');  // nueva
 
             
-        });
+        // });
 
         Route::prefix('dist/citas_consular')->name('citas_consular.')->group(function () {
             Route::get('/', [CitasconsularController::class, 'Index'])->name('Index');

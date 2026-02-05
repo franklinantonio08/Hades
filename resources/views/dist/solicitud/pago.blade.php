@@ -1,225 +1,124 @@
 @extends('layouts.admin')
 
-@section('title', 'Método de Pago')
+@section('title', 'Confirmar Método de Pago')
 
 @section('content')
-<div class="payment-page">
+<div class="col-lg-12">
+    <div class="card border-0 shadow-lg mb-4">
 
-  <!-- ====== ESTILOS LOCALES (puedes moverlos a app.css) ====== -->
-<link href="{{ asset('css/pagos.css') }}" rel="stylesheet">
+        {{-- Header institucional --}}
+        <div class="card-header text-center text-white py-4"
+             style="background: linear-gradient(90deg, #003366, #0056b3);">
+            <h3 class="fw-bold mb-1">
+                Plataforma Oficial de Pagos
+            </h3>
+            <small>
+                Servicio Nacional de Migración · Ministerio de Seguridad Pública · República de Panamá
+            </small>
+        </div>
 
-  <div class="pay-container"><!-- ancho contenido -->
+        <div class="card-body p-5">
 
-    {{-- HEADER --}}
-    <header class="pay-header">
-      <img src="{{ asset('images/LOGOconBorde200x229.png') }}" alt="Migración" class="brand">
-      <div class="titles">
-        <h1>Método de Pago</h1>
-        <p>Procese su pago con tarjeta de crédito de forma segura.</p>
-      </div>
-    </header>
+            {{-- Datos del solicitante --}}
+            <div class="mb-5">
+                <h5 class="fw-bold text-primary mb-4">
+                    <i class="bi bi-person-vcard-fill me-2"></i>
+                    Información del Solicitante
+                </h5>
 
-    <div class="row g-4 align-items-start mt-2">
-      {{-- IZQUIERDA --}}
-      <div class="col-12 col-lg-8 col-xl-8">
-        <div class="panel">
+                <div class="row g-4">
+                   
 
-          {{-- alertas --}}
-          <div class="mb-2">
-            @include('includes.errors')
-            @include('includes.success')
-          </div>
+                    <div class="col-md-4">
+                        <div class="border rounded-3 p-3 h-100 bg-light">
+                            <small class="text-muted d-block">Nombre </small>
+                            <div class="fs-5 fw-semibold">{{ $solicitud->primer_nombre }}</div>
+                        </div>
+                    </div>
 
-          {{-- PASO 1 --}}
-          <div class="section-head">
-            <span class="badge-step" aria-hidden="true">1</span>
-            <h2>Datos del titular</h2>
-          </div>
+                    <div class="col-md-4">
+                        <div class="border rounded-3 p-3 h-100 bg-light">
+                            <small class="text-muted d-block">Apellido</small>
+                            <div class="fs-5 fw-semibold">{{ $solicitud->primer_apellido }}</div>
+                        </div>
+                    </div>
 
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label for="ruex" class="form-label">RUEX</label>
-              <input id="ruex" type="text" class="form-control form-control-xl" name="ruex" inputmode="numeric" readonly autocomplete="off" value="{{ $solicitud->filiacion }}" required>
+                    <div class="col-md-4">
+                        <div class="border rounded-3 p-3 h-100 bg-light">
+                            <small class="text-muted d-block">Pasaporte </small>
+                            <div class="fs-5 fw-semibold">{{ $solicitud->pasaporte }}</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="border rounded-3 p-3 h-100 bg-light">
+                            <small class="text-muted d-block">RUEX</small>
+                            <div class="fs-5 fw-semibold">{{ $solicitud->filiacion }}</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="border rounded-3 p-3 h-100 bg-light">
+                            <small class="text-muted d-block">Correo Electrónico</small>
+                            <div class="fs-5 fw-semibold">{{ $solicitud->email }}</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="border rounded-3 p-3 h-100 bg-light">
+                            <small class="text-muted d-block">Teléfono</small>
+                            <div class="fs-5 fw-semibold">{{ $solicitud->telefono }}</div>
+                        </div>
+                    </div>
+
+                    
+                </div>
             </div>
 
-            <div class="col-md-6">
-              <label for="email" class="form-label">Correo electrónico</label>
-              <input id="email" type="email" class="form-control form-control-xl" name="email" autocomplete="email" readonly value="{{ $solicitud->email }}" required>
+            {{-- Tarjeta del monto --}}
+            <div class="mb-5">
+                <div class="rounded-4 p-5 text-center text-white shadow"
+                     style="background: linear-gradient(120deg, #198754, #20c997);">
+                    <div class="mb-2 text-uppercase small">Monto a Pagar</div>
+                    <div class="display-4 fw-bold">$100.00 USD</div>
+                    <div class="small mt-2">
+                        Pago correspondiente al trámite oficial de Cambio de Residencia
+                    </div>
+                </div>
             </div>
 
-            <div class="col-md-7">
-              <label for="full_name" class="form-label">Nombre completo</label>
-              <input id="full_name" type="text" class="form-control form-control-xl" name="full_name" autocomplete="name" readonly value="{{ $solicitud->nombre_completo }}" required>
+            {{-- Seguridad --}}
+            <div class="alert border-0 shadow-sm d-flex align-items-center mb-5"
+                 style="background-color: #e7f3ff;">
+                <i class="bi bi-shield-lock-fill fs-3 me-3 text-primary"></i>
+                <div>
+                    Su pago será procesado mediante una pasarela certificada bajo estándares internacionales
+                    de seguridad financiera (PCI Compliance).
+                </div>
             </div>
 
-            <div class="col-md-2">
-              <label for="amount" class="form-label">Monto</label>
-              <input id="amount" type="text" class="form-control form-control-xl" name="amount" autocomplete="name" readonly value="100.00" required>
+            {{-- Botón de pago --}}
+            <div class="text-center">
+                <form method="POST" action="{{ route('payment.process') }}">
+                    @csrf
+                    <input type="hidden" name="solicitud_id" value="{{ $solicitud->id }}">
+                    <input type="hidden" name="amount" value="100">
+                    <input type="hidden" name="currency" value="USD">
+
+                    <button class="btn btn-lg px-5 py-3 text-white fw-bold shadow"
+                            style="background: linear-gradient(90deg, #003366, #0056b3); border-radius: 50px;">
+                        <i class="bi bi-credit-card-2-front-fill me-2"></i>
+                        Proceder al Pago Seguro
+                    </button>
+                </form>
             </div>
-
-            {{-- <div class="col-md-3">
-              <label for="amount" class="form-label">Monto</label>
-              <div class="input-group input-group-xl">
-                <span class="input-group-text">$</span>
-                <input id="amount" type="number" class="form-control" name="amount" step="0.01" min="0.01" inputmode="decimal" readonly value="100.00" required>
-              </div>
-              <div class="form-text">Mínimo 0.01</div>
-            </div> --}}
-
-            {{-- <div class="col-md-2">
-              <label for="currency" class="form-label">Moneda</label>
-              <select id="currency" class="form-select form-select-xl" name="currency" required>
-                <option value="840" {{ old('currency','840')=='840'?'selected':'' }}>USD</option>
-              </select>
-            </div> --}}
-
-            <div class="col-md-2">
-              <label for="currency" class="form-label">Moneda</label>
-              <input id="currency" type="text" class="form-control form-control-xl" name="currency" autocomplete="name" readonly value="USD" required>
-            </div>
-
-          </div>
-
-          {{-- PASO 2 --}}
-          <div class="section-head mt-4">
-            <span class="badge-step" aria-hidden="true">2</span>
-            <h2>Datos de la tarjeta</h2>
-          </div>
-
-          <div class="panel soft p-0 mb-2" aria-live="polite" aria-busy="true">
-            <div id="creditcard-container">
-              <div id="widget-loading" class="text-center py-5">
-                <div class="spinner-border" role="status" aria-hidden="true"></div>
-                <p class="mt-3 mb-0">Cargando pasarela de pago…</p>
-              </div>
-            </div>
-          </div>
-
-          <div id="widget-messages" class="alert alert-info d-none" role="alert"></div>
-
-          {{-- PASO 3 --}}
-          <div class="section-head mt-4">
-            <span class="badge-step" aria-hidden="true">3</span>
-            <h2>Confirmar y pagar</h2>
-          </div>
-
-          <div id="payment-form" class="mt-2">
-            <form id="process-payment-form" novalidate>
-              @csrf
-              <input type="hidden" name="token" id="token-input">
-              <input type="hidden" name="account_number" id="account-number-input">
-
-              <div class="d-flex flex-wrap align-items-center gap-3">
-                <button type="submit" class="btn btn-primary btn-xl fw-bold" id="btn-process" disabled>
-                  <i class="bi bi-credit-card-2-front me-2" aria-hidden="true"></i>Procesar Pago
-                </button>
-                <div class="assurance"><i class="bi bi-shield-lock" aria-hidden="true"></i> Cifrado TLS · Cumplimiento PCI DSS</div>
-              </div>
-            </form>
-            <input type="hidden" id="payment_token" name="payment_token">
-          </div>
 
         </div>
-      </div>
 
-      {{-- DERECHA: RESUMEN --}}
-      <aside class="col-12 col-lg-4 col-xl-4" aria-labelledby="summary-title">
-        <div class="summary">
-          <div class="s-head">
-            <img src="{{ asset('images/LOGOconBorde200x229.png') }}" alt="" aria-hidden="true">
-            <div>
-              <h3 id="summary-title" class="h6 mb-0">Resumen</h3>
-              <small class="text-muted">Revise antes de pagar</small>
-            </div>
-          </div>
-
-          <div class="s-amount">
-            <div>
-              <div id="summary-amount" class="total">$0.00</div>
-              <div id="summary-currency" class="currency">USD</div>
-            </div>
-            <div class="brands" aria-label="Tarjetas aceptadas">
-              <img src="{{ asset('images/visa.svg') }}" alt="Visa" onerror="this.style.display='none'">
-              <img src="{{ asset('images/mastercard.svg') }}" alt="Mastercard" onerror="this.style.display='none'">
-            </div>
-          </div>
-
-          <ul class="s-list">
-            <li><i class="bi bi-lock-fill" aria-hidden="true"></i> Pasarela certificada</li>
-            <li><i class="bi bi-shield-check" aria-hidden="true"></i> Verificación antifraude</li>
-            <li><i class="bi bi-clock-history" aria-hidden="true"></i> Operación en tiempo real</li>
-          </ul>
-
-          <hr>
-          <small class="text-muted d-block">Si ocurre un error no se realiza el cargo. Recibirá confirmación por correo.</small>
+        <div class="card-footer text-center small text-muted py-3">
+            © {{ date('Y') }} Servicio Nacional de Migración · Plataforma Oficial de Pagos del Estado Panameño
         </div>
-      </aside>
+
     </div>
-  </div>
-
-  @include('includes.confirmacionmodal')
-  @include('includes.messagebasicmodal')
 </div>
-@endsection
-
-@section('scripts')
-<script>
-  document.body.classList.add('payment','payment-page');
-
-  // Config de pasarela (expuesta a payment.js)
-  window.paymentConfig = {
-    routes: {
-      handleWidgetCallback: '{{ route("payment.handleWidgetCallback") }}',
-      process:               '{{ route("payment.process") }}',
-      success:               '{{ route("payment.success") }}',
-      error:                 '{{ route("payment.error") }}'
-    },
-    csrfToken:  '{{ csrf_token() }}',
-    apiKey:     '{{ config('payment.api_key') }}',
-    testMode:   {{ config('payment.test_mode', true) ? 'true' : 'false' }},
-    widgetUrls: {
-      test: 'https://apicomponentv2-test.merchantprocess.net/UIComponent/CreditCard',
-      prod: 'https://gateway.merchantprocess.net/securecomponent/v2/UIComponent/CreditCard'
-    }
-  };
-
-  // Utilidad para que el widget avise el token de forma explícita
-  // Llama window.paymentUI.setToken(token, accountNumber) desde payment.js o el callback del widget
-  window.paymentUI = (function(){
-    const $token = document.getElementById('token-input');
-    const $acc   = document.getElementById('account-number-input');
-    const $btn   = document.getElementById('btn-process');
-    function syncButton(){ $btn.disabled = !($token.value && $token.value.length > 10); }
-    return {
-      setToken(token, accountNumber){
-        if(token){ $token.value = token; }
-        if(accountNumber){ $acc.value = accountNumber; }
-        syncButton();
-      },
-      clear(){ $token.value=''; $acc.value=''; syncButton(); }
-    };
-  })();
-
-  // Resumen dinámico (monto/moneda)
-  (function(){
-    const $amount  = document.getElementById('amount');
-    const $currency= document.getElementById('currency');
-    const $outAmt  = document.getElementById('summary-amount');
-    const $outCur  = document.getElementById('summary-currency');
-    const fmtUSD = v => (v ? Number(v).toLocaleString('en-US',{ style:'currency', currency:'USD' }) : '$0.00');
-
-    function sync(){
-      $outAmt.textContent = fmtUSD($amount.value);
-      $outCur.textContent = ($currency.options[$currency.selectedIndex]?.text || 'USD').toUpperCase();
-    }
-    $amount?.addEventListener('input', sync);
-    $currency?.addEventListener('change', sync);
-    sync();
-  })();
-</script>
-
-<script src="https://code.jquery.com/jquery-migrate-3.4.1.min.js"></script>
-<script src="{{ asset('js/comun/confirmacionModal.js') }}"></script>
-<script src="{{ asset('js/comun/messagebasicModal.js') }}"></script>
-<script src="{{ asset('js/dist/payment/payment.js') }}"></script>
 @endsection
