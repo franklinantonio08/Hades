@@ -39,6 +39,12 @@ class NeoPaymentController extends Controller
             $solicitudId = $this->request->solicitud_id;
             $amount      = '10000';
 
+            $percentFee = round($amount * 0.013);        
+
+            $fixedFee = 35;
+            
+            $transactionFee = $percentFee + $fixedFee;
+
             $solicitud = DB::table('solicitudes_cambio_residencia')
             ->where('solicitudes_cambio_residencia.id', $solicitudId)
             ->leftjoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
@@ -71,6 +77,11 @@ class NeoPaymentController extends Controller
                         "name"     => "Cambio de Residencia",
                         "quantity" => 1,
                         "price"    => $amount,
+                    ],
+                    [
+                        "name"     => "Cargo por transacción",
+                        "quantity" => 1,
+                        "price"    => $transactionFee,
                     ]
                 ],
 
@@ -86,7 +97,7 @@ class NeoPaymentController extends Controller
                     // "client_name" =>  (string)$solicitudId,
                     // "email" =>  (string)$solicitudId,
                     // "transaction_id" =>  (string)$solicitudId,
-                    "payment_reference" => (string) $solicitudId,
+                    "payment_reference" =>  "CR-" . $solicitudId,
                 ],
 
                 "customer" => [
