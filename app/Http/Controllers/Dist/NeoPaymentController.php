@@ -34,91 +34,128 @@ class NeoPaymentController extends Controller
 
     }
 
-public function process()
-{
-        $solicitudId = $this->request->solicitud_id;
-        $amount      = '100';
+    public function process(){
 
-        $payload  = [
+            $solicitudId = $this->request->solicitud_id;
+            $amount      = '10000';
 
-            "currency_code" => "USD",
+            $solicitud = DB::table('solicitudes_cambio_residencia')
+            ->where('solicitudes_cambio_residencia.id', $solicitudId)
+            ->leftjoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
+             ->select(
+                'solicitudes_cambio_residencia.*',
+                'solicitudes_cambio_personas.primer_nombre',
+                'solicitudes_cambio_personas.segundo_nombre',
+                'solicitudes_cambio_personas.primer_apellido',
+                'solicitudes_cambio_personas.segundo_apellido',
+                'solicitudes_cambio_personas.pasaporte',
+                'solicitudes_cambio_personas.correo',
+                'solicitudes_cambio_personas.telefono'
+                )
+            ->first();
 
-            "checkout_items" => [
-                [
-                    "name"     => "Cambio de Residencia",
-                    "quantity" => 1,
-                    "price"    => $amount,
-                ]
-            ],
+            // return $solicitud->primer_nombre;
 
-            
-            "return_url" =>  "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=" . $solicitudId,
-            "url_ok"      => "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId,
-            "url_ko"      => "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId,
-            "webhook"     => "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook",
-            "source" => "https://8f3d-190-34-23-11.ngrok-free.app",
+            if (!$solicitud) {
+                return back()->withErrors('Solicitud no encontrada.');
+            }
 
-            "metadatas" => [
-                "payment_id" =>  (string)$solicitudId,
-                "client_name" =>  (string)$solicitudId,
-                "email" =>  (string)$solicitudId,
-                "transaction_id" =>  (string)$solicitudId,
-            ]  
-        ];
+           
 
-        $redirectUrl = NeoPaymentTokenService::createCheckout($payload);
+            $payload  = [
 
-        return redirect($redirectUrl);
-}
+                "currency_code" => "USD",
+
+                "checkout_items" => [
+                    [
+                        "name"     => "Cambio de Residencia",
+                        "quantity" => 1,
+                        "price"    => $amount,
+                    ]
+                ],
+
+                
+                "return_url" =>  "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=" . $solicitudId,
+                "url_ok"      => "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId,
+                "url_ko"      => "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId,
+                "webhook"     => "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook",
+                "source" => "https://8f3d-190-34-23-11.ngrok-free.app",
+
+                "metadatas" => [
+                    // "payment_id" =>  (string)$solicitudId,
+                    // "client_name" =>  (string)$solicitudId,
+                    // "email" =>  (string)$solicitudId,
+                    // "transaction_id" =>  (string)$solicitudId,
+                    "payment_reference" => (string) $solicitudId,
+                ],
+
+                "customer" => [
+                    "type"          => "natural", // o "legal_entity"
+                    "name"          => trim(($solicitud->primer_nombre ?? '') . ' ' . ($solicitud->segundo_nombre ?? '')),
+                    "first_surname" => trim(($solicitud->primer_apellido ?? '') . ' ' . ($solicitud->segundo_apellido ?? '')),
+                    "doc_id_type"   => "P", // P=pasaporte, C=cédula (según doc)
+                    "doc_id"        => (string) ($solicitud->pasaporte ?? ''),
+
+                    "metadata" => [
+                        "email" => (string) ($solicitud->correo ?? ''),
+                        // "phone" => (string) ($solicitud->telefono ?? '0000-0000'),
+                    ],
+                ],
+            ];
+
+            $redirectUrl = NeoPaymentTokenService::createCheckout($payload);
+
+            return redirect($redirectUrl);
+    }
 
 
 
 
 
-public function webhook(Request $request)
-{
-    $payload = $request->all();
+    public function webhook(Request $request)
+    {
+        $payload = $request->all();
 
-    if (($payload['status'] ?? '') !== 'authorized') {
+        if (($payload['status'] ?? '') !== 'authorized') {
+            return response()->json(['ok' => true]);
+        }
+
+        $solicitudId = $payload['metadatas']['solicitud_id'];
+
+        DB::table('pagos')->insert([
+            'solicitud_id'   => $solicitudId,
+            'transaction_id' => $payload['id'],
+            'status'         => $payload['status'],
+            'authorization_number' => $payload['authorization_number'] ?? null,
+            'response_code'  => $payload['response_code'] ?? null,
+            'card_brand'     => $payload['metadatas']['card_brand'] ?? null,
+            'pan_masked'     => $payload['pan'] ?? null,
+            'amount'         => $payload['amount'] / 100,
+            'currency'       => $payload['currency'],
+            'raw_response'   => json_encode($payload),
+            'created_at'     => now(),
+        ]);
+
+        DB::table('solicitudes_cambio_residencia')
+            ->where('id', $solicitudId)
+            ->update(['estatus' => 'Pagada']);
+
         return response()->json(['ok' => true]);
     }
 
-    $solicitudId = $payload['metadatas']['solicitud_id'];
-
-    DB::table('pagos')->insert([
-        'solicitud_id'   => $solicitudId,
-        'transaction_id' => $payload['id'],
-        'status'         => $payload['status'],
-        'authorization_number' => $payload['authorization_number'] ?? null,
-        'response_code'  => $payload['response_code'] ?? null,
-        'card_brand'     => $payload['metadatas']['card_brand'] ?? null,
-        'pan_masked'     => $payload['pan'] ?? null,
-        'amount'         => $payload['amount'] / 100,
-        'currency'       => $payload['currency'],
-        'raw_response'   => json_encode($payload),
-        'created_at'     => now(),
-    ]);
-
-    DB::table('solicitudes_cambio_residencia')
-        ->where('id', $solicitudId)
-        ->update(['estatus' => 'Pagada']);
-
-    return response()->json(['ok' => true]);
-}
 
 
+    public function success($id)
+    {
+        return redirect()->route('solicitud.Mostrar', $id)
+            ->with('success', 'Pago realizado correctamente.');
+    }
 
-public function success($id)
-{
-    return redirect()->route('solicitud.Mostrar', $id)
-        ->with('success', 'Pago realizado correctamente.');
-}
-
-public function error($id)
-{
-    return redirect()->route('solicitud.Mostrar', $id)
-        ->withErrors('El pago fue rechazado.');
-}
+    public function error($id)
+    {
+        return redirect()->route('solicitud.Mostrar', $id)
+            ->withErrors('El pago fue rechazado.');
+    }
 
 
 
