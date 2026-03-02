@@ -42,11 +42,16 @@ class NeoPaymentController extends Controller
 
                 $solicitudId = $this->request->solicitud_id;
 
-                $amount      = '10000';
+                // $amount      = '10000';
+                $amount = (int) $this->request->amount * 100;
 
                 $percentFee = round($amount * 0.013); 
                 $fixedFee = 35;                
                 $transactionFee = $percentFee + $fixedFee;
+
+                $reference = 'CR-' . $solicitudId . '-' . time();
+
+                $totalAmount = $amount + $transactionFee ;
 
                 $solicitud = DB::table('solicitudes_cambio_residencia')
                 ->where('solicitudes_cambio_residencia.id', $solicitudId)
@@ -63,48 +68,79 @@ class NeoPaymentController extends Controller
                     )
                 ->first();
 
+                
+
                 // return $solicitud->primer_nombre;
 
                 if (!$solicitud) {
                     return back()->withErrors('Solicitud no encontrada.');
                 }
 
-                $pagoPendiente = DB::table('pagos')
-                    ->where('solicitud_id', $solicitudId)
-                    ->whereIn('status', ['Pendiente', 'En proceso'])
-                    ->orderByDesc('id')
-                    ->first();
+                //  return 'Hola';
 
-                if ($pagoPendiente) {
-                    $paymentId = $pagoPendiente->id;
+                // $pagoPendiente = DB::table('pagos')
+                //     ->where('solicitud_id', $solicitudId)
+                //     ->whereIn('status', ['Pendiente', 'En proceso'])
+                //     ->orderByDesc('id')
+                //     ->first();
 
-                    // si cambió el monto por alguna razón, lo actualizas
-                    DB::table('pagos')->where('id', $paymentId)->update([
-                        'amount'     => $totalAmount,
-                        'currency'   => 'USD',
-                        'updated_at' => now(),
-                    ]);
-                } else {
+                // if ($pagoPendiente) {
+                //     $paymentId = $pagoPendiente->id;
 
-                        $paymentId = DB::table('pagos')->insertGetId([
-                        'solicitud_id' => $solicitudId,
-                        'amount'       => $totalAmount,
-                        'currency'     => 'USD',
-                        'status'       => 'Pendiente',
-                        'created_at'   => now(),
-                        'updated_at'   => now(),
-                    ]);
-                }
+                //     // si cambió el monto por alguna razón, lo actualizas
+                //     DB::table('pagos')->where('id', $paymentId)->update([
+                //         'amount'     => $amount + $transactionFee,
+                //         'currency'   => 'USD',
+                //         'updated_at' => now(),
+                //     ]);
+                // } else {
+
+                //         $paymentId = DB::table('pagos')->insertGetId([
+                //         'solicitud_id' => $solicitudId,
+                //         'amount'       => $amount + $transactionFee,
+                //         'currency'     => 'USD',
+                //         'status'       => 'Pendiente',
+                //         'created_at'   => now(),
+                //         'updated_at'   => now(),
+                //     ]);
+                // }
+
+                $transactionId = DB::table('payment_transactions')->insertGetId([
+                    'user_id' => Auth::id(),
+                    'token_id' => 1, // ⚠ si no usas tokens aún, debes permitir NULL en BD
+                    'amount' => $totalAmount,
+                    'currency' => 'USD',
+                    'reference' => $reference,
+                    'ruex' => $solicitud->num_filiacion ?? null,
+                    'email' => $solicitud->correo ?? null,
+                    'request_date' => now(),
+                    'status' => 'Pendiente',
+                    'id_solicitud' => $solicitudId,
+                    'codigo_solicitud' => $reference,
+                    'request_data' => null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+               
 
                 if (($solicitud->estatus ?? '') === 'Aprobada - con pago') {
                     DB::table('solicitudes_cambio_residencia')
                         ->where('id', $solicitudId)
                         ->update(['estatus' => 'Pago en proceso']);
                 }
+              
+                //return 'Hola';
                 
                 $urlOk  = route('payment.success', ['id' => $solicitudId]);
                 $urlKo  = route('payment.error',   ['id' => $solicitudId]);
                 $webhook = route('payment.webhook');
+
+                // $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
+                // $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
+                // $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
+
+                //  return 'Hola';
 
                 $payload  = [
 
@@ -163,10 +199,20 @@ class NeoPaymentController extends Controller
 
                 $redirectUrl = NeoPaymentTokenService::createCheckout($payload);
 
-                DB::table('pagos')->where('id', $paymentId)->update([
-                    'status'     => 'En proceso',
-                    'updated_at' => now(),
-                ]);
+                
+
+                DB::table('payment_transactions')
+                    ->where('id', $transactionId)
+                    ->update([
+                        'status' => 'En proceso',
+                        'request_data' => json_encode($payload),
+                        'updated_at' => now(),
+                    ]);
+
+                // DB::table('pagos')->where('id', $paymentId)->update([
+                //     'status'     => 'En proceso',
+                //     'updated_at' => now(),
+                // ]);
 
                 DB::commit();
 
@@ -188,25 +234,47 @@ class NeoPaymentController extends Controller
     {
         $payload = $request->all();
 
+        DB::table('payment_logs')->insert([
+            'type' => 'webhook',
+            'data' => json_encode($payload),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'created_at' => now(),
+        ]);
+
         if (($payload['status'] ?? '') !== 'authorized') {
             return response()->json(['ok' => true]);
         }
 
         $solicitudId = $payload['metadatas']['solicitud_id'];
 
-        DB::table('pagos')->insert([
-            'solicitud_id'   => $solicitudId,
-            'transaction_id' => $payload['id'],
-            'status'         => $payload['status'],
-            'authorization_number' => $payload['authorization_number'] ?? null,
-            'response_code'  => $payload['response_code'] ?? null,
-            'card_brand'     => $payload['metadatas']['card_brand'] ?? null,
-            'pan_masked'     => $payload['pan'] ?? null,
-            'amount'         => $payload['amount'] / 100,
-            'currency'       => $payload['currency'],
-            'raw_response'   => json_encode($payload),
-            'created_at'     => now(),
-        ]);
+        DB::table('payment_transactions')
+            ->where('id', $transactionId)
+            ->update([
+                'status' => $payload['status'],
+                'gateway_transaction_id' => $payload['id'] ?? null,
+                'authorization_number' => $payload['authorization_number'] ?? null,
+                'response_code' => $payload['response_code'] ?? null,
+                'response_data' => json_encode($payload),
+                'response_date' => now(),
+                'updated_at' => now(),
+            ]);
+
+        // DB::table('pagos')->insert([
+        //     'solicitud_id'   => $solicitudId,
+        //     'transaction_id' => $payload['id'],
+        //     'status'         => $payload['status'],
+        //     'authorization_number' => $payload['authorization_number'] ?? null,
+        //     'response_code'  => $payload['response_code'] ?? null,
+        //     'card_brand'     => $payload['metadatas']['card_brand'] ?? null,
+        //     'pan_masked'     => $payload['pan'] ?? null,
+        //     'amount'         => $payload['amount'] / 100,
+        //     'currency'       => $payload['currency'],
+        //     'raw_response'   => json_encode($payload),
+        //     'created_at'     => now(),
+        // ]);
+
+
 
         DB::table('solicitudes_cambio_residencia')
             ->where('id', $solicitudId)
@@ -219,14 +287,22 @@ class NeoPaymentController extends Controller
 
     public function success($id)
     {
-        return redirect()->route('solicitud.Mostrar', $id)
-            ->with('success', 'Pago realizado correctamente.');
+        // return redirect()->route('solicitud.Mostrar', $id)
+        //     ->with('success', 'Pago realizado correctamente.');
+
+        $solicitudId = (int) $request->query('solicitud_id');
+
+        return redirect()->route('solicitud.PagoCompletado', $solicitudId);
     }
 
     public function error($id)
     {
-        return redirect()->route('solicitud.Mostrar', $id)
-            ->withErrors('El pago fue rechazado.');
+        // return redirect()->route('solicitud.Mostrar', $id)
+        //     ->withErrors('El pago fue rechazado.');
+
+        $solicitudId = (int) $request->query('solicitud_id');
+
+        return redirect()->route('solicitud.PagoRechazado', $solicitudId);
     }
 
 

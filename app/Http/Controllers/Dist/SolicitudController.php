@@ -1586,5 +1586,68 @@ class SolicitudController extends Controller
 
     }
 
+    public function PagoCompletado($solicitudId){
+        
+        $solicitud = DB::table('solicitudes_cambio_residencia')
+            ->leftJoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
+            ->where('solicitudes_cambio_residencia.id', $solicitudId)
+            ->where('solicitudes_cambio_residencia.usuario_id', Auth::id())
+            ->select(
+                'solicitudes_cambio_residencia.*',
+                'solicitudes_cambio_personas.correo as email',
+                'solicitudes_cambio_personas.num_filiacion as filiacion',
+                'solicitudes_cambio_personas.primer_nombre',
+                'solicitudes_cambio_personas.primer_apellido',
+                DB::raw("CONCAT(solicitudes_cambio_personas.primer_nombre, ' ', solicitudes_cambio_personas.primer_apellido) AS nombre_completo")
+            )
+            ->first();
+
+        if (!$solicitud) {
+            return redirect('dist/solicitud')->withErrors('Solicitud no encontrada.');
+        }
+
+        // Busca la última transacción aprobada para esa solicitud (si quieres mostrar referencia / autorización)
+        $trx = DB::table('payment_transactions')
+            ->where('id_solicitud', $solicitudId)
+            ->where('status', 'authorized')
+            ->orderByDesc('id')
+            ->first();
+
+        // Si no está autorizada aún, puedes mandar a "pendiente"
+        if (!$trx) {
+            return view('dist.solicitud.pago_pendiente', compact('solicitud'));
+        }
+
+        return view('dist.solicitud.pago_completado', compact('solicitud', 'trx'));
+    }
+
+    public function PagoRechazado($solicitudId)
+    {
+        $solicitud = DB::table('solicitudes_cambio_residencia')
+            ->leftJoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
+            ->where('solicitudes_cambio_residencia.id', $solicitudId)
+            ->where('solicitudes_cambio_residencia.usuario_id', Auth::id())
+            ->select(
+                'solicitudes_cambio_residencia.*',
+                'solicitudes_cambio_personas.correo as email',
+                'solicitudes_cambio_personas.num_filiacion as filiacion',
+                'solicitudes_cambio_personas.primer_nombre',
+                'solicitudes_cambio_personas.primer_apellido',
+                DB::raw("CONCAT(solicitudes_cambio_personas.primer_nombre, ' ', solicitudes_cambio_personas.primer_apellido) AS nombre_completo")
+            )
+            ->first();
+
+        if (!$solicitud) {
+            return redirect('dist/solicitud')->withErrors('Solicitud no encontrada.');
+        }
+
+        $trx = DB::table('payment_transactions')
+            ->where('id_solicitud', $solicitudId)
+            ->orderByDesc('id')
+            ->first();
+
+        return view('dist.solicitud.pago_rechazado', compact('solicitud', 'trx'));
+    }
+
 
 }

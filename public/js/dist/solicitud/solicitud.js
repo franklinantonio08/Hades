@@ -29,6 +29,7 @@ class Distsolicitud {
             'Por corregir': 'bg-warning bg-gradient',
             'Aprobada - con pago':  'bg-success bg-gradient',
             'Aprobada - sin pago':  'bg-success bg-gradient',
+            'Pago en proceso':  'bg-secondary bg-gradient',
             'Multa emitida':    'bg-primary bg-gradient',
             'Rechazada':   'bg-danger bg-gradient',
             'Cancelada':   'bg-dark bg-gradient',
@@ -41,6 +42,7 @@ class Distsolicitud {
             'Por corregir',
             'Aprobada - con pago',
             'Aprobada - sin pago',
+            'Pago en proceso',
             'Multa emitida',
             'Rechazada',
             'Cancelada'

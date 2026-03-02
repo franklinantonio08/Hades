@@ -134,6 +134,9 @@ Route::middleware('guest')->group(function () {
             Route::post('/buscafamiliar', [SolicitudController::class, 'BuscaFamiliar']) ->name('BuscaFamiliar'); 
 
             Route::get('/pago/{Id}', [SolicitudController::class, 'Pago']) ->name('Pago'); 
+            Route::get('/pago-completado/{Id}', [SolicitudController::class, 'PagoCompletado']) ->name('PagoCompletado'); 
+            Route::get('/pago-rechazado/{Id}', [SolicitudController::class, 'PagoRechazado']) ->name('PagoRechazado'); 
+            
 
             /* Pasarela de Pago NeoPayment*/
             // Route::post('/payment/process', [NeoPaymentController::class, 'process'])->name('payment.process');
