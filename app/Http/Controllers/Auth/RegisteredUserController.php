@@ -112,7 +112,7 @@ class RegisteredUserController extends Controller
         ];
 
 
-        $data = $request->validate($rules);
+        // $data = $request->validate($rules);
 
         $messages = [
             'acepta_terminos.accepted' => 'Debe aceptar la Declaración y Términos del RUEX para continuar.',
@@ -120,18 +120,22 @@ class RegisteredUserController extends Controller
 
         $data = $request->validate($rules, $messages);
 
+        $pasaporte = null;
+
         // (Opcional) Verificación fuerte contra SIM cuando es solicitante:
         if ($data['tipo_usuario'] === 'solicitante') {
             
-            $sim = DB::connection('simpanama')
-                ->table('dbo.SIM_FI_GENERALES')
+            $sim = DB::connection('DATAMIND')
+                ->table('dbo.RUEX_INFO')
                 ->select([
-                    'NUM_REG_FILIACION',
-                    'NOM_PRIMER_APELL','NOM_SEGUND_APELL',
-                    'NOM_PRIMER_NOMB','NOM_SEGUND_NOMB',
-                    'IND_SEXO','FEC_NACIM',
+                    'num_filiacion',
+                    'primerApellido','segundoApellido',
+                    'primerNombre','segundoNombre',
+                    'genero','fecha_nacimiento',
+                    'cod_pais_nacionalidad','cod_pais_nacimiento',
+                    'pasaporte', 'telefono'
                 ])
-                ->where('NUM_REG_FILIACION', $data['documento_numero'])
+                ->where('num_filiacion', $data['documento_numero'])
                 ->first();
 
             if (!$sim) {
@@ -141,8 +145,8 @@ class RegisteredUserController extends Controller
             }
 
             // Comparaciones simples (puedes endurecerlas si quieres)
-            $simPN = strtoupper(trim($sim->NOM_PRIMER_NOMB ?? ''));
-            $simPA = strtoupper(trim($sim->NOM_PRIMER_APELL ?? ''));
+            $simPN = strtoupper(trim($sim->primerNombre ?? ''));
+            $simPA = strtoupper(trim($sim->primerApellido ?? ''));
             $inPN  = strtoupper(trim($data['primer_nombre'] ?? ''));
             $inPA  = strtoupper(trim($data['primer_apellido'] ?? ''));
 
@@ -157,11 +161,13 @@ class RegisteredUserController extends Controller
                 ]);
             }
 
+            $pasaporte = $sim->pasaporte ?? null;
+
             // Si quieres, pisas género/fecha con SIM (o sólo si vinieron vacíos)
-            $sexoSim = strtoupper((string)($sim->IND_SEXO ?? ''));            
+            $sexoSim = strtoupper((string)($sim->genero ?? ''));            
             $fechaSim = null;
-            if (!empty($sim->FEC_NACIM)) {
-                $ts = strtotime((string)$sim->FEC_NACIM);
+            if (!empty($sim->fecha_nacimiento)) {
+                $ts = strtotime((string)$sim->fecha_nacimiento);
                 if ($ts !== false) {
                     $fechaSim = date('Y-m-d', $ts); // YYYY-MM-DD
                 }
@@ -196,6 +202,8 @@ class RegisteredUserController extends Controller
                 'segundo_apellido' => $segundo_apellido,
                 'name'             => $fullName,
 
+                'pasaporte'        => $pasaporte,
+
                 // Contacto
                 'email'            => $data['email'],
                 'telefono'         => $data['telefono'] ?? null,
@@ -221,13 +229,15 @@ class RegisteredUserController extends Controller
 
             // NO: Auth::login($user);
 
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'ok' => true,
-                    'message' => 'Cuenta creada. Te enviamos un correo para verificar tu dirección. Revisa tu bandeja.',
-                    'redirect' => route('login'),
-                ]);
-            }
+            // if ($request->wantsJson()) {
+            //     return response()->json([
+            //         'ok' => true,
+            //         'message' => 'Cuenta creada. Te enviamos un correo para verificar tu dirección. Revisa tu bandeja.',
+            //         'redirect' => route('login'),
+            //     ]);
+            // }
+
+            return redirect()->route('login')->with('status', 'Cuenta creada. Revisa tu correo para verificar tu dirección.');
 
             // Si llegara por submit normal:
             // return redirect()->route('login')->with('status', 'verification-link-sent');
@@ -267,18 +277,22 @@ class RegisteredUserController extends Controller
 
         $ruex = trim($validated['documento_numero']);
 
-        $row = DB::connection('sqlsrv_sim')
-            ->table('dbo.SIM_FI_GENERALES')
+        $row = DB::connection('DATAMIND')
+            ->table('dbo.RUEX_INFO')
             ->select([
-                'NUM_REG_FILIACION',
-                'NOM_PRIMER_APELL',
-                'NOM_SEGUND_APELL',
-                'NOM_PRIMER_NOMB',
-                'NOM_SEGUND_NOMB',
-                'IND_SEXO',
-                'FEC_NACIM',
+                'num_filiacion',
+                'primerApellido',
+                'segundoApellido',
+                'primerNombre',
+                'segundoNombre',
+                'genero',
+                'fecha_nacimiento',
+                'cod_pais_nacionalidad',
+                'cod_pais_nacimiento',
+                'pasaporte',
+                'telefono',
             ])
-            ->where('NUM_REG_FILIACION', $ruex)
+            ->where('num_filiacion', $ruex)
             ->first();
 
         if (!$row) {
@@ -288,7 +302,7 @@ class RegisteredUserController extends Controller
         }
 
         // Mapear sexo y fecha
-        $sexo = strtoupper((string)($row->IND_SEXO ?? ''));
+        $sexo = strtoupper((string)($row->genero ?? ''));
 
         if (!in_array($sexo, ['M','F'], true)) {
             $sexo = null;
@@ -296,22 +310,46 @@ class RegisteredUserController extends Controller
 
         $fecha = null;
 
-        if (!empty($row->FEC_NACIM)) {
-            $ts = strtotime((string)$row->FEC_NACIM);
+        if (!empty($row->fecha_nacimiento)) {
+            $ts = strtotime((string)$row->fecha_nacimiento);
             if ($ts !== false) {
                 $fecha = date('Y-m-d', $ts); // YYYY-MM-DD
             }
         }
 
+        // $codNac = trim((string)($row->cod_pais_nacionalidad ?? ''));
+        // $codNacim = trim((string)($row->cod_pais_nacimiento ?? ''));
+
+        $codNac   = strtoupper(trim((string)($row->cod_pais_nacionalidad ?? '')));
+        $codNacim = strtoupper(trim((string)($row->cod_pais_nacimiento ?? '')));
+
+        $paisNacionalidad = null;
+        $paisNacimiento   = null;
+
+        $codigos = collect([$codNac, $codNacim])->filter()->unique()->values();
+
+        $paises = DB::table('paises')
+            ->whereIn('cod_pais', $codigos)
+            ->where('estatus','Activo')
+            ->get()
+            ->keyBy('cod_pais');
+
+        $paisNacionalidad = $paises[$codNac] ?? null;
+        $paisNacimiento   = $paises[$codNacim] ?? null;
+
         return response()->json([
             'ok' => true,
             'data' => [
-                'primer_nombre'    => $row->NOM_PRIMER_NOMB ?? null,
-                'segundo_nombre'   => $row->NOM_SEGUND_NOMB ?? null,
-                'primer_apellido'  => $row->NOM_PRIMER_APELL ?? null,
-                'segundo_apellido' => $row->NOM_SEGUND_APELL ?? null,
-                'genero'           => $sexo,
-                'fecha_nacimiento' => $fecha,
+                'primer_nombre'         => $row->primerNombre ?? null,
+                'segundo_nombre'        => $row->segundoNombre ?? null,
+                'primer_apellido'       => $row->primerApellido ?? null,
+                'segundo_apellido'      => $row->segundoApellido ?? null,
+                'genero'                => $sexo,
+                'fecha_nacimiento'      => $fecha,
+                'pais_nacionalidad_id'  => $paises[$codNac]->id ?? null,
+                'pais_nacimiento_id'    => $paises[$codNac]->id ?? null,
+                'pasaporte'             => $row->pasaporte ?? null,
+                'telefono'              => $row->telefono ?? null,
             ],
         ]);
         

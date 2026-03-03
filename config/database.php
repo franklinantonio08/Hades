@@ -92,11 +92,11 @@ return [
         ],
 
         
-        'simpanama' => [
+        'DATAMIND' => [
             'driver' => env('DB4_CONNECTION', 'sqlsrv'),
             'host' => env('DB4_HOST', 'localhost'),
             'port' => env('DB4_PORT', '1433'),
-            'database' => env('DB4_DATABASE', 'SIM_PANAMA'),
+            'database' => env('DB4_DATABASE', 'DATAMING'),
             'username' => env('DB4_USERNAME', 'bireporte'),
             'password' => env('DB4_PASSWORD', ''),
             'charset' => 'utf8',

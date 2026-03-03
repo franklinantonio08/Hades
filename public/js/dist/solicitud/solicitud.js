@@ -1546,9 +1546,9 @@ class Distsolicitud {
                     );
                     // objMessagebasicModal.init();
 
-                    $('#messageBasicModal').on('hidden.bs.modal', function () {
-                        window.location.href = '/dist/solicitud'; // 🔄 redirige al inicio
-                    });
+                    // $('#messageBasicModal').on('hidden.bs.modal', function () {
+                    //     window.location.href = '/dist/solicitud'; // 🔄 redirige al inicio
+                    // });
                 },
                 error: function (xhr) {
                     console.error(xhr);

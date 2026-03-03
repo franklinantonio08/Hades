@@ -115,6 +115,18 @@
                                     </div>
 
                                     <div class="col-md-6 mb-3">
+                                        <label for="genero" class="form-label fw-bold text-primary">Genero</label>
+                                        <div id="div_genero" ></div>
+                                        <input type="text" class="form-control" id="genero" name="genero" placeholder="Ingrese su genero" readonly value="{{ $Sujeto->genero }}">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="fecha_nacimiento" class="form-label fw-bold text-primary">Fecha de Nacimiento</label>
+                                        <div id="div_fecha_nacimiento" ></div>
+                                        <input type="text" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" placeholder="Ingrese su fecha de nacimiento" readonly value="{{ $Sujeto->fecha_nacimiento }}">
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
                                         <label for="correo" class="form-label fw-bold text-primary">Correo Electrónico</label>
                                         <div id="div_correo" ></div>
                                         <input type="email" class="form-control" id="correo" name="correo" placeholder="Ingrese su correo electrónico" readonly value="{{ $Sujeto->email }}">
@@ -129,14 +141,14 @@
                                     <div class="col-md-6 mb-3">
                                         <label for="paisNacionalidad" class="form-label fw-bold text-primary">Nacionalidad</label>
                                         <div id="div_paisNacionalidad"></div>
-                                        <input type="hidden" name="pais_nacionalidad_id" value="">
+                                        <input type="hidden" name="pais_nacionalidad_id" readonly value="{{ $Sujeto->id_pais_nacionalidad }}">
                                         <input type="text" class="form-control" id="paisNacionalidad" name="paisNacionalidad" readonly value="{{ $Sujeto->pais_nacionalidad }}">
                                     </div>
                                 
                                     <div class="col-md-6 mb-3">
                                         <label for="paisNacimiento" class="form-label fw-bold text-primary">País de Nacimiento</label>
                                         <div id="div_paisNacimiento"></div>
-                                        <input type="hidden" name="pais_nacimiento_id" value="">
+                                        <input type="hidden" name="pais_nacimiento_id" readonly value="{{ $Sujeto->id_pais_nacimiento }}">
                                         <input type="text" class="form-control" id="paisNacimiento" name="paisNacimiento" readonly value="{{ $Sujeto->pais_nacimiento }}">
                                     </div>
 

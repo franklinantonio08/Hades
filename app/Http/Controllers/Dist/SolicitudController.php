@@ -334,6 +334,8 @@ class SolicitudController extends Controller
 
         }
 
+        //return $tipo_usuario;
+
         if(empty($Usuario)){
             return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0001");
         }
@@ -356,7 +358,6 @@ class SolicitudController extends Controller
             return redirect('dist/solicitud/nuevo')->withErrors("ERROR AL GUARDAR STORE CEBECECO CODE-0002");
         }
 
-         // NUEVO: leer token efímero (si viene) para prefill
         $prefillTitularNF  = null; // Ruex seleccionado
         $prefillAfinidadId = null; // Afinidad seleccionada
 
@@ -378,32 +379,7 @@ class SolicitudController extends Controller
                 ->first();
         }
 
-        //  return $prefillTitularNF;
-
-        // if (!empty($prefillTitularNF)) {
-
-        //     $existeSolicitudActiva = DB::table('solicitudes_cambio_residencia as scr')
-        //         ->join(
-        //             'solicitudes_cambio_personas as scp',
-        //             'scr.id',
-        //             '=',
-        //             'scp.solicitud_id'
-        //         )
-        //         ->where('scp.num_filiacion', $prefillAfinidadId)
-        //         ->whereNotIn('scr.estatus', ['Rechazada', 'Cancelada'])
-        //         ->exists();
-
-        //     if ($existeSolicitudActiva) {
-        //         return redirect()
-        //             ->route('dist.solicitud.nuevo')
-        //             ->withErrors([
-        //                 'solicitud' => 'ERROR: Ya tienes una solicitud de cambio de residencia activa. Código: 0002'
-        //             ]);
-
-        //             // return redirect('dist/solicitud/nuevo')->withErrors("ERROR Ya tienes una solicitud de cambio de residencia activa CODE-0002");
-        //     }
-        // }
-
+        
         if (!empty($prefillTitularNF)) { 
 
             $solicitudCambioResidencia = DB::table('solicitudes_cambio_residencia') 
@@ -418,21 +394,102 @@ class SolicitudController extends Controller
             } 
         }
 
+          // $Sujeto = (object)[
+        //     'primer_nombre'    => $Usuario->primer_nombre ?? '',
+        //     'segundo_nombre'   => $Usuario->segundo_nombre ?? '',
+        //     'primer_apellido'  => $Usuario->primer_apellido ?? '',
+        //     'segundo_apellido' => $Usuario->segundo_apellido ?? '',
+        //     'filiacion'        => $Usuario->documento_numero ?? '',
+        //     'pasaporte'        => $Usuario->pasaporte ?? '',            
+        //     'email'            => $Usuario->email ?? '',
+        //     'telefono'         => $Usuario->telefono ?? '',   
+        //     'pais_nacionalidad'=> '',
+        //     'pais_nacimiento'  => '',
+        //     'tipo_carnet'      => '',
+        //     'num_carnet'       => '',
+        // ];
+
+        $filiacion = $prefillTitularNF ?? $Usuario->documento_numero;
+
+        $sim = DB::connection('DATAMIND')
+            ->table('dbo.RUEX_INFO AS SFG')
+            ->select([
+                'SFG.num_filiacion',
+                'SFG.pasaporte',
+                'SFG.primerApellido',
+                'SFG.segundoApellido',
+                'SFG.primerNombre',
+                'SFG.segundoNombre',
+                'SFG.genero',
+                'SFG.fecha_nacimiento',
+                'SFG.cod_pais_nacionalidad',
+                'SFG.cod_pais_nacimiento',
+                'SFG.telefono',
+            ])
+            ->where('SFG.num_filiacion', $filiacion)
+            ->first();
+
+        if ($sim) {
+
+            $codNac   = strtoupper(trim((string)($sim->cod_pais_nacionalidad ?? '')));
+            $codNacim = strtoupper(trim((string)($sim->cod_pais_nacimiento ?? '')));
+
+            $codigos = collect([$codNac, $codNacim])->filter()->unique()->values();
+
+            $paises = DB::table('paises')
+                ->whereIn('cod_pais', $codigos)
+                ->where('estatus','Activo')
+                ->get()
+                ->keyBy('cod_pais');
+
+            $tc = function ($v) {
+                $v = $v ?? '';
+                $v = mb_strtolower($v, 'UTF-8');
+                return mb_convert_case($v, MB_CASE_TITLE, 'UTF-8');
+            };
+
+            $Sujeto = (object)[
+                'primer_nombre'     => $tc($sim->primerNombre),
+                'segundo_nombre'    => $tc($sim->segundoNombre),
+                'primer_apellido'   => $tc($sim->primerApellido),
+                'segundo_apellido'  => $tc($sim->segundoApellido),
+                'filiacion'         => $filiacion,
+                'pasaporte'         => $tc($sim->pasaporte),
+                'email'             => $Usuario->email ?? '',
+                'telefono'          => $sim->telefono ?? '',
+                'fecha_nacimiento'  => $sim->fecha_nacimiento ?? '',
+                'genero'            => $sim->genero ?? '',
+                'pais_nacionalidad' => $paises[$codNac]->nacionalidad ?? '',
+                'pais_nacimiento'   => $paises[$codNacim]->pais ?? '',
+                'id_pais_nacionalidad'   => $paises[$codNac]->id ?? '',
+                'id_pais_nacimiento'   => $paises[$codNacim]->id ?? '',
+                
+                'tipo_carnet'       => '',
+                'num_carnet'        => '',
+            ];
+
+        } else {
+
+            // fallback si no existe en SIM
+            $Sujeto = (object)[
+                'primer_nombre'    => $Usuario->primer_nombre ?? '',
+                'segundo_nombre'   => $Usuario->segundo_nombre ?? '',
+                'primer_apellido'  => $Usuario->primer_apellido ?? '',
+                'segundo_apellido' => $Usuario->segundo_apellido ?? '',
+                'filiacion'        => $Usuario->documento_numero ?? '',
+                'pasaporte'        => $Usuario->pasaporte ?? '',
+                'email'            => $Usuario->email ?? '',
+                'telefono'         => $Usuario->telefono ?? '',
+                'pais_nacionalidad'=> '',
+                'pais_nacimiento'  => '',
+                'tipo_carnet'      => '',
+                'num_carnet'       => '',
+            ];
+        }
+
+
   
-        $Sujeto = (object)[
-            'primer_nombre'    => $Usuario->primer_nombre ?? '',
-            'segundo_nombre'   => $Usuario->segundo_nombre ?? '',
-            'primer_apellido'  => $Usuario->primer_apellido ?? '',
-            'segundo_apellido' => $Usuario->segundo_apellido ?? '',
-            'filiacion'        => $Usuario->documento_numero ?? '',
-            'pasaporte'        => $Usuario->pasaporte ?? '',            
-            'email'            => $Usuario->email ?? '',
-            'telefono'         => $Usuario->telefono ?? '',   
-            'pais_nacionalidad'=> '',
-            'pais_nacimiento'  => '',
-            'tipo_carnet'      => '',
-            'num_carnet'       => '',
-        ];
+      
 
         $tc = function ($v) {
             $v = $v ?? '';
@@ -440,52 +497,68 @@ class SolicitudController extends Controller
             return mb_convert_case($v, MB_CASE_TITLE, 'UTF-8');
         };
 
-        if ($prefillTitularNF) {
-            $sim = DB::connection('simpanama')
-                ->table('dbo.SIM_FI_GENERALES AS SFG')
-                ->leftJoin('SIM_GE_PAIS AS SGP', 'SGP.COD_PAIS', '=', 'SFG.COD_NACION_ACTUAL') // nacionalidad
-                ->leftJoin('SIM_GE_PAIS AS SGPN', 'SGPN.COD_PAIS', '=', 'SFG.COD_PAIS_NACIM') // nacionalidad
+        //return $prefillTitularNF;
 
+        if ($prefillTitularNF) {
+            $sim = DB::connection('DATAMIND')
+                ->table('dbo.RUEX_INFO AS SFG')
                 ->select([
-                    'SFG.NUM_REG_FILIACION',
-                    'SFG.NUM_PASAPORTE',
-                    'SFG.NOM_PRIMER_APELL',
-                    'SFG.NOM_SEGUND_APELL',
-                    'SFG.NOM_PRIMER_NOMB',
-                    'SFG.NOM_SEGUND_NOMB',
-                    'SFG.IND_SEXO',
-                    'SFG.FEC_NACIM',
-                    'SGP.NOM_NACIONALIDAD',
-                    'SGPN.NOM_PAIS',
+                    'SFG.num_filiacion',
+                    'SFG.pasaporte',
+                    'SFG.primerApellido',
+                    'SFG.segundoApellido',
+                    'SFG.primerNombre',
+                    'SFG.segundoNombre',
+                    'SFG.genero',
+                    'SFG.fecha_nacimiento',
+                    'SFG.cod_pais_nacionalidad',
+                    'SFG.cod_pais_nacimiento',
+                    'SFG.telefono',
                 ])
-                ->where('SFG.NUM_REG_FILIACION', $prefillTitularNF)
+                ->where('SFG.num_filiacion', $prefillTitularNF)
                 ->first();
+
+                $codNac   = strtoupper(trim((string)($sim->cod_pais_nacionalidad ?? '')));
+                $codNacim = strtoupper(trim((string)($sim->cod_pais_nacimiento ?? '')));
+
+                $paisNacionalidad = null;
+                $paisNacimiento   = null;
+
+                $codigos = collect([$codNac, $codNacim])->filter()->unique()->values();
+
+                $paises = DB::table('paises')
+                    ->whereIn('cod_pais', $codigos)
+                    ->where('estatus','Activo')
+                    ->get()
+                    ->keyBy('cod_pais');
+
+                $paisNacionalidad = $paises[$codNac] ?? null;
+                $paisNacimiento   = $paises[$codNacim] ?? null;
 
             if ($sim) {
                 $Sujeto = (object)[
-                    'primer_nombre'    => $tc($sim->NOM_PRIMER_NOMB),
-                    'segundo_nombre'   => $tc($sim->NOM_SEGUND_NOMB),
-                    'primer_apellido'  => $tc($sim->NOM_PRIMER_APELL),
-                    'segundo_apellido' => $tc($sim->NOM_SEGUND_APELL),
-                    'filiacion'        => (string)$prefillTitularNF,
-                    'pasaporte'        => $tc($sim->NUM_PASAPORTE) ?? '',
-                    'email'            => $Usuario->email ?? '',
-                    'telefono'        => $Usuario->telefono ?? '',  
-                    // Mostramos el Ruex seleccionado aquí (si tu UI realmente quiere Ruex en ese campo)
-                 
-                    'pais_nacionalidad'=>  mb_convert_case(strtolower($sim->NOM_NACIONALIDAD), MB_CASE_TITLE, "UTF-8") ?? '',
-                    'pais_nacimiento'  => mb_convert_case(strtolower($sim->NOM_PAIS), MB_CASE_TITLE, "UTF-8") ?? '', // si luego tienes el código de país de nacimiento, aquí lo mapeas
-                    'tipo_carnet'      => '',
-                    'num_carnet'       => '',
+                    'primer_nombre'     => $tc($sim->primerNombre),
+                    'segundo_nombre'    => $tc($sim->segundoNombre),
+                    'primer_apellido'   => $tc($sim->primerApellido),
+                    'segundo_apellido'  => $tc($sim->segundoApellido),
+                    'filiacion'         => (string)$prefillTitularNF,
+                    'pasaporte'         => $tc($sim->pasaporte) ?? '',
+                    'email'             => $Usuario->email ?? '',
+                    'telefono'          =>  $tc($sim->segundoApellido) ?? '',  
+                    'fecha_nacimiento'  =>  $tc($sim->fecha_nacimiento) ?? '',  
+                    'genero'            =>  $tc($sim->genero) ?? '',                  
+                    'pais_nacionalidad' =>  mb_convert_case(strtolower($paises[$codNac]->nacionalidad ?? null), MB_CASE_TITLE, "UTF-8") ?? '',
+                    'pais_nacimiento'   => mb_convert_case(strtolower($paises[$codNac]->pais ?? null), MB_CASE_TITLE, "UTF-8") ?? '', // si luego tienes el código de país de nacimiento, aquí lo mapeas
+                    'id_pais_nacionalidad'   => $paises[$codNac]->id ?? '',
+                    'id_pais_nacimiento'   => $paises[$codNacim]->id ?? '',
+                    'tipo_carnet'       => '',
+                    'num_carnet'        => '',
                 ];
             } else {
                 // Si no existe en SIM, puedes notificar y seguir con datos del usuario
                 session()->flash('errors', 'No se encontraron datos en SIM para el Ruex seleccionado.');
             }
         }
-
-
-
 
         return view('dist.solicitud.nuevo', compact(
             'Usuario',
@@ -753,8 +826,10 @@ class SolicitudController extends Controller
         $paisNacimiento         = $this->request->input('paisNacimiento');
         $tipoCarnet             = $this->request->input('tipoCarnet');
         $numCarnet              = $this->request->input('numCarnet');
+        $genero                 = $this->request->input('genero');
+        $fecha_nacimiento       = $this->request->input('fecha_nacimiento');
 
-        //return  $afinidad;
+        //return  $pais_nacionalidad_id;
 
         if ($this->common->algunaPersonaTieneSolicitudActiva([$titularNF])) {
             return response()->json([
@@ -766,7 +841,7 @@ class SolicitudController extends Controller
         //return $afinidad;
 
         // 3) CREAR Solicitud + Estado inicial + Persona TITULAR + Archivos
-        return DB::transaction(function () use ($validated, $titularNF, $titularF,  $afinidad, $pasaporte, $primerNombre, $segundoNombre, $primerApellido, $segundoApellido, $correo, $pais_nacionalidad_id, $pais_nacimiento_id, $tipoCarnet, $numCarnet) {
+        return DB::transaction(function () use ($validated, $titularNF, $titularF,  $afinidad, $pasaporte, $genero, $fecha_nacimiento, $primerNombre, $segundoNombre, $primerApellido, $segundoApellido, $correo, $pais_nacionalidad_id, $pais_nacimiento_id, $tipoCarnet, $numCarnet) {
 
             // 3.1 Solicitud
             $solicitud = SolicitudCambioResidencia::create([
@@ -826,6 +901,8 @@ class SolicitudController extends Controller
                 'primer_apellido'  => $primerApellido ?: null,
                 'segundo_apellido' => $segundoApellido ?: null,
                 'correo'           => $correo ?: null,
+                'genero'           => $genero ?: null,
+                'fecha_nacimiento' => $fecha_nacimiento ?: null,
 
                 // FKs (usa los IDs numéricos)
                 'nacionalidadId'   => $pais_nacionalidad_id ?: null,
@@ -1459,57 +1536,76 @@ class SolicitudController extends Controller
         //     $q->whereDate('FEC_NACIM', $data['fecha_nacimiento']);
         // }
 
-        $q = DB::connection('simpanama')
-            ->table('dbo.SIM_FI_GENERALES AS SFG')
-            ->leftJoin('SIM_GE_PAIS AS SGP', 'SGP.COD_PAIS', '=', 'SFG.COD_NACION_ACTUAL')
+        $q = DB::connection('DATAMIND')
+            ->table('dbo.RUEX_INFO AS SFG')
+            // ->leftJoin('SIM_GE_PAIS AS SGP', 'SGP.COD_PAIS', '=', 'SFG.COD_NACION_ACTUAL')
             ->select([
-                'SFG.NUM_REG_FILIACION',
-                'SFG.NOM_PRIMER_APELL',
-                'SFG.NOM_SEGUND_APELL',
-                'SFG.NOM_PRIMER_NOMB',
-                'SFG.NOM_SEGUND_NOMB',
-                'SFG.IND_SEXO',
-                'SFG.FEC_NACIM',
-                'SGP.NOM_NACIONALIDAD',
+                'SFG.num_filiacion',
+                'SFG.primerApellido',
+                'SFG.segundoApellido',
+                'SFG.primerNombre',
+                'SFG.segundoNombre',
+                'SFG.genero',
+                'SFG.fecha_nacimiento',
+                'SFG.cod_pais_nacionalidad',
+                'SFG.cod_pais_nacimiento',
+                'SFG.telefono',
             ]);
 
         // 🔎 Nombre
         $q->where(function ($n) use ($data) {
-            $n->where('NOM_PRIMER_NOMB', 'like', "%{$data['nombre']}%")
-            ->orWhere('NOM_SEGUND_NOMB', 'like', "%{$data['nombre']}%");
+            $n->where('primerNombre', 'like', "%{$data['nombre']}%")
+            ->orWhere('segundoNombre', 'like', "%{$data['nombre']}%");
         });
 
         // 🔎 Apellido
         $q->where(function ($a) use ($data) {
-            $a->where('NOM_PRIMER_APELL', 'like', "%{$data['apellido']}%")
-            ->orWhere('NOM_SEGUND_APELL', 'like', "%{$data['apellido']}%");
+            $a->where('primerApellido', 'like', "%{$data['apellido']}%")
+            ->orWhere('segundoApellido', 'like', "%{$data['apellido']}%");
         });
 
         // 🔎 Género
         $g = $data['genero'] === 'Masculino' ? ['M', 'Masculino'] : ['F', 'Femenino'];
-        $q->whereIn('IND_SEXO', $g);
+        $q->whereIn('genero', $g);
 
         // 🔎 Fecha de nacimiento
-        $q->whereDate('FEC_NACIM', $data['fecha_nacimiento']);
+        $q->whereDate('fecha_nacimiento', $data['fecha_nacimiento']);
 
         $result = $q->limit(100)->get();
 
         $dataOut = $result->map(function ($r) {
-            $nombres   = trim((mb_convert_case(strtolower($r->NOM_PRIMER_NOMB), MB_CASE_TITLE, "UTF-8") ?? '') . ' ' . (mb_convert_case(strtolower($r->NOM_SEGUND_NOMB), MB_CASE_TITLE, "UTF-8") ?? ''));
-            $apellidos = trim((mb_convert_case(strtolower($r->NOM_PRIMER_APELL), MB_CASE_TITLE, "UTF-8") ?? '') . ' ' . (mb_convert_case(strtolower($r->NOM_SEGUND_APELL), MB_CASE_TITLE, "UTF-8") ?? ''));
+            $nombres   = trim((mb_convert_case(strtolower($r->primerNombre), MB_CASE_TITLE, "UTF-8") ?? '') . ' ' . (mb_convert_case(strtolower($r->segundoNombre), MB_CASE_TITLE, "UTF-8") ?? ''));
+            $apellidos = trim((mb_convert_case(strtolower($r->primerApellido), MB_CASE_TITLE, "UTF-8") ?? '') . ' ' . (mb_convert_case(strtolower($r->segundoApellido), MB_CASE_TITLE, "UTF-8") ?? ''));
             $nombreCompleto = trim($nombres . ' ' . $apellidos);
 
-            $genero = $r->IND_SEXO;
+            $genero = $r->genero;
             if ($genero === 'M') $genero = 'Masculino';
             if ($genero === 'F') $genero = 'Femenino';
 
+            $codNac   = strtoupper(trim((string)($r->cod_pais_nacionalidad?? '')));
+            $codNacim = strtoupper(trim((string)($r->cod_pais_nacimiento?? '')));
+
+            $paisNacionalidad = null;
+            $paisNacimiento   = null;
+
+            $codigos = collect([$codNac, $codNacim])->filter()->unique()->values();
+
+            $paises = DB::table('paises')
+                ->whereIn('cod_pais', $codigos)
+                ->where('estatus','Activo')
+                ->get()
+                ->keyBy('cod_pais');
+
+            $paisNacionalidad = $paises[$codNac] ?? null;
+            $paisNacimiento   = $paises[$codNacim] ?? null;
+
             return [
                 'nombre'           => $nombreCompleto ?: '—',
-                'documento'        => $r->NUM_REG_FILIACION ?? '—',
+                'documento'        => $r->num_filiacion ?? '—',
                 'genero'           => $genero ?: '—',
-                'nacionalidad'     => $r->NOM_NACIONALIDAD?: '—', // puedes añadir si tu tabla la trae
-                'fecha_nacimiento' => $r->FEC_NACIM 
-                    ? \Illuminate\Support\Carbon::parse($r->FEC_NACIM)->format('Y-m-d') 
+                'nacionalidad'     => $paises[$codNac]->nacionalidad ?? null, // puedes añadir si tu tabla la trae
+                'fecha_nacimiento' => $r->fecha_nacimiento 
+                    ? \Illuminate\Support\Carbon::parse($r->fecha_nacimiento)->format('Y-m-d') 
                     : '—',
             ];
         })->values();
@@ -1587,7 +1683,7 @@ class SolicitudController extends Controller
     }
 
     public function PagoCompletado($solicitudId){
-        
+
         $solicitud = DB::table('solicitudes_cambio_residencia')
             ->leftJoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
             ->where('solicitudes_cambio_residencia.id', $solicitudId)
