@@ -87,14 +87,22 @@
                                 Fecha de Nacimiento
                             </label>
 
+                            {{-- <input
+                                type="date"
+                                class="form-control"
+                                id="fecha_nacimiento"
+                                name="fecha_nacimiento"
+                                placeholder="YYYY-MM-DD"
+                             
+                            > --}}
+
                             <input
                                 type="text"
                                 class="form-control"
                                 id="fecha_nacimiento"
                                 name="fecha_nacimiento"
-                                placeholder="YYYY-MM-DD"
+                                placeholder="Seleccione fecha"
                                 autocomplete="off"
-                                readonly
                             >
 
                             <div class="form-text">

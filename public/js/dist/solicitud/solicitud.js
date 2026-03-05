@@ -5,15 +5,23 @@ class Distsolicitud {
         this.stream = null;
         this.capturas = [];
 
+        // this.desde = '2025-01-01';
+        // this.hasta = moment().subtract(0, 'days').format('YYY-MM-DD');
+
+        // var date = new Date();
+        // var year1 = new Date();
+        // var year1 = year1.getFullYear() + 1;
+        // var field = year1.toString()+ '-' + (date.getMonth() + 1).toString().padStart(2, 0) + '-' + date.getDate().toString().padStart(2, 0);
+
+        // this.hasta = field;
+
         this.desde = '2025-01-01';
-        this.hasta = moment().subtract(0, 'days').format('YYY-MM-DD');
 
-        var date = new Date();
-        var year1 = new Date();
-        var year1 = year1.getFullYear() + 1;
-        var field = year1.toString()+ '-' + (date.getMonth() + 1).toString().padStart(2, 0) + '-' + date.getDate().toString().padStart(2, 0);
+        const today = new Date();
+        const nextYear = new Date(today);
+        nextYear.setFullYear(today.getFullYear() + 1);
 
-        this.hasta = field;
+        this.hasta = nextYear.toISOString().split('T')[0];
 
         this.instrucciones = [
             { id: 'frente',    texto: 'Mira al frente',       icon: 'indicador-frente' },
@@ -48,6 +56,86 @@ class Distsolicitud {
             'Cancelada'
         ];     
 
+    }
+
+    initRangoFechas() {
+
+        const _this = this;
+
+        const input = document.getElementById("reportrange");
+        if (!input) return;
+
+        this.fp = flatpickr(input, {
+            locale: flatpickr.l10ns.es,
+            mode: "range",
+            dateFormat: "Y-m-d",
+            defaultDate: [_this.desde, _this.hasta],
+
+            onChange: function(selectedDates) {
+
+                if (selectedDates.length === 2) {
+
+                    const desde = selectedDates[0].toISOString().split('T')[0];
+                    const hasta = selectedDates[1].toISOString().split('T')[0];
+
+                    _this.desde = desde;
+                    _this.hasta = hasta;
+
+                    _this.solicitud();
+
+                    $('#reporte_fecha_titulo span')
+                        .html(` Desde ${desde} - Hasta ${hasta}`);
+                }
+            }
+        });
+
+        this.initBotonesRango();
+    }
+
+    initBotonesRango() {
+
+        const _this = this;
+
+        $(document).on("click", ".rango-btn", function () {
+
+            const tipo = $(this).data("range");
+
+            const hoy = new Date();
+            let desde, hasta;
+
+            if (tipo === "hoy") {
+                desde = hasta = hoy;
+            }
+
+            if (tipo === "ayer") {
+                const ayer = new Date();
+                ayer.setDate(hoy.getDate() - 1);
+                desde = hasta = ayer;
+            }
+
+            if (tipo === "7dias") {
+                desde = new Date();
+                desde.setDate(hoy.getDate() - 6);
+                hasta = hoy;
+            }
+
+            if (tipo === "mes") {
+                desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                hasta = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+            }
+
+            if (tipo === "mespasado") {
+                desde = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+                hasta = new Date(hoy.getFullYear(), hoy.getMonth(), 0);
+            }
+
+            if (tipo === "anio") {
+                desde = new Date(hoy.getFullYear(), 0, 1);
+                hasta = new Date(hoy.getFullYear(), 11, 31);
+            }
+
+            _this.fp.setDate([desde, hasta], true);
+        });
     }
 
     getStatusOfficial(estatus) {
@@ -201,6 +289,9 @@ class Distsolicitud {
 
 
     actualizarTextoBoton() {
+
+        console.log('Actualizar')
+
         const btn = document.getElementById('guardarForm');
         if (!btn) return;
 
@@ -213,35 +304,15 @@ class Distsolicitud {
 
     initFechaNacimiento() {
 
-        const $input = $('#fecha_nacimiento');
-        if (!$input.length) return;
+        const input = document.getElementById("fecha_nacimiento");
+        if (!input) return;
 
-        $input.daterangepicker({
-            singleDatePicker: true,
-            showDropdowns: true,
-            autoUpdateInput: false,
-            maxDate: moment(), // no permite fechas futuras
-            locale: {
-                format: 'YYYY-MM-DD',
-                applyLabel: 'Aplicar',
-                cancelLabel: 'Cancelar',
-                daysOfWeek: ['Do','Lu','Ma','Mi','Ju','Vi','Sa'],
-                monthNames: [
-                    'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
-                ],
-                firstDay: 1
-            }
-        });
-
-        // cuando selecciona
-        $input.on('apply.daterangepicker', function (ev, picker) {
-            $(this).val(picker.startDate.format('YYYY-MM-DD')).trigger('change');
-        });
-
-        // cuando cancela
-        $input.on('cancel.daterangepicker', function () {
-            $(this).val('').trigger('change');
+        flatpickr(input, {
+            locale: flatpickr.l10ns.es,
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            allowInput: true,
+            disableMobile: false
         });
     }
 
@@ -271,6 +342,7 @@ class Distsolicitud {
         });
 
         this.initFechaNacimiento();
+        this.initRangoFechas();
 
     
         this.acciones();
@@ -417,7 +489,7 @@ class Distsolicitud {
         });
 
 
-        $('#reportrange span').html(this.desde + ' - ' + this.hasta);
+        /*$('#reportrange span').html(this.desde + ' - ' + this.hasta);
 
         $('#reportrange').daterangepicker({
                 format: 'DD-MM-YYYY',
@@ -468,7 +540,7 @@ class Distsolicitud {
                 $('#reportrange span').html(start.format('YYYY-MM-DD') + ' - ' + end.format('YYYY-MM-DD'));
                 $('#reporte_fecha_titulo span').html(' Desde ' + start.format('YYYY-MM-DD') + ' - Hasta ' + end.format('YYYY-MM-DD'));
                 
-            });
+            });*/
 
     
     }

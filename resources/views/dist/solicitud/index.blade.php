@@ -94,13 +94,54 @@
                 @endif
 
                <div class="row align-items-end flex-wrap gap-3 mb-4">
-                    <!-- Rango de Fechas -->
-                    <div class="col-md-3">
+
+                   <!-- <div class="col-md-3">
                         <label class="form-label fw-semibold text-muted">Rango de Fechas</label>
-                        <div id="reportrange" class="form-control d-flex align-items-center shadow-sm border border-success-subtle rounded">
-                            <i class="bi bi-calendar-event me-2 text-success fs-5"></i>
-                            <span class="flex-grow-1">Seleccione la fecha</span>
-                            <i class="bi bi-caret-down-fill ms-auto text-muted"></i>
+
+                        <input
+                            type="text"
+                            id="reportrange"
+                            class="form-control"
+                            placeholder="Seleccione rango de fechas"
+                        />
+                        <div class="mt-2 d-flex flex-wrap gap-2" id="rangosRapidos">
+                            <button class="btn btn-sm btn-outline-primary rango-btn" data-range="hoy">Hoy</button>
+                            <button class="btn btn-sm btn-outline-primary rango-btn" data-range="ayer">Ayer</button>
+                            <button class="btn btn-sm btn-outline-primary rango-btn" data-range="7dias">Últimos 7 días</button>
+                            <button class="btn btn-sm btn-outline-primary rango-btn" data-range="mes">Mes actual</button>
+                            <button class="btn btn-sm btn-outline-primary rango-btn" data-range="mespasado">Mes pasado</button>
+                            <button class="btn btn-sm btn-outline-primary rango-btn" data-range="anio">Año actual</button>
+                        </div>
+                    </div> -->
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold text-muted">Rango de Fechas</label>
+
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-white">
+                                <i class="bi bi-calendar-event"></i>
+                            </span>
+
+                            <input
+                                type="text"
+                                id="reportrange"
+                                class="form-control"
+                                placeholder="Seleccione rango de fechas"
+                            >
+
+                            <button class="btn btn-outline-secondary dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown">
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item rango-btn" data-range="hoy">Hoy</a></li>
+                                <li><a class="dropdown-item rango-btn" data-range="ayer">Ayer</a></li>
+                                <li><a class="dropdown-item rango-btn" data-range="7dias">Últimos 7 días</a></li>
+                                <li><a class="dropdown-item rango-btn" data-range="mes">Mes actual</a></li>
+                                <li><a class="dropdown-item rango-btn" data-range="mespasado">Mes pasado</a></li>
+                                <li><a class="dropdown-item rango-btn" data-range="anio">Año actual</a></li>
+                            </ul>
                         </div>
                     </div>
 
@@ -255,6 +296,23 @@
      <script src="{{ asset('js/dist/solicitud/solicitud.js') }}"></script>
 
     <!-- Plugins -->
-    <script src="{{ asset('plugins/moment/moment.js') }}"></script>
-    <script src="{{ asset('plugins/bootstrap-daterangepicker/daterangepicker.js') }}"></script>
+    {{--<script src="{{ asset('plugins/moment/moment.js') }}"></script>
+     <script src="{{ asset('plugins/bootstrap-daterangepicker/daterangepicker.js') }}"></script> --}}
+
+    {{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script> --}}
+
+    {{-- <script src="{{ asset('plugins/dflatpickrt/flatpickr.min.css') }}"></script>
+    <script src="{{ asset('plugins/dflatpickrt/material_blue.css') }}"></script>
+    <script src="{{ asset(plugins/dflatpickrt/flatpickr.js') }}"></script>
+    <script src="{{ asset(plugins/dflatpickrt/es.js') }}"></script> --}}
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
 @endsection
