@@ -110,14 +110,10 @@ Route::middleware('guest')->group(function () {
             Route::post('/validar-solicitud', [SolicitudController::class, 'ValidarSolicitud']) ->name('ValidarSolicitud'); 
             Route::post('/validar-filiacion-activa', [SolicitudController::class, 'validarFiliacionActiva']) ->name('validarFiliacionActiva'); 
 
-            
-
             Route::post('/seleccion-familiar', [SolicitudController::class, 'SeleccionFamiliar'])->name('SeleccionFamiliar');
 
             Route::post('/validar-solicitud', [SolicitudController::class, 'ValidarSolicitud']) ->name('ValidarSolicitud'); 
             Route::post('/validar-filiacion-activa', [SolicitudController::class, 'validarFiliacionActiva']) ->name('validarFiliacionActiva'); 
-
-            
             
             Route::get('/instruciones', [SolicitudController::class, 'instruciones']) ->name('instruciones'); 
 
@@ -137,18 +133,14 @@ Route::middleware('guest')->group(function () {
             Route::get('/pago-completado/{Id}', [SolicitudController::class, 'PagoCompletado']) ->name('PagoCompletado'); 
             Route::get('/pago-rechazado/{Id}', [SolicitudController::class, 'PagoRechazado']) ->name('PagoRechazado'); 
             
-
             /* Pasarela de Pago NeoPayment*/
             // Route::post('/payment/process', [NeoPaymentController::class, 'process'])->name('payment.process');
             // Route::get('/payment/success', [NeoPaymentController::class, 'success'])->name('payment.success');            
             // Route::get('/payment/error', [NeoPaymentController::class, 'error'])->name('payment.error');
-
             
             // Route::get('/payment/test-token', function () { 
             //     return response()->json(['token' => \App\Services\NeoPaymentTokenService::getToken()]);
             // });
-
-
 
         });
 

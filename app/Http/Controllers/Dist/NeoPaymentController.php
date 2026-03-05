@@ -45,7 +45,7 @@ class NeoPaymentController extends Controller
                 // $amount      = '10000';
                 $amount = (int) $this->request->amount * 100;
 
-                $percentFee = round($amount * 0.013); 
+                $percentFee = round($amount * 0.0275); 
                 $fixedFee = 35;                
                 $transactionFee = $percentFee + $fixedFee;
 

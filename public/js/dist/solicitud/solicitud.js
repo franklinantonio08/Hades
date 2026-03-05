@@ -117,6 +117,9 @@ class Distsolicitud {
             // mostremos el paso final esperado
             return ['Recibida', 'Por revisión', 'Aprobada - con pago', 'Multa emitida'];
 
+            case 'Pago en proceso':
+            return ['Recibida', 'Por revisión', 'Aprobada - con pago', 'Pago en proceso','Multa emitida'];
+
             case 'Multa emitida':
             return ['Recibida', 'Por revisión', 'Aprobada - con pago', 'Multa emitida'];
 
@@ -1546,9 +1549,9 @@ class Distsolicitud {
                     );
                     // objMessagebasicModal.init();
 
-                    // $('#messageBasicModal').on('hidden.bs.modal', function () {
-                    //     window.location.href = '/dist/solicitud'; // 🔄 redirige al inicio
-                    // });
+                    $('#messageBasicModal').on('hidden.bs.modal', function () {
+                        window.location.href = '/dist/solicitud'; // 🔄 redirige al inicio
+                    });
                 },
                 error: function (xhr) {
                     console.error(xhr);
