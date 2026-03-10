@@ -55,7 +55,7 @@ class NeoPaymentTokenService {
         ];
     }
 
-    public static function createCheckout(array $payload): string
+/*    public static function createCheckout(array $payload): string
     {
         $token  = self::getAccessToken();
         $config = self::config();
@@ -69,5 +69,33 @@ class NeoPaymentTokenService {
         }
 
         return $response['data']['redirect_url'];
+    }*/
+
+    public static function createCheckout(array $payload): string
+    {
+        $token  = self::getAccessToken();
+        $config = self::config();
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer '.$token,
+            'Accept' => 'application/json',
+            'User-Agent' => 'Laravel-HADES'
+        ])->post($config['host'].'/api/v2/checkout', $payload);
+
+        if(!$response->ok()){
+            throw new \Exception("NeoPayment HTTP Error: ".$response->body());
+        }
+
+        $data = $response->json();
+
+        if(($data['status'] ?? null) !== 'ok'){
+            throw new \Exception("NeoPayment API Error: ".json_encode($data));
+        }
+
+        if(!isset($data['data']['redirect_url'])){
+            throw new \Exception("No redirect_url returned: ".json_encode($data));
+        }
+
+        return $data['data']['redirect_url'];
     }
 }

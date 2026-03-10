@@ -102,8 +102,10 @@ class NeoPaymentController extends Controller
                 // $urlKo  = route('payment.error', ['id' => $solicitudId], true);
                 // $webhook = route('payment.webhook', [], true);
 
-                $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
-                $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
+                // $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
+                // $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
+                $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success/".$solicitudId;
+                $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error/".$solicitudId;
                 $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
 
                  $payload  = [
@@ -127,7 +129,8 @@ class NeoPaymentController extends Controller
                     "url_ok"     => $urlOk,
                     "url_ko"     => $urlKo,
                     "webhook"    => $webhook,
-                    "source" => config('app.url'),
+                    "source" => "https://8f3d-190-34-23-11.ngrok-free.app",
+
 
                     "metadatas" => [
                         "payment_reference" =>  $reference,
@@ -165,6 +168,8 @@ class NeoPaymentController extends Controller
                 // ]);
 
                 DB::commit();
+
+                dd($redirectUrl);
 
                 return redirect()->away($redirectUrl);
 
