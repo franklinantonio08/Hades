@@ -38,6 +38,20 @@ class NeoPaymentTokenService {
         // guarda el token un poco menos que su expiración real
         Cache::put($cacheKey, $token, max(60, $expiresIn - 120));
 
+        DB::table('payment_tokens')->insert([
+            'user_id' => Auth::id() ?? 1,
+            'token' => $token,
+            'account_number' => null,
+            'last_four_digits' => '0000',
+            'brand' => 'OAUTH_DEBUG',
+            'cardholder_name' => 'OAuth Token Debug',
+            'expiry_date' => now()->addHour(),
+            'is_default' => 0,
+            'is_active' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         return $token;
     }
 
