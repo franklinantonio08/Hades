@@ -140,13 +140,16 @@ class NeoPaymentController extends Controller
                 $urlKo  = route('payment.error', ['id' => $solicitudId], true);
                 $webhook = route('payment.webhook', [], true);
 
-                
+
 
                 // $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
                 // $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
                 // $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
 
                 //  return 'Hola';
+
+                //$reference = 'CR-' . $solicitudId . '-' . time();
+
 
                 $payload  = [
 
@@ -186,7 +189,7 @@ class NeoPaymentController extends Controller
                         
                         // "solicitud_id"      => (string) $solicitudId,
                         // "pago_id"           => (string) $paymentId,
-                        "payment_reference" =>  "CR-" . $solicitudId,
+                        "payment_reference" =>  $reference,
                     ],
 
                     "customer" => [
@@ -222,7 +225,8 @@ class NeoPaymentController extends Controller
 
                 DB::commit();
 
-                return redirect($redirectUrl);
+                // return redirect($redirectUrl);
+                return redirect()->away($redirectUrl);
 
         } catch (\Throwable $e) {
 
@@ -236,8 +240,8 @@ class NeoPaymentController extends Controller
 
 
 
-    public function webhook(Request $request)
-    {
+    public function webhook(Request $request){
+        
         $payload = $request->all();
 
         DB::table('payment_logs')->insert([
@@ -252,10 +256,22 @@ class NeoPaymentController extends Controller
             return response()->json(['ok' => true]);
         }
 
-        $solicitudId = $payload['metadatas']['solicitud_id'];
+        $reference = $payload['metadatas']['payment_reference'] ?? null;
+
+        if (!$reference) {
+            return response()->json(['ok' => false], 400);
+        }
+
+        $transaction = DB::table('payment_transactions')
+            ->where('reference', $reference)
+            ->first();
+
+        if (!$transaction) {
+            return response()->json(['ok' => false], 404);
+        }
 
         DB::table('payment_transactions')
-            ->where('id', $transactionId)
+            ->where('id', $transaction->id)
             ->update([
                 'status' => $payload['status'],
                 'gateway_transaction_id' => $payload['id'] ?? null,
@@ -266,25 +282,11 @@ class NeoPaymentController extends Controller
                 'updated_at' => now(),
             ]);
 
-        // DB::table('pagos')->insert([
-        //     'solicitud_id'   => $solicitudId,
-        //     'transaction_id' => $payload['id'],
-        //     'status'         => $payload['status'],
-        //     'authorization_number' => $payload['authorization_number'] ?? null,
-        //     'response_code'  => $payload['response_code'] ?? null,
-        //     'card_brand'     => $payload['metadatas']['card_brand'] ?? null,
-        //     'pan_masked'     => $payload['pan'] ?? null,
-        //     'amount'         => $payload['amount'] / 100,
-        //     'currency'       => $payload['currency'],
-        //     'raw_response'   => json_encode($payload),
-        //     'created_at'     => now(),
-        // ]);
-
-
-
         DB::table('solicitudes_cambio_residencia')
-            ->where('id', $solicitudId)
-            ->update(['estatus' => 'Pagada']);
+            ->where('id', $transaction->id_solicitud)
+            ->update([
+                'estatus' => 'Pagada'
+            ]);
 
         return response()->json(['ok' => true]);
     }
