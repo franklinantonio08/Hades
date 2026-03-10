@@ -132,9 +132,15 @@ class NeoPaymentController extends Controller
               
                 //return 'Hola';
                 
-                $urlOk  = route('payment.success', ['id' => $solicitudId]);
-                $urlKo  = route('payment.error',   ['id' => $solicitudId]);
-                $webhook = route('payment.webhook');
+                // $urlOk  = route('payment.success', ['id' => $solicitudId]);
+                // $urlKo  = route('payment.error',   ['id' => $solicitudId]);
+                // $webhook = route('payment.webhook');
+
+                $urlOk  = route('payment.success', ['id' => $solicitudId], true);
+                $urlKo  = route('payment.error', ['id' => $solicitudId], true);
+                $webhook = route('payment.webhook', [], true);
+
+                
 
                 // $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
                 // $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
@@ -285,22 +291,16 @@ class NeoPaymentController extends Controller
 
 
 
-    public function success($id)
-    {
-        // return redirect()->route('solicitud.Mostrar', $id)
-        //     ->with('success', 'Pago realizado correctamente.');
+    public function success(Request $request, $id){
 
-        $solicitudId = (int) $request->query('solicitud_id');
+        $solicitudId = $id;
 
         return redirect()->route('solicitud.PagoCompletado', $solicitudId);
     }
 
-    public function error($id)
-    {
-        // return redirect()->route('solicitud.Mostrar', $id)
-        //     ->withErrors('El pago fue rechazado.');
+    public function error(Request $request, $id){
 
-        $solicitudId = (int) $request->query('solicitud_id');
+        $solicitudId = $id;
 
         return redirect()->route('solicitud.PagoRechazado', $solicitudId);
     }
