@@ -66,7 +66,8 @@ class Distsolicitud {
         if (!input) return;
 
         this.fp = flatpickr(input, {
-            locale: flatpickr.l10ns.es,
+            // locale: flatpickr.l10ns.es,
+            locale: "es",
             mode: "range",
             dateFormat: "Y-m-d",
             defaultDate: [_this.desde, _this.hasta],
@@ -102,6 +103,25 @@ class Distsolicitud {
 
             const hoy = new Date();
             let desde, hasta;
+
+            if (tipo === "todos") {
+
+                const today = new Date();
+                const nextYear = new Date(today);
+                nextYear.setFullYear(today.getFullYear() + 1);
+
+                _this.desde = '2025-01-01';
+                _this.hasta = nextYear.toISOString().split('T')[0];
+
+                _this.fp.clear();
+
+                _this.solicitud();
+
+                $('#reporte_fecha_titulo span')
+                    .html(` Desde ${_this.desde} - Hasta ${_this.hasta}`);
+
+                return;
+            }
 
             if (tipo === "hoy") {
                 desde = hasta = hoy;
@@ -338,11 +358,14 @@ class Distsolicitud {
         }
 
         document.getElementById('modalRegistro')?.addEventListener('hidden.bs.modal', () => {
-            resetResultados();
+            this.resetResultados();
         });
 
-        this.initFechaNacimiento();
+       
+
         this.initRangoFechas();
+
+        this.initFechaNacimiento();
 
     
         this.acciones();
@@ -630,12 +653,9 @@ class Distsolicitud {
         //     .removeClass('text-danger')
         //     .text('Completa uno o más criterios y presiona Buscar.');
 
-        if (!res.ok) {
-            $('#modalRegistroDesc')
-                .addClass('text-danger')
-                .text(res.msg || 'Debe completar todos los campos para buscar.');
-            return;
-        }
+         $('#modalRegistroDesc')
+        .removeClass('text-danger')
+        .text('Completa los criterios y presiona Buscar.');
     }
 
     selecionarFamiliar(){

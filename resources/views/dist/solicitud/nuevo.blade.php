@@ -1,8 +1,11 @@
 @extends('layouts.admin')
 
-@section('styles')
+@section('css')
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="{{ asset('plugins/bootstrap-daterangepicker/daterangepicker.css') }}">
+    {{-- <link rel="stylesheet" href="{{ asset('plugins/bootstrap-daterangepicker/daterangepicker.css') }}"> --}}
+
+    <link rel="stylesheet" href="{{ asset('plugins/flatpickr/flatpickr.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/flatpickr/material_blue.css') }}"> 
 
 @endsection
 
@@ -16,8 +19,10 @@
         
     </script>
 
-    <script src="{{ asset('plugins/moment/moment.js') }}" ></script>
-    <script src="{{ asset('plugins/bootstrap-daterangepicker/daterangepicker.js') }}" ></script>
+    {{-- <script src="{{ asset('plugins/moment/moment.js') }}" ></script>
+    <script src="{{ asset('plugins/bootstrap-daterangepicker/daterangepicker.js') }}" ></script> --}}
+    <script src="{{ asset('plugins/flatpickr/flatpickr.min.js') }}"></script>
+    <script src="{{ asset('plugins/flatpickr/es.js') }}"></script>  
     <script src="{{ asset('js/comun/messagebasicModal.js') }}" ></script>
     <script src="{{ asset('js/dist/solicitud/solicitud.js') }}" ></script>
 
@@ -123,7 +128,7 @@
                                     <div class="col-md-6 mb-3">
                                         <label for="fecha_nacimiento" class="form-label fw-bold text-primary">Fecha de Nacimiento</label>
                                         <div id="div_fecha_nacimiento" ></div>
-                                        <input type="text" class="form-control" id="fecha_nacimiento" name="fecha_nacimiento" placeholder="Ingrese su fecha de nacimiento" readonly value="{{ $Sujeto->fecha_nacimiento }}">
+                                        <input type="text" class="form-control" id="fecha_nacimiento_persona" name="fecha_nacimiento" placeholder="Ingrese su fecha de nacimiento" readonly value="{{ $Sujeto->fecha_nacimiento }}">
                                     </div>
 
                                     <div class="col-md-6 mb-3">

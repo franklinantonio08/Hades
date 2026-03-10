@@ -165,8 +165,8 @@
           <label for="genero" class="form-label fw-semibold">Genero</label>
           <select id="genero" name="genero" class="form-select">
             <option value="" disabled {{ old('genero') ? '' : 'selected' }}>Selecciona...</option>
-            <option value="M" {{ old('genero')==='M' ? 'selected':'' }}>Masculino</option>
-            <option value="F" {{ old('genero')==='F' ? 'selected':'' }}>Femenino</option>
+            <option value="Masculino" {{ old('genero')==='Masculino' ? 'selected':'' }}>Masculino</option>
+            <option value="Femenino" {{ old('genero')==='Femenino' ? 'selected':'' }}>Femenino</option>
           </select>
           @error('genero') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
         </div>

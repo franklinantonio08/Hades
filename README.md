@@ -148,6 +148,10 @@ sudo systemctl enable httpd
 
 sudo dnf install -y php-ldap
 
+/* PHP */
+
+sudo systemctl restart php-fpm
+
 /* Ejecuta proyecto */
 php -S 172.20.10.81:8080 -t public
 

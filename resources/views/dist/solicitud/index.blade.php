@@ -1,5 +1,15 @@
 @extends('layouts.admin')
 
+@section('css')
+    <!-- Stylesheets -->
+    {{-- <link rel="stylesheet" href="{{ asset('plugins/bootstrap-daterangepicker/daterangepicker.css') }}"> --}}
+
+    <link rel="stylesheet" href="{{ asset('plugins/flatpickr/flatpickr.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/flatpickr/material_blue.css') }}"> 
+
+
+@endsection
+
 @section('content')
     <div class="col-lg-12">
         <div class="card mb-4">
@@ -135,6 +145,7 @@
                             </button>
 
                             <ul class="dropdown-menu dropdown-menu-end">
+                                  <li><a class="dropdown-item rango-btn" data-range="todos">Todos</a></li>
                                 <li><a class="dropdown-item rango-btn" data-range="hoy">Hoy</a></li>
                                 <li><a class="dropdown-item rango-btn" data-range="ayer">Ayer</a></li>
                                 <li><a class="dropdown-item rango-btn" data-range="7dias">Últimos 7 días</a></li>
@@ -288,31 +299,12 @@
     </script>
 
     <!-- JS Específicos -->
-   
+
+    <script src="{{ asset('plugins/flatpickr/flatpickr.min.js') }}"></script>
+    <script src="{{ asset('plugins/flatpickr/es.js') }}"></script>  
     <script src="{{ asset('js/comun/confirmacionModal.js') }}"></script>
     <script src="{{ asset('js/comun/messagebasicModal.js') }}"></script>
-
-
      <script src="{{ asset('js/dist/solicitud/solicitud.js') }}"></script>
 
-    <!-- Plugins -->
-    {{--<script src="{{ asset('plugins/moment/moment.js') }}"></script>
-     <script src="{{ asset('plugins/bootstrap-daterangepicker/daterangepicker.js') }}"></script> --}}
-
-    {{-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script> --}}
-
-    {{-- <script src="{{ asset('plugins/dflatpickrt/flatpickr.min.css') }}"></script>
-    <script src="{{ asset('plugins/dflatpickrt/material_blue.css') }}"></script>
-    <script src="{{ asset(plugins/dflatpickrt/flatpickr.js') }}"></script>
-    <script src="{{ asset(plugins/dflatpickrt/es.js') }}"></script> --}}
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
-
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
 @endsection
