@@ -9,7 +9,7 @@ class ConfigPayment extends Model
 {
     use HasFactory;
 
-    protected $connection = 'atlas';
+    // protected $connection = 'atlas';
 
     protected $table = 'config_payment';
 

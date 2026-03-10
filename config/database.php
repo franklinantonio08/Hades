@@ -97,7 +97,7 @@ return [
             'host' => env('DB4_HOST', 'localhost'),
             'port' => env('DB4_PORT', '1433'),
             'database' => env('DB4_DATABASE', 'DATAMING'),
-            'username' => env('DB4_USERNAME', 'bireporte'),
+            'username' => env('DB4_USERNAME', 'apolo'),
             'password' => env('DB4_PASSWORD', ''),
             'charset' => 'utf8',
             'prefix' => '',
