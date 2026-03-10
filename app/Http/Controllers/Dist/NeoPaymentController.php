@@ -30,8 +30,6 @@ class NeoPaymentController extends Controller
                 ->value('descripcion'),
             '/'
         );
-
-
     }
 
     public function process(){
@@ -42,7 +40,6 @@ class NeoPaymentController extends Controller
 
                 $solicitudId = $this->request->solicitud_id;
 
-                // $amount      = '10000';
                 $amount = (int) $this->request->amount * 100;
 
                 $percentFee = round($amount * 0.0275); 
@@ -76,35 +73,6 @@ class NeoPaymentController extends Controller
                     return back()->withErrors('Solicitud no encontrada.');
                 }
 
-                //  return 'Hola';
-
-                // $pagoPendiente = DB::table('pagos')
-                //     ->where('solicitud_id', $solicitudId)
-                //     ->whereIn('status', ['Pendiente', 'En proceso'])
-                //     ->orderByDesc('id')
-                //     ->first();
-
-                // if ($pagoPendiente) {
-                //     $paymentId = $pagoPendiente->id;
-
-                //     // si cambió el monto por alguna razón, lo actualizas
-                //     DB::table('pagos')->where('id', $paymentId)->update([
-                //         'amount'     => $amount + $transactionFee,
-                //         'currency'   => 'USD',
-                //         'updated_at' => now(),
-                //     ]);
-                // } else {
-
-                //         $paymentId = DB::table('pagos')->insertGetId([
-                //         'solicitud_id' => $solicitudId,
-                //         'amount'       => $amount + $transactionFee,
-                //         'currency'     => 'USD',
-                //         'status'       => 'Pendiente',
-                //         'created_at'   => now(),
-                //         'updated_at'   => now(),
-                //     ]);
-                // }
-
                 $transactionId = DB::table('payment_transactions')->insertGetId([
                     'user_id' => Auth::id(),
                     'token_id' => 1, // ⚠ si no usas tokens aún, debes permitir NULL en BD
@@ -130,28 +98,15 @@ class NeoPaymentController extends Controller
                         ->update(['estatus' => 'Pago en proceso']);
                 }
               
-                //return 'Hola';
-                
-                // $urlOk  = route('payment.success', ['id' => $solicitudId]);
-                // $urlKo  = route('payment.error',   ['id' => $solicitudId]);
-                // $webhook = route('payment.webhook');
+                // $urlOk  = route('payment.success', ['id' => $solicitudId], true);
+                // $urlKo  = route('payment.error', ['id' => $solicitudId], true);
+                // $webhook = route('payment.webhook', [], true);
 
-                $urlOk  = route('payment.success', ['id' => $solicitudId], true);
-                $urlKo  = route('payment.error', ['id' => $solicitudId], true);
-                $webhook = route('payment.webhook', [], true);
+                $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
+                $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
+                $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
 
-
-
-                // $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
-                // $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
-                // $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
-
-                //  return 'Hola';
-
-                //$reference = 'CR-' . $solicitudId . '-' . time();
-
-
-                $payload  = [
+                 $payload  = [
 
                     "currency_code" => "USD",
 
@@ -174,34 +129,20 @@ class NeoPaymentController extends Controller
                     "webhook"    => $webhook,
                     "source" => config('app.url'),
 
-                    
-                    // "return_url" =>  "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=" . $solicitudId,
-                    // "url_ok"      => "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId,
-                    // "url_ko"      => "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId,
-                    // "webhook"     => "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook",
-                    // "source" => "https://8f3d-190-34-23-11.ngrok-free.app",
-
                     "metadatas" => [
-                        // "payment_id" =>  (string)$solicitudId,
-                        // "client_name" =>  (string)$solicitudId,
-                        // "email" =>  (string)$solicitudId,
-                        // "transaction_id" =>  (string)$solicitudId,
-                        
-                        // "solicitud_id"      => (string) $solicitudId,
-                        // "pago_id"           => (string) $paymentId,
                         "payment_reference" =>  $reference,
                     ],
 
                     "customer" => [
-                        "type"          => "natural", // o "legal_entity"
+                        "type"          => "natural", 
                         "name"          => trim(($solicitud->primer_nombre ?? '') . ' ' . ($solicitud->segundo_nombre ?? '')),
                         "first_surname" => trim(($solicitud->primer_apellido ?? '') . ' ' . ($solicitud->segundo_apellido ?? '')),
-                        "doc_id_type"   => "P", // P=pasaporte, C=cédula (según doc)
+                        "doc_id_type"   => "P", 
                         "doc_id"        => (string) ($solicitud->pasaporte ?? ''),
 
                         "metadata" => [
                             "email" => (string) ($solicitud->correo ?? ''),
-                            // "phone" => (string) ($solicitud->telefono ?? '0000-0000'),
+                            "phone" => (string) ($solicitud->telefono ?? '60000000')
                         ],
                     ],
                 ];
@@ -225,7 +166,6 @@ class NeoPaymentController extends Controller
 
                 DB::commit();
 
-                // return redirect($redirectUrl);
                 return redirect()->away($redirectUrl);
 
         } catch (\Throwable $e) {
@@ -236,12 +176,8 @@ class NeoPaymentController extends Controller
         }
     }
 
-
-
-
-
     public function webhook(Request $request){
-        
+
         $payload = $request->all();
 
         DB::table('payment_logs')->insert([
@@ -291,8 +227,6 @@ class NeoPaymentController extends Controller
         return response()->json(['ok' => true]);
     }
 
-
-
     public function success(Request $request, $id){
 
         $solicitudId = $id;
@@ -306,7 +240,5 @@ class NeoPaymentController extends Controller
 
         return redirect()->route('solicitud.PagoRechazado', $solicitudId);
     }
-
-
 
 }
