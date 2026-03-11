@@ -287,6 +287,12 @@ class NeoPaymentController extends Controller
 
         $solicitudId = (int) $request->query('solicitud_id');
 
+        DB::table('payment_transactions')
+            ->where('id_solicitud', $solicitudId)
+            ->update(['status' => 'authorized']);
+
+        
+
         return redirect()->route('solicitud.PagoCompletado', $solicitudId);
     }
 
