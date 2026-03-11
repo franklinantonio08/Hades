@@ -193,8 +193,7 @@ class NeoPaymentController extends Controller
                 ];
 
                 $redirectUrl = NeoPaymentTokenService::createCheckout($payload);
-
-                
+              
 
                 // DB::table('payment_transactions')
                 //     ->where('id', $transactionId)
@@ -282,15 +281,11 @@ class NeoPaymentController extends Controller
 
     public function success(Request $request)
     {
-        // return redirect()->route('solicitud.Mostrar', $id)
-        //     ->with('success', 'Pago realizado correctamente.');
-
         $solicitudId = (int) $request->query('solicitud_id');
 
         DB::table('payment_transactions')
             ->where('id_solicitud', $solicitudId)
             ->update(['status' => 'authorized']);
-
         
 
         return redirect()->route('solicitud.PagoCompletado', $solicitudId);
@@ -298,8 +293,6 @@ class NeoPaymentController extends Controller
 
     public function error(Request $request)
     {
-        // return redirect()->route('solicitud.Mostrar', $id)
-        //     ->withErrors('El pago fue rechazado.');
 
         $solicitudId = (int) $request->query('solicitud_id');
 

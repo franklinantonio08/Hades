@@ -1710,9 +1710,9 @@ class SolicitudController extends Controller
             ->first();
 
         // Si no está autorizada aún, puedes mandar a "pendiente"
-        // if (!$trx) {
-        //     return view('dist.solicitud.pago_pendiente', compact('solicitud'));
-        // }
+        if (!$trx) {
+            return view('dist.solicitud.pago_pendiente', compact('solicitud'));
+        }
 
         return view('dist.solicitud.pago_completado', compact('solicitud', 'trx'));
     }
