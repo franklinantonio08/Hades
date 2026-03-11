@@ -111,8 +111,8 @@ class NeoPaymentController extends Controller
                         ->update(['estatus' => 'Pago en proceso']);
                 }
                             
-                $urlOk  = route('payment.success', ['id' => $solicitudId]);
-                $urlKo  = route('payment.error',   ['id' => $solicitudId]);
+                $urlOk  = route('payment.success', ['solicitud_id' => $solicitudId]);
+                $urlKo  = route('payment.error',   ['solicitud_id' => $solicitudId]);
                 $webhook = route('payment.webhook');
 
                 // $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
@@ -135,6 +135,7 @@ class NeoPaymentController extends Controller
                     $transaction->request_data = null;
 
                     $transaction->save();
+                //$transactionId = $transaction->id;
 
                 $payload  = [
 
@@ -186,7 +187,7 @@ class NeoPaymentController extends Controller
 
                         "metadata" => [
                             "email" => (string) ($solicitud->correo ?? ''),
-                            "phone" => (string) ($solicitud->telefono ?? '0000-0000'),
+                            // "phone" => (string) ($solicitud->telefono ?? '0000-0000'),
                         ],
                     ],
                 ];
@@ -194,6 +195,7 @@ class NeoPaymentController extends Controller
                 $redirectUrl = NeoPaymentTokenService::createCheckout($payload);
 
                 
+
                 // DB::table('payment_transactions')
                 //     ->where('id', $transactionId)
                 //     ->update([
@@ -220,6 +222,9 @@ class NeoPaymentController extends Controller
     }
 
 
+
+
+
     public function webhook(Request $request)
     {
         $payload = $request->all();
@@ -236,16 +241,10 @@ class NeoPaymentController extends Controller
             return response()->json(['ok' => true]);
         }
 
-        $reference = $payload['metadatas']['reference'] ?? null;
-
         $solicitudId = $payload['metadatas']['solicitud_id'];
 
-        if (!$reference) {
-                return response()->json(['ok' => false]);
-        }
-
         DB::table('payment_transactions')
-            ->where('reference', $reference)
+            ->where('id', $transactionId)
             ->update([
                 'status' => $payload['status'],
                 'gateway_transaction_id' => $payload['id'] ?? null,
@@ -286,15 +285,9 @@ class NeoPaymentController extends Controller
         // return redirect()->route('solicitud.Mostrar', $id)
         //     ->with('success', 'Pago realizado correctamente.');
 
-        // $solicitudId = (int) $request->query('solicitud_id');
-
-        // return redirect()->route('solicitud.PagoCompletado', $solicitudId);
-
-
-        $solicitudId = (int) $request->query('id');
+        $solicitudId = (int) $request->query('solicitud_id');
 
         return redirect()->route('solicitud.PagoCompletado', $solicitudId);
-
     }
 
     public function error(Request $request)
@@ -302,7 +295,7 @@ class NeoPaymentController extends Controller
         // return redirect()->route('solicitud.Mostrar', $id)
         //     ->withErrors('El pago fue rechazado.');
 
-        $solicitudId = (int) $request->query('id');
+        $solicitudId = (int) $request->query('solicitud_id');
 
         return redirect()->route('solicitud.PagoRechazado', $solicitudId);
     }
