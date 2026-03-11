@@ -150,7 +150,7 @@ Route::middleware('guest')->group(function () {
                 Route::get('/success', [NeoPaymentController::class, 'success'])->name('success');            
                 Route::get('/error', [NeoPaymentController::class, 'error'])->name('error');
 
-                Route::post('/webhook', [NeoPaymentController::class, 'webhook'])->name('webhook');
+                // Route::post('/webhook', [NeoPaymentController::class, 'webhook'])->name('webhook');
 
         });
 
@@ -358,7 +358,11 @@ Route::middleware('guest')->group(function () {
     });
 
     
+    Route::prefix('payment')->name('payment.')->group(function () {
 
+        Route::post('/webhook', [NeoPaymentController::class, 'webhook'])->name('webhook');
+
+    });
 
 // Route::get('/dashboard', function () {
 //     return view('dashboard');

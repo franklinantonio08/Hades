@@ -271,7 +271,7 @@ class NeoPaymentController extends Controller
     {
         try {
 
-            $payload = $request->all();
+            $payload = $request->json()->all();
 
             /*
             |--------------------------------------------------------------------------
