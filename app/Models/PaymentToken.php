@@ -9,6 +9,8 @@ class PaymentToken extends Model
 {
     use HasFactory;
 
+    protected $table = 'payment_tokens';
+
     protected $fillable = [
         'user_id', 
         'token', 
@@ -34,6 +36,6 @@ class PaymentToken extends Model
 
     public function transactions()
     {
-        return $this->hasMany(PaymentTransaction::class);
+        return $this->hasMany(PaymentTransaction::class, 'token_id');
     }
 }

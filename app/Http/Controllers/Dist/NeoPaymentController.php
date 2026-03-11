@@ -46,7 +46,6 @@ class NeoPaymentController extends Controller
 
                 $solicitudId = $this->request->solicitud_id;
 
-                // $amount      = '10000';
                 $amount = (int) $this->request->amount * 100;
 
                 $percentFee = round($amount * 0.0275); 
@@ -68,19 +67,14 @@ class NeoPaymentController extends Controller
                     'solicitudes_cambio_personas.segundo_apellido',
                     'solicitudes_cambio_personas.pasaporte',
                     'solicitudes_cambio_personas.correo',
-                    'solicitudes_cambio_personas.telefono'
+                    'solicitudes_cambio_personas.telefono',
+                    'solicitudes_cambio_personas.num_filiacion'
                     )
                 ->first();
-
-              
-
-                // return $solicitud->primer_nombre;
 
                 if (!$solicitud) {
                     return back()->withErrors('Solicitud no encontrada.');
                 }
-
-                //  return 'Hola';
 
                 // $pagoPendiente = DB::table('pagos')
                 //     ->where('solicitud_id', $solicitudId)
@@ -111,33 +105,12 @@ class NeoPaymentController extends Controller
 
                 //dd("ENTRO AL METODO PROCESS", $solicitud);
 
-                // $transactionId = PaymentTransaction::insertGetId([
-                //     'user_id' => Auth::id(),
-                //     'token_id' => 1, // ⚠ si no usas tokens aún, debes permitir NULL en BD
-                //     'amount' => $totalAmount,
-                //     'currency' => 'USD',
-                //     'reference' => $reference,
-                //     'ruex' => $solicitud->num_filiacion ?? null,
-                //     'email' => $solicitud->correo ?? null,
-                //     'request_date' => now(),
-                //     'status' => 'Pendiente',
-                //     'id_solicitud' => $solicitudId,
-                //     'codigo_solicitud' => $reference,
-                //     'request_data' => null,
-                //     'created_at' => now(),
-                //     'updated_at' => now(),
-                // ]);
-
-                //dd("ENTRO AL METODO PROCESS", $solicitud);
-
                 if (($solicitud->estatus ?? '') === 'Aprobada - con pago') {
                     DB::table('solicitudes_cambio_residencia')
                         ->where('id', $solicitudId)
                         ->update(['estatus' => 'Pago en proceso']);
                 }
-              
-                //return 'Hola';
-                
+                            
                 $urlOk  = route('payment.success', ['id' => $solicitudId]);
                 $urlKo  = route('payment.error',   ['id' => $solicitudId]);
                 $webhook = route('payment.webhook');
@@ -146,7 +119,22 @@ class NeoPaymentController extends Controller
                 // $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
                 // $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
 
-                //return 'Hola';
+                    $transaction = new PaymentTransaction();
+
+                    $transaction->user_id = Auth::id();
+                    $transaction->token_id = null;
+                    $transaction->amount = $totalAmount;
+                    $transaction->currency = 'USD';
+                    $transaction->reference = $reference;
+                    $transaction->ruex = $solicitud->num_filiacion ?? null;
+                    $transaction->email = $solicitud->correo ?? null;
+                    $transaction->request_date = now();
+                    $transaction->status = 'Pendiente';
+                    $transaction->id_solicitud = $solicitudId;
+                    $transaction->codigo_solicitud = $reference;
+                    $transaction->request_data = null;
+
+                    $transaction->save();
 
                 $payload  = [
 
@@ -198,7 +186,7 @@ class NeoPaymentController extends Controller
 
                         "metadata" => [
                             "email" => (string) ($solicitud->correo ?? ''),
-                            // "phone" => (string) ($solicitud->telefono ?? '0000-0000'),
+                            "phone" => (string) ($solicitud->telefono ?? '0000-0000'),
                         ],
                     ],
                 ];
@@ -206,7 +194,6 @@ class NeoPaymentController extends Controller
                 $redirectUrl = NeoPaymentTokenService::createCheckout($payload);
 
                 
-
                 // DB::table('payment_transactions')
                 //     ->where('id', $transactionId)
                 //     ->update([
@@ -233,9 +220,6 @@ class NeoPaymentController extends Controller
     }
 
 
-
-
-
     public function webhook(Request $request)
     {
         $payload = $request->all();
@@ -252,10 +236,16 @@ class NeoPaymentController extends Controller
             return response()->json(['ok' => true]);
         }
 
+        $reference = $payload['metadatas']['reference'] ?? null;
+
         $solicitudId = $payload['metadatas']['solicitud_id'];
 
+        if (!$reference) {
+                return response()->json(['ok' => false]);
+        }
+
         DB::table('payment_transactions')
-            ->where('id', $transactionId)
+            ->where('reference', $reference)
             ->update([
                 'status' => $payload['status'],
                 'gateway_transaction_id' => $payload['id'] ?? null,
@@ -291,22 +281,28 @@ class NeoPaymentController extends Controller
 
 
 
-    public function success($id)
+    public function success(Request $request)
     {
         // return redirect()->route('solicitud.Mostrar', $id)
         //     ->with('success', 'Pago realizado correctamente.');
 
-        $solicitudId = (int) $request->query('solicitud_id');
+        // $solicitudId = (int) $request->query('solicitud_id');
+
+        // return redirect()->route('solicitud.PagoCompletado', $solicitudId);
+
+
+        $solicitudId = (int) $request->query('id');
 
         return redirect()->route('solicitud.PagoCompletado', $solicitudId);
+
     }
 
-    public function error($id)
+    public function error(Request $request)
     {
         // return redirect()->route('solicitud.Mostrar', $id)
         //     ->withErrors('El pago fue rechazado.');
 
-        $solicitudId = (int) $request->query('solicitud_id');
+        $solicitudId = (int) $request->query('id');
 
         return redirect()->route('solicitud.PagoRechazado', $solicitudId);
     }

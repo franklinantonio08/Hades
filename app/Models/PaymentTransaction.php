@@ -9,25 +9,42 @@ class PaymentTransaction extends Model
 {
     use HasFactory;
 
-    protected $connection = 'hades';
+    // protected $connection = 'hades';
+
+    protected $table = 'payment_transactions';
 
     protected $fillable = [
-        'user_id', 'token_id', 'amount', 'currency',
-        'reference', 'status', 'request_data',
-        'response_data', 'gateway_transaction_id',
-
-        'ruex','email','account_number',
-        'request_date','response_date',
-        'response_code','authorization_number','bin_id','processor_id',
-        'result','tracking','system_tracking',
+        'user_id',
+        'token_id',
+        'amount',
+        'currency',
+        'reference',
+        'ruex',
+        'email',
+        'account_number',
+        'request_date',
+        'response_date',
+        'response_code',
+        'authorization_number',
+        'bin_id',
+        'processor_id',
+        'result',
+        'tracking',
+        'system_tracking',
+        'status',
+        'id_solicitud',
+        'codigo_solicitud',
+        'request_data',
+        'response_data',
+        'gateway_transaction_id'
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'request_date' => 'datetime',
+        'response_date' => 'datetime',
         'request_data' => 'array',
         'response_data' => 'array',
-        'request_date'  => 'datetime',
-        'response_date' => 'datetime',
+        'amount' => 'decimal:2'
     ];
 
     public function user()
@@ -42,13 +59,25 @@ class PaymentTransaction extends Model
 
     public function token()
     {
-        return $this->belongsTo(\App\Models\PaymentToken::class, 'token_id', 'id')
-                    ->withDefault(); // para que $transaction->token no sea null
+         return $this->belongsTo(PaymentToken::class, 'token_id');
+    }
+       
+    public function solicitud()
+    {
+        return $this->belongsTo(
+            \App\Models\SolicitudCambioResidencia::class,
+            'id_solicitud'
+        );
     }
 
-    public function emailLogs()
+    public function scopeApproved($query)
     {
-        return $this->hasMany(PaymentEmailLog::class, 'payment_transaction_id');
+        return $query->where('status', 'authorized');
+    }
+
+    public function scopeFailed($query)
+    {
+        return $query->where('status', 'declined');
     }
         
 }

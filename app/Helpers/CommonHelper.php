@@ -48,4 +48,32 @@ class CommonHelper
 
     }
 
+    public function paymentLog(string $type, $data = null): void{
+        try {
+
+            $dataString = is_array($data)
+                ? json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                : $data;
+
+            $dataString = substr($dataString, 0, 60000);
+
+            DB::table('payment_logs')->insert([
+                'type' => $type,
+                'data' => $dataString,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+        } catch (\Throwable $e) {
+
+            \Log::error('Error guardando payment log', [
+                'type' => $type,
+                'error' => $e->getMessage()
+            ]);
+
+        }
+    }
+
 }
