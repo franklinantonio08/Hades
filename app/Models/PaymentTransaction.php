@@ -9,6 +9,8 @@ class PaymentTransaction extends Model
 {
     use HasFactory;
 
+    protected $connection = 'hades';
+
     protected $fillable = [
         'user_id', 'token_id', 'amount', 'currency',
         'reference', 'status', 'request_data',
