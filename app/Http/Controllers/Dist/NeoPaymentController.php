@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\NeoPaymentTokenService;
 use App\Models\ConfigPayment;
 use App\Models\PaymentTransaction;
+use App\Models\PaymentLog;
+use App\Models\PaymentEmailLog;
+use App\Models\PaymentToken;
 
 use App\Helpers\CommonHelper;
 use Illuminate\Http\Request;
@@ -111,13 +114,13 @@ class NeoPaymentController extends Controller
                         ->update(['estatus' => 'Pago en proceso']);
                 }
                             
-                $urlOk  = route('payment.success', ['solicitud_id' => $solicitudId]);
-                $urlKo  = route('payment.error',   ['solicitud_id' => $solicitudId]);
-                $webhook = route('payment.webhook');
+                // $urlOk  = route('payment.success', ['solicitud_id' => $solicitudId]);
+                // $urlKo  = route('payment.error',   ['solicitud_id' => $solicitudId]);
+                // $webhook = route('payment.webhook');
 
-                // $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
-                // $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
-                // $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
+                $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
+                $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
+                $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
 
                     $transaction = new PaymentTransaction();
 
@@ -132,7 +135,7 @@ class NeoPaymentController extends Controller
                     $transaction->status = 'Pendiente';
                     $transaction->id_solicitud = $solicitudId;
                     $transaction->codigo_solicitud = $reference;
-                    $transaction->request_data = null;
+                    //$transaction->request_data = json_encode($payload);
 
                     $transaction->save();
                 //$transactionId = $transaction->id;
@@ -175,7 +178,7 @@ class NeoPaymentController extends Controller
                         
                         // "solicitud_id"      => (string) $solicitudId,
                         // "pago_id"           => (string) $paymentId,
-                        "payment_reference" =>  "CR-" . $solicitudId,
+                        "payment_reference" =>  $reference,
                     ],
 
                     "customer" => [
@@ -191,6 +194,9 @@ class NeoPaymentController extends Controller
                         ],
                     ],
                 ];
+
+                $transaction->request_data = json_encode($payload);
+                $transaction->save();
 
                 $redirectUrl = NeoPaymentTokenService::createCheckout($payload);
               
@@ -224,57 +230,160 @@ class NeoPaymentController extends Controller
 
 
 
+    // public function webhook(Request $request)
+    // {
+    //     $payload = $request->all();
+
+    //     DB::table('payment_logs')->insert([
+    //         'type' => 'webhook',
+    //         'data' => json_encode($payload),
+    //         'ip_address' => $request->ip(),
+    //         'user_agent' => $request->userAgent(),
+    //         'created_at' => now(),
+    //     ]);
+
+    //     if (($payload['status'] ?? '') !== 'authorized') {
+    //         return response()->json(['ok' => true]);
+    //     }
+
+    //     $solicitudId = $payload['metadatas']['solicitud_id'];
+
+    //     DB::table('payment_transactions')
+    //         ->where('id', $transactionId)
+    //         ->update([
+    //             'status' => $payload['status'],
+    //             'gateway_transaction_id' => $payload['id'] ?? null,
+    //             'authorization_number' => $payload['authorization_number'] ?? null,
+    //             'response_code' => $payload['response_code'] ?? null,
+    //             'response_data' => json_encode($payload),
+    //             'response_date' => now(),
+    //             'updated_at' => now(),
+    //         ]);
+
+    //     DB::table('solicitudes_cambio_residencia')
+    //         ->where('id', $solicitudId)
+    //         ->update(['estatus' => 'Pagada']);
+
+    //     return response()->json(['ok' => true]);
+    // }
+
     public function webhook(Request $request)
     {
-        $payload = $request->all();
+        try {
 
-        DB::table('payment_logs')->insert([
-            'type' => 'webhook',
-            'data' => json_encode($payload),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'created_at' => now(),
-        ]);
+            $payload = $request->all();
 
-        if (($payload['status'] ?? '') !== 'authorized') {
+            /*
+            |--------------------------------------------------------------------------
+            | 1. Guardar LOG del webhook
+            |--------------------------------------------------------------------------
+            */
+
+            $log = new PaymentLog();
+            $log->type = 'webhook';
+            $log->data = json_encode($payload);
+            $log->ip_address = $request->ip();
+            $log->user_agent = $request->userAgent();
+            $log->save();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 2. Validar estado
+            |--------------------------------------------------------------------------
+            */
+
+            $status = $payload['status'] ?? null;
+
+            if (!$status) {
+                return response()->json(['ok' => true]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 3. Obtener referencia enviada al checkout
+            |--------------------------------------------------------------------------
+            */
+
+            $paymentReference = $payload['metadatas']['payment_reference'] ?? null;
+
+            if (!$paymentReference) {
+                return response()->json(['ok' => true]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 4. Buscar transacción local
+            |--------------------------------------------------------------------------
+            */
+
+            $transaction = PaymentTransaction::where('reference', $paymentReference)->first();
+
+            if (!$transaction) {
+                return response()->json(['ok' => true]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 5. Evitar doble procesamiento
+            |--------------------------------------------------------------------------
+            */
+
+            if ($transaction->status === 'authorized') {
+                return response()->json(['ok' => true]);
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 6. Actualizar transacción
+            |--------------------------------------------------------------------------
+            */
+
+            $transaction->status = $status;
+            $transaction->gateway_transaction_id = $payload['id'] ?? null;
+            $transaction->authorization_number = $payload['authorization_number'] ?? null;
+            $transaction->response_code = $payload['response_code'] ?? null;
+            $transaction->response_data = json_encode($payload);
+            $transaction->response_date = now();
+
+            $transaction->save();
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | 7. Si el pago fue autorizado
+            |--------------------------------------------------------------------------
+            */
+
+            if ($status === 'authorized') {
+
+                DB::table('solicitudes_cambio_residencia')
+                    ->where('id', $transaction->id_solicitud)
+                    ->update([
+                        'estatus' => 'Pagada'
+                    ]);
+
+            }
+
+
             return response()->json(['ok' => true]);
+
+        } catch (\Throwable $e) {
+
+            $log = new PaymentLog();
+            $log->type = 'webhook_error';
+            $log->data = $e->getMessage();
+            $log->ip_address = $request->ip();
+            $log->user_agent = $request->userAgent();
+            $log->save();
+
+            return response()->json(['ok' => false]);
+
         }
-
-        $solicitudId = $payload['metadatas']['solicitud_id'];
-
-        DB::table('payment_transactions')
-            ->where('id', $transactionId)
-            ->update([
-                'status' => $payload['status'],
-                'gateway_transaction_id' => $payload['id'] ?? null,
-                'authorization_number' => $payload['authorization_number'] ?? null,
-                'response_code' => $payload['response_code'] ?? null,
-                'response_data' => json_encode($payload),
-                'response_date' => now(),
-                'updated_at' => now(),
-            ]);
-
-        // DB::table('pagos')->insert([
-        //     'solicitud_id'   => $solicitudId,
-        //     'transaction_id' => $payload['id'],
-        //     'status'         => $payload['status'],
-        //     'authorization_number' => $payload['authorization_number'] ?? null,
-        //     'response_code'  => $payload['response_code'] ?? null,
-        //     'card_brand'     => $payload['metadatas']['card_brand'] ?? null,
-        //     'pan_masked'     => $payload['pan'] ?? null,
-        //     'amount'         => $payload['amount'] / 100,
-        //     'currency'       => $payload['currency'],
-        //     'raw_response'   => json_encode($payload),
-        //     'created_at'     => now(),
-        // ]);
-
-
-
-        DB::table('solicitudes_cambio_residencia')
-            ->where('id', $solicitudId)
-            ->update(['estatus' => 'Pagada']);
-
-        return response()->json(['ok' => true]);
     }
 
 
@@ -283,9 +392,9 @@ class NeoPaymentController extends Controller
     {
         $solicitudId = (int) $request->query('solicitud_id');
 
-        DB::table('payment_transactions')
-            ->where('id_solicitud', $solicitudId)
-            ->update(['status' => 'authorized']);
+        // DB::table('payment_transactions')
+        //     ->where('id_solicitud', $solicitudId)
+        //     ->update(['status' => 'authorized']);
         
 
         return redirect()->route('solicitud.PagoCompletado', $solicitudId);
