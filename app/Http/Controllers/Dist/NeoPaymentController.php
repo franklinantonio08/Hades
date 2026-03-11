@@ -114,13 +114,13 @@ class NeoPaymentController extends Controller
                         ->update(['estatus' => 'Pago en proceso']);
                 }
                             
-                // $urlOk  = route('payment.success', ['solicitud_id' => $solicitudId]);
-                // $urlKo  = route('payment.error',   ['solicitud_id' => $solicitudId]);
-                // $webhook = route('payment.webhook');
+                $urlOk  = route('payment.success', ['solicitud_id' => $solicitudId]);
+                $urlKo  = route('payment.error',   ['solicitud_id' => $solicitudId]);
+                $webhook = route('payment.webhook');
 
-                $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
-                $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
-                $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
+                // $urlOk  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/success?solicitud_id=/".$solicitudId;
+                // $urlKo  = "https://8f3d-190-34-23-11.ngrok-free.app/payment/error?solicitud_id=/".$solicitudId;
+                // $webhook = "https://8f3d-190-34-23-11.ngrok-free.app/payment/webhook";
 
                     $transaction = new PaymentTransaction();
 
