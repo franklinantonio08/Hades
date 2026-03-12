@@ -179,35 +179,51 @@ class RegisteredUserController extends Controller
 
                 $pasaporte = trim((string)($sim->pasaporte ?? '')) ?: null;
 
-            // Comparaciones simples (puedes endurecerlas si quieres)
-            $simPN = strtoupper(trim($sim->primerNombre ?? ''));
-            $simPA = strtoupper(trim($sim->primerApellido ?? ''));
-            $inPN  = strtoupper(trim($data['primer_nombre'] ?? ''));
-            $inPA  = strtoupper(trim($data['primer_apellido'] ?? ''));
+                if (User::where('documento_numero', $data['documento_numero'])->exists()) {
+                    throw ValidationException::withMessages([
+                        'documento_numero' => 'Este número de filiación ya tiene una cuenta registrada.',
+                    ]);
+                }
 
-            if ($simPN && $inPN && $simPN !== $inPN) {
-                throw ValidationException::withMessages([
-                    'primer_nombre' => 'El primer nombre no coincide con el registro de filiación.',
-                ]);
-            }
-            if ($simPA && $inPA && $simPA !== $inPA) {
-                throw ValidationException::withMessages([
-                    'primer_apellido' => 'El primer apellido no coincide con el registro de filiación.',
-                ]);
-            }
+                // Comparaciones simples (puedes endurecerlas si quieres)
+                $simPN = strtoupper(trim($sim->primerNombre ?? ''));
+                $simPA = strtoupper(trim($sim->primerApellido ?? ''));
+
+                $inPN  = strtoupper(trim($request->input('primer_nombre') ?? ''));
+                $inPA  = strtoupper(trim($request->input('primer_apellido') ?? ''));
+
+                if ($simPN && $inPN && $simPN !== $inPN) {
+                    throw ValidationException::withMessages([
+                        'primer_nombre' => 'El primer nombre no coincide con el registro de filiación.',
+                    ]);
+                }
+
+                if ($simPA && $inPA && $simPA !== $inPA) {
+                    throw ValidationException::withMessages([
+                        'primer_apellido' => 'El primer apellido no coincide con el registro de filiación.',
+                    ]);
+                }
 
             // Si quieres, pisas género/fecha con SIM (o sólo si vinieron vacíos)   
 
-            $fechaSim = null;
-            if (!empty($sim->fecha_nacimiento)) {
-                $ts = strtotime((string)$sim->fecha_nacimiento);
-                if ($ts !== false) {
-                    $fechaSim = date('Y-m-d', $ts); // YYYY-MM-DD
+                $simGenero = ucfirst(strtolower(trim($sim->genero)));
+                $inGenero  = $request->input('genero');
+
+                if ($simGenero !== $inGenero) {
+                    throw ValidationException::withMessages([
+                        'genero' => 'El género no coincide con el registro de filiación.',
+                    ]);
                 }
-            }
-            if ($fechaSim) {
-                $data['fecha_nacimiento'] = $fechaSim;
-            }
+
+
+                $simFecha = date('Y-m-d', strtotime($sim->fecha_nacimiento));
+                $inFecha  = $request->input('fecha_nacimiento');
+
+                if ($simFecha !== $inFecha) {
+                    throw ValidationException::withMessages([
+                        'fecha_nacimiento' => 'La fecha de nacimiento no coincide con el registro de filiación.',
+                    ]);
+                }
         }
 
             // Guardar archivo de idoneidad si aplica

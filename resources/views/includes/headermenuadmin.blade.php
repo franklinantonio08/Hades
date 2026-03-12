@@ -10,11 +10,11 @@
                     </svg>
                 </button>
 
-                <a class="header-brand d-md-none" href="#">
+                {{-- <a class="header-brand d-md-none" href="#">
                     <svg width="118" height="46" alt="CoreUI Logo">
                         <use xlink:href="{{ asset('brand/coreui.svg#full') }}"></use>
                     </svg>
-                </a>
+                </a> --}}
 
                 {{-- <form class="d-flex" role="search">
                     <div class="input-group">

@@ -40,16 +40,7 @@
                                         </a>
                                 </li>--}}
 
-                                @if(Auth::check() && Auth::user()->tipo_usuario === 'solicitante')
-                                <li class="nav-item">
-                                        {{-- <a class="nav-link d-flex align-items-center" href="{{ route('filiacion.Editar', Auth::user()->id) }}"> --}}
-                                        <a class="nav-link d-flex align-items-center" href="/dist/filiacion">
-                                                <i class="bi bi-people-fill nav-icon text-primary me-2"></i>
-                                                <span class="nav-text">Afiliación</span>
-                                        </a>
-                                </li>
-                                @endif
-
+                             
                                 <li class="nav-item">
                                         <a class="nav-link d-flex align-items-center" href="/dist/solicitud">
                                                 <i class="bi bi-house-gear-fill nav-icon text-danger me-2"></i>

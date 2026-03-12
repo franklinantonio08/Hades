@@ -1,201 +1,426 @@
-@section('scripts')
+@extends('layouts.admin') @section('css')
+    <link rel="stylesheet" href="{{ asset('plugins/flatpickr/flatpickr.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('plugins/flatpickr/material_blue.css') }}">
+    @endsection @section('scripts')
+    <script>
+        const BASEURL = '{{ url('/dist/solicitud') }}';
+        const token = '{{ csrf_token() }}';
+    </script>
 
-<script>
-    var BASEURL = '{{ url()->current() }}';
-	var token = '{{ csrf_token() }}';
-</script>
-	
-{{-- <script type="text/javascript" src="{{ asset('../js/dist/departamento/departamento.js') }}"></script>  --}}
-<script type="text/javascript" src="{{ asset('../js/dist/solicitud/solicitud.js') }}"></script>
-<script src="{{ asset('../js/comun/messagebasicModal.js') }}"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="{{ asset('plugins/flatpickr/flatpickr.min.js') }}"></script>
+    <script src="{{ asset('plugins/flatpickr/es.js') }}"></script>
 
-<script>
-    // Inicializar Flatpickr
-    flatpickr("#fechaNacimiento", {
-        dateFormat: "Y-m-d",
-        maxDate: "today", // Establecer la fecha máxima como hoy
-        locale: {
-            firstDayOfWeek: 1, // Establecer el primer día de la semana como lunes
-            weekdays: {
-                shorthand: ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"],
-                longhand: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
-            },
-            months: {
-                shorthand: ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
-                longhand: ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
-            },
-        }
-    });
-</script>
+    <script src="{{ asset('js/comun/messagebasicModal.js') }}"></script>
+    <script src="{{ asset('js/dist/solicitud/solicitud.js') }}"></script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            flatpickr("#fecha_nacimiento_persona", {
+                dateFormat: "Y-m-d",
+                maxDate: "today",
+                locale: "es"
+            });
 
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"> 
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+        });
+    </script>
+    @endsection @section('content')
+    <div class="row">
+        @include('includes.errors') @include('includes.success')
+    </div>
 
 
-@stop
+    <div class="col-lg-12">
 
-@extends('layouts.admin')
-
-@section('content')
-
-    <!-- ACTION BUTTONS -->
-<div class="row">
-
-    @include('includes/errors')
-    @include('includes/success')
-
-</div>
-   
-	<div class="col-lg-12">
         <div class="card mb-4">
-			
-           <!-- <div class="card-body p-4">
-                <div class="row">
-                    <div class="col">
-                        <div class="card-title fs-4 fw-semibold">Solicitud</div>
-                    </div>
-                </div>
-			</div> -->
 
-            <div class="table-responsive">
+            <div class="container-fluid py-4">
 
-                
-                <!-- Formulario -->
+                <form id="editarregistro" method="POST" action="{{ url('/dist/solicitud/actualizar/' . $solicitud->id) }}"
+                    enctype="multipart/form-data" autocomplete="off">
 
-                <div class="container-fluid px-2 my-2">
-                    <form id="editarregistro" name="editarregistro" autocomplete="off"  method="POST" action="{{ url()->current('/dist/solicitud/nuevo') }}" enctype="multipart/form-data">
-                            {{ csrf_field() }}
-                            
-                            <input type="hidden" id="solicitudId" name="solicitudId" value="{{$solicitud->id}}" class="form-control text-right" >
+                    @csrf @method('PUT')
 
-                <div class="row">
+                    <input type="hidden" name="solicitudId" value="{{ $solicitud->id }}">
 
 
-                        <div class="col-lg-5 m-b-6">
+                    <div class="card shadow-sm border-0">
 
-                            <div class="col">
-                                <hr style="border-color: gray;"> 
-                                <div class="card-title fs-5 fw-semibold">Solicitud</div>
-                                <hr style="border-color: gray;"> 
-                            </div>
+                        <div class="card-header bg-primary text-white text-center">
 
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" style="width: 150px;" >Tipo de Atencion</span>
-                                    <input type="text" class="form-control" id="tipoAtencion" name="tipoAtencion" placeholder="" value="{{$solicitud->descripcion}}">
-                                    <input type="hidden" id="IdTipoAtencion" name="IdTipoAtencion" value="{{$solicitud->IdTipoAtencion}}" class="form-control text-right" >
-                                </div>
-
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" style="width: 150px;" >Departamento</span>
-                                    <input type="text" class="form-control" id="departamento" name="departamento" placeholder="" value="{{$solicitud->departamentoNombre}}">
-                                    <input type="hidden" id="departamentoId" name="departamentoId" value="{{$solicitud->departamentoId}}" class="form-control text-right" >
-                                </div>
-
-                                <div class="input-group mb-3">
-                                    <label class="input-group-text" style="width: 150px;" for="inputGroupSelect01">Estatus</label>
-                                    <select class="form-select" id="estatus" name="estatus">
-                                        <option value="Activo" {{ $solicitud->estatus === 'Activo' ? 'selected' : '' }}>Activo</option>
-                                        <option value="Resuelto" {{ $solicitud->estatus === 'Resuelto' ? 'selected' : '' }}>Resuelto</option>
-                                    </select>
-                                </div>
-                                
-                                
-                                <div class="form-floating mb-3">
-                                    <textarea class="form-control" id="comentario" name="comentario" type="text" placeholder="Comentario" style="height: 10rem;" ></textarea>
-                                    <label for="comentario">Comentario</label>
-                                </div>
-
-                            </div>
-
-                        <div class="col-lg-5 m-b-6">
-
-                            <div class="col">
-                                <hr style="border-color: gray;"> 
-                                <div class="card-title fs-5 fw-semibold">Datos del Consumidor</div>
-                                <hr style="border-color: gray;"> 
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" style="width: 150px;" >Cedula</span>
-                                <input type="text" class="form-control" id="cedula" name="cedula" placeholder="" value="{{$solicitud->cedula}}">
-
-                            </div>
-    
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" style="width: 150px;">Nombre</span>
-                                <input type="text" class="form-control" id="nombre" name="nombre" placeholder="" value="{{$solicitud->nombre}}">
-                            </div>
-    
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" style="width: 150px;">Apellido</span>
-                                <input type="text" class="form-control" id="apellido" name="apellido" placeholder="" value="{{$solicitud->apellido}}">
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" style="width: 150px;">Fecha de Nacimiento</span>
-                                <input type="text" class="form-control" id="fechaNacimiento" name="fechaNacimiento" placeholder="Selecciona una fecha" value="{{$solicitud->fechaNacimiento}}">
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" style="width: 150px;">Correo</span>
-                                <input type="text" class="form-control" id="correo" name="correo" placeholder="@example.com" value="{{$solicitud->correo}}">
-                            </div>
-    
-                              <div class="input-group mb-3">
-                                <span class="input-group-text" style="width: 150px;">Teléfono</span>
-                                <input type="text" class="form-control" id="telefono" name="telefono" placeholder="" value="{{$solicitud->cedula}}">
-                            </div>
-
-                              <div class="input-group mb-3">
-                                <label class="input-group-text" style="width: 150px;" for="inputGroupSelect01">Genero</label>
-                                <select class="form-select" id="genero" name="genero">
-                                    <option value="Masculino" {{ $solicitud->genero === 'Masculino' ? 'selected' : '' }}>Masculino</option>
-                                    <option value="Femenino" {{ $solicitud->genero === 'Femenino' ? 'selected' : '' }}>Femenino</option>
-                                </select>
-                            </div>
-
-
-                              <div class="input-group mb-3">
-                                <label class="input-group-text" style="width: 150px;" for="inputGroupSelect01">Tipo de Usuario</label>
-                                <select class="form-select" id="tipoUsuario" name="tipoUsuario">
-                                    <option value="" selected disabled>Seleccionar...</option>	
-                                    <option value="Normal" {{ $solicitud->tipoConsumidor === 'Normal' ? 'selected' : '' }} >Normal</option>										
-                                    <option value="Embarazada" {{ $solicitud->tipoConsumidor === 'Embarazada' ? 'selected' : '' }} >Embarazada</option>										
-                                    <option value="Discapacitado" {{ $solicitud->tipoConsumidor === 'Discapacitado' ? 'selected' : '' }} >Discapacitado</option>										
-                                    <option value="Jubilado" {{ $solicitud->tipoConsumidor === 'Jubilado' ? 'selected' : '' }} >Jubilado</option>	
-                                </select>
-                              </div>
+                            <h5 class="mb-0">Actualización de Dirección</h5>
+                            <small class="text-light">Datos Personales y Documentales</small>
 
                         </div>
+
+
+                        <div class="card-body">
+
+
+                            {{-- ERRORES VISUALES --}}
+                            <div id="formErrorBox" class="alert alert-danger d-none">
+                                <div class="fw-bold mb-2">Por favor corrige lo siguiente:</div>
+                                <ul id="formErrorList" class="mb-0"></ul>
+                            </div>
+
+
+
+                            {{-- ======================== DATOS PERSONALES ======================== --}}
+
+                            <h5 class="form-label fw-bold text-primary" style="background-color:#f0f0f0;padding:5px;">
+                                Datos Personales
+                            </h5>
+
+
+                            <div class="row mb-4">
+
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold text-primary">Primer Nombre</label>
+                                    <input type="text" class="form-control" name="primerNombre"
+                                        value="{{ $solicitud->primer_nombre }}">
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold text-primary">Segundo Nombre</label>
+                                    <input type="text" class="form-control" name="segundoNombre"
+                                        value="{{ $solicitud->segundo_nombre }}">
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold text-primary">Primer Apellido</label>
+                                    <input type="text" class="form-control" name="primerApellido"
+                                        value="{{ $solicitud->primer_apellido }}">
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold text-primary">Segundo Apellido</label>
+                                    <input type="text" class="form-control" name="segundoApellido"
+                                        value="{{ $solicitud->segundo_apellido }}">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary">Filiación</label>
+                                    <input type="text" class="form-control" name="filiacion"
+                                        value="{{ $solicitud->num_filiacion }}">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary">Pasaporte</label>
+                                    <input type="text" class="form-control" name="pasaporte"
+                                        value="{{ $solicitud->pasaporte }}">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary">Genero</label>
+                                    <select class="form-select" name="genero">
+                                        <option value="Masculino"
+                                            {{ $solicitud->genero == 'Masculino' ? 'selected' : '' }}>
+                                            Masculino
+                                        </option>
+                                        <option value="Femenino" {{ $solicitud->genero == 'Femenino' ? 'selected' : '' }}>
+                                            Femenino
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary">
+                                        Fecha nacimiento
+                                    </label>
+                                    <input type="text" class="form-control" id="fecha_nacimiento_persona"
+                                        name="fecha_nacimiento" value="{{ $solicitud->fecha_nacimiento }}">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary">Correo</label>
+                                    <input type="email" class="form-control" name="correo"
+                                        value="{{ $solicitud->correo }}">
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary">Teléfono</label>
+                                    <input type="text" class="form-control" name="telefono"
+                                        value="{{ $solicitud->telefono }}">
+                                </div>
+
+                                 <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary">
+                                        Provincia
+                                    </label>
+                                    <select class="form-select" name="provincia" id="provincia">
+                                        @foreach ($provincia as $p)
+                                            <option value="{{ $p->id }}"
+                                                {{ $solicitud->provincia_id == $p->id ? 'selected' : '' }}>
+                                                {{ $p->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold text-primary">
+                                        Distrito
+                                    </label>
+                                    <select class="form-select" name="distrito" id="distrito">
+                                        @foreach ($distrito as $d)
+                                            <option value="{{ $d->id }}"
+                                                {{ $solicitud->distrito_id == $d->id ? 'selected' : '' }}>
+                                                {{ $d->nombre }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                            </div>
+
+
+
+                            {{-- ======================== DIRECCION ======================== --}}
+
+                            <h5 class="form-label fw-bold text-primary" style="background-color:#f0f0f0;padding:5px;">
+                                Dirección específica
+                            </h5>
+
+
+                            <div class="row g-3">
+
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label fw-bold text-primary">
+                                        Provincia
+                                    </label>
+
+                                    <select class="form-select" name="provincia" id="provincia">
+
+                                        @foreach ($provincia as $p)
+                                            <option value="{{ $p->id }}"
+                                                {{ $solicitud->provincia_id == $p->id ? 'selected' : '' }}>
+                                                {{ $p->nombre }}
+                                            </option>
+                                        @endforeach
+
+                                    </select>
+
+                                </div>
+
+
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label fw-bold text-primary">
+                                        Distrito
+                                    </label>
+
+                                    <select class="form-select" name="distrito" id="distrito">
+
+                                        @foreach ($distrito as $d)
+                                            <option value="{{ $d->id }}"
+                                                {{ $solicitud->distrito_id == $d->id ? 'selected' : '' }}>
+                                                {{ $d->nombre }}
+                                            </option>
+                                        @endforeach
+
+                                    </select>
+
+                                </div>
+
+
+
+                                <div class="col-md-6 mb-3">
+
+                                    <label class="form-label fw-bold text-primary">
+                                        Corregimiento
+                                    </label>
+
+                                    <select class="form-select" name="corregimiento" id="corregimiento">
+
+                                        @foreach ($corregimiento as $c)
+                                            <option value="{{ $c->id }}"
+                                                {{ $solicitud->corregimiento_id == $c->id ? 'selected' : '' }}>
+                                                {{ $c->nombre }}
+                                            </option>
+                                        @endforeach
+
+                                    </select>
+
+                                </div>
+
+
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-primary">
+                                        Barrio / Urbanización
+                                    </label>
+
+                                    <input type="text" class="form-control" name="barrio"
+                                        value="{{ $solicitud->barrio }}">
+
+                                </div>
+
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-primary">
+                                        Calle / Avenida
+                                    </label>
+
+                                    <input type="text" class="form-control" name="calle"
+                                        value="{{ $solicitud->calle }}">
+                                </div>
+
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold text-primary">
+                                        Número de casa
+                                    </label>
+
+                                    <input type="text" class="form-control" name="numero_casa"
+                                        value="{{ $solicitud->numero_casa }}">
+                                </div>
+
+
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold text-primary">
+                                        Punto de referencia
+                                    </label>
+
+                                    <input type="text" class="form-control" name="punto_referencia"
+                                        value="{{ $solicitud->punto_referencia }}">
+                                </div>
+
+                            </div>
+
+
+
+                            {{-- ======================== DOCUMENTOS ======================== --}}
+
+                            <hr class="mb-4">
+                            <h5 class="form-label fw-bold text-primary" style="background-color:#f0f0f0;padding:5px;">
+                                Documentos requeridos
+                            </h5>
+
+
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label fw-bold text-primary">
+                                        Documento de domicilio
+                                    </label>
+
+                                    <input type="file" class="form-control" name="domicilio_archivo">
+                                    @if (isset($archivos['domicilio']))
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary verDocumento"
+                                                data-url="{{ asset('storage/' . $archivos['domicilio']->ruta) }}"
+                                                data-tipo="Documento de domicilio">
+
+                                                Ver documento actual
+
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label fw-bold text-primary">
+                                        Recibo de servicio
+                                    </label>
+                                    <input type="file" class="form-control" name="recibo_archivo">
+                                    @if (isset($archivos['recibo']))
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary verDocumento"
+                                                data-url="{{ asset('storage/' . $archivos['recibo']->ruta) }}"
+                                                data-tipo="Recibo de servicio">
+                                                Ver recibo actual
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label fw-bold text-primary">
+                                        carnet_frente
+                                    </label>
+                                    <input type="file" class="form-control" name="carnet_frente">
+                                    @if (isset($archivos['carnet_frente']))
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary verDocumento"
+                                                data-url="{{ asset('storage/' . $archivos['carnet_frente']->ruta) }}"
+                                                data-tipo="Recibo de servicio">
+                                                Ver carnet_frente actual
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="col-md-6 mb-4">
+                                    <label class="form-label fw-bold text-primary">
+                                        carnet_reverso
+                                    </label>
+                                    <input type="file" class="form-control" name="carnet_reverso">
+                                    @if (isset($archivos['carnet_reverso']))
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary verDocumento"
+                                                data-url="{{ asset('storage/' . $archivos['carnet_reverso']->ruta) }}"
+                                                data-tipo="Recibo de servicio">
+                                                Ver carnet_reverso actual
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
+
+
+                            </div>
+
+
+
+                            {{-- ======================== COMENTARIO ======================== --}}
+
+                            <hr class="mb-4">
+                            <h5 class="form-label fw-bold text-primary" style="background-color:#f0f0f0;padding:5px;">
+                                Comentario adicional </h5>
+
+                            <textarea class="form-control" name="comentario" rows="3">
+                            {{ $solicitud->comentario }}
+                        </textarea>
+
+
+
+                        </div>
+
+
+
+                        <div class="card-footer text-end">
+
+                            <button id="guardarForm" type="submit" class="btn btn-primary shadow">
+
+                                Actualizar
+
+                            </button>
+
+
+                            <a href="{{ url()->previous() }}" class="btn btn-secondary shadow">
+
+                                Cancelar
+
+                            </a>
+
+
+                        </div>
+
+
                     </div>
 
 
-                                <!-- ACTION BUTTONS -->
-                                <div class="form-group row">
-                                    <div class="offset-12 col-12">
-                                        <button id="submitForm" name="submitForm" type="submit" class="btn btn-primary text-white"><i class="fa fa-check m-r-5"></i> Guardar</button>
-                                        <a href="{{ url()->previous() }}"  class="btn btn-danger text-white"><i class="fa fa-remove m-r-5"></i> Cancelar</a>
-                                    </div>
-                                </div>
-                            <!-- end ACTION BUTTONS -->
-                    </form>
-                </div>
-            
-                <!-- Fin Formulario-->
+                </form>
+
 
             </div>
-	    </div>    
-    </div>  
+
+        </div>
+
+    </div>
 
 
+    @include('dist.solicitud.documentos')
+    @include('includes.messagebasicmodal')
 
-</div>
-
-@include('includes/messagebasicmodal')
 @endsection
-
-
-

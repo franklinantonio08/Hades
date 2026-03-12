@@ -7,9 +7,9 @@
                 </svg>
             </button>
             <a class="header-brand d-md-none" href="#">
-                <svg width="118" height="46" alt="CoreUI Logo">
+                {{-- <svg width="118" height="46" alt="CoreUI Logo">
                     <use xlink:href="{{ asset('brand/coreui.svg#full') }}"></use>
-                </svg>
+                </svg> --}}
             </a>
         </div>
     </header>

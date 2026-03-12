@@ -310,7 +310,7 @@ class Distsolicitud {
 
     actualizarTextoBoton() {
 
-        console.log('Actualizar')
+        //console.log('Actualizar')
 
         const btn = document.getElementById('guardarForm');
         if (!btn) return;
@@ -342,7 +342,8 @@ class Distsolicitud {
         this.initFilePreviews();
         
         if($('#editarregistro').length) {
-            this.cambia_motivo();
+            // this.cambia_motivo();
+            this.documentos_editar();
         }
 
         if($('#nuevoregistro').length) {
@@ -493,7 +494,7 @@ class Distsolicitud {
 
             e.preventDefault();
             _this.BuscaFamiliar();
-            console.log('por aqui vamos');
+            //console.log('por aqui vamos');
         });
 
         $('#btnLimpiar').off('click').on('click', function () {
@@ -507,7 +508,7 @@ class Distsolicitud {
             // $('#nombre, #apellido, #ruex, #fecha_nacimiento').val('');
             // $('#genero, #afinidadId').val('');
             // _this.resetResultados();
-            console.log('Por Aqui vamos');
+            //console.log('Por Aqui vamos');
             _this.selecionarFamiliar();
         });
 
@@ -658,13 +659,58 @@ class Distsolicitud {
         .text('Completa los criterios y presiona Buscar.');
     }
 
+    documentos_editar(){
+
+        const _this = this;
+
+        document.addEventListener("click", function(e){
+
+            const btn = e.target.closest(".verDocumento");
+            if(!btn) return;
+
+            const url = btn.dataset.url;
+
+            const contenedor = document.getElementById("contenedorDocumento");
+            if(!contenedor) return;
+
+            contenedor.innerHTML = "";
+
+            const extension = url.split('.').pop().toLowerCase();
+
+            if(["jpg","jpeg","png","webp"].includes(extension)){
+
+                contenedor.innerHTML = `<img src="${url}" class="img-fluid rounded shadow">`;
+
+            }else if(extension === "pdf"){
+
+                contenedor.innerHTML = `<iframe src="${url}" width="100%" height="600px"></iframe>`;
+
+            }else{
+
+                contenedor.innerHTML = `
+                    <a href="${url}" target="_blank" class="btn btn-primary">
+                        Abrir documento
+                    </a>
+                `;
+
+            }
+
+            document.getElementById("btnDescargar").href = url;
+
+            const modal = new bootstrap.Modal(document.getElementById("modalDocumento"));
+            modal.show();
+
+        });
+
+    }
+
     selecionarFamiliar(){
 
         const documento  = $('#ruex').val(); 
         const afinidadId = $('#afinidadId').val(); 
 
-        console.log(documento);
-        console.log(afinidadId);
+        //console.log(documento);
+        //console.log(afinidadId);
 
         if (!afinidadId) {
             // alert('Selecciona una afinidad antes de continuar.');
@@ -1442,7 +1488,7 @@ class Distsolicitud {
 
             const _this = this
 
-            console.log('Ejecutando preSubmitCheck');
+            //console.log('Ejecutando preSubmitCheck');
 
             // Asegurar visibilidad correcta antes de validar
             this.toggleViviendaFields();
@@ -1607,7 +1653,7 @@ class Distsolicitud {
 
         enviarFormulario() {
 
-            console.log('Por Aqui vamos 2');
+            //console.log('Por Aqui vamos 2');
 
             const $form = $("#nuevoregistro");
             const formData = new FormData($form[0]);
@@ -1633,7 +1679,7 @@ class Distsolicitud {
                 processData: false,
                 contentType: false,
                 success: function (resp) {
-                    console.log("Respuesta servidor:", resp);
+                    //console.log("Respuesta servidor:", resp);
 
                     _this.showTopMessageModal(
                         "Solicitud",
@@ -1669,7 +1715,7 @@ class Distsolicitud {
 
             //var BASEURL = window.location.origin; 
 
-            console.log(BASEURL);
+            //console.log(BASEURL);
             
             let estadoFiltro = $('#estadoFiltro').val();
             const _this = this
@@ -1743,7 +1789,7 @@ class Distsolicitud {
         }
 
         handleAjaxError( xhr, textStatus, error ) {
-            console.log(error);
+            //console.log(error);
         }
 
           /*END TABLA USUARIO*/
@@ -1758,7 +1804,7 @@ class Distsolicitud {
 
               $("#nuevoregistro").validate({
                   submitHandler: function(form) {
-                      console.log('submit');
+                      //console.log('submit');
                       form.submit();
                    },
                    invalidHandler:function(form) {
@@ -1930,7 +1976,7 @@ class Distsolicitud {
                   )
                   .done(function( data ) {
 
-                    console.log('por aqui vamos callbackDesactivarsolicitud')
+                    //console.log('por aqui vamos callbackDesactivarsolicitud')
 
 
                       if(data.response == true){

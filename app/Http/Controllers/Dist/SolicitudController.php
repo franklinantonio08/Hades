@@ -993,37 +993,76 @@ class SolicitudController extends Controller
             return redirect('dist/dashboard')->withErrors($this->common->message);
         }*/
 
-        $solicitud = DB::table('solicitud')
-            ->where('solicitud.id', '=', $solicitudId)
-            ->leftjoin('tipoAtencion', 'tipoAtencion.id', '=', 'solicitud.IdtipoAtencion')
-        ->leftjoin('departamento', 'departamento.id', '=', 'solicitud.departamentoId')
-        ->leftjoin('consumidor', 'consumidor.solicitudId', '=', 'solicitud.id')
-            //->where('rubro.distribuidorId', Auth::user()->distribuidorId)
-        ->select('solicitud.*',
-        'departamento.id as departamentoId', 
-        'departamento.nombre as departamentoNombre',
-        'tipoAtencion.id as IdTipoAtencion', 
-        'tipoAtencion.descripcion', 
-        //'consumidor.*')
-        'consumidor.cedula',
-        'consumidor.nombre',
-        'consumidor.apellido',
-        'consumidor.fechaNacimiento',
-        'consumidor.correo',
-        'consumidor.genero',
-        'consumidor.telefono',
-        'consumidor.tipoConsumidor')
-        ->first();
+        $solicitud = DB::table('solicitudes_cambio_residencia')
+            ->where('solicitudes_cambio_residencia.id', '=', $solicitudId)
+            ->leftjoin('solicitudes_cambio_personas', 'solicitudes_cambio_personas.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
+            
+            // ->leftjoin('solicitudes_cambio_archivos', 'solicitudes_cambio_archivos.solicitud_id', '=', 'solicitudes_cambio_residencia.id')
+
+            ->leftjoin('users', 'users.id', '=', 'solicitudes_cambio_residencia.usuario_id')       
+            ->leftjoin('provincia', 'provincia.id', '=', 'solicitudes_cambio_residencia.provincia_id')
+            ->leftjoin('distrito', 'distrito.id', '=', 'solicitudes_cambio_residencia.distrito_id')
+            ->leftjoin('corregimiento', 'corregimiento.id', '=', 'solicitudes_cambio_residencia.corregimiento_id')
+
+            ->select(
+                'solicitudes_cambio_residencia.*',
+
+                DB::raw("CONCAT(users.primer_nombre, ' ', users.primer_apellido) AS nombre_completo"),
+                'solicitudes_cambio_personas.num_filiacion',
+                'solicitudes_cambio_personas.primer_nombre',
+                'solicitudes_cambio_personas.segundo_nombre',
+                'solicitudes_cambio_personas.primer_apellido',
+                'solicitudes_cambio_personas.segundo_apellido',
+                'solicitudes_cambio_personas.genero',
+                'solicitudes_cambio_personas.fecha_nacimiento',
+                'solicitudes_cambio_personas.correo',
+                'solicitudes_cambio_personas.telefono',               
+                'solicitudes_cambio_personas.pasaporte',               
+
+                'provincia.nombre as provincia',
+                'distrito.nombre as distrito',
+                'corregimiento.nombre as corregimiento',
+             )->first();
 
 
         //return $solicitud;
 
-        if(empty($solicitud)){
-            return redirect('dist/solicitud')->withErrors("ERROR STORE CEBECECO NO EXISTE CODE-0004");
+        if(!$solicitud){
+                return redirect('dist/solicitud')->withErrors("Solicitud no encontrada.");
         }
 
-        view()->share('solicitud', $solicitud);
-        return \View::make('dist.solicitud.editar');
+        $archivos = DB::table('solicitudes_cambio_archivos')
+        ->where('solicitud_id',$solicitudId)
+        ->where('estatus','Activo')
+        ->get()
+        ->keyBy('tipo');
+
+        $provincia = Provincia::where('estatus','Activo')
+                ->orderBy('nombre')
+                ->get();
+
+
+        $distrito = Distrito::where('provinciaId', $solicitud->provincia_id)
+            ->where('estatus','Activo')
+            ->orderBy('nombre')
+            ->get();
+
+
+        $corregimiento = Corregimiento::where('distritoId', $solicitud->distrito_id)
+            ->where('estatus','Activo')
+            ->orderBy('nombre')
+            ->get();
+
+
+
+        return view('dist.solicitud.editar', compact(
+            'solicitud',
+            'provincia',
+            'distrito',
+            'corregimiento',
+            'archivos'
+        ));
+                
     }
         
     public function PostEditar(){
